@@ -1,0 +1,12 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: e2e-deny-all-ingress
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  # No ingress rules = deny all ingress

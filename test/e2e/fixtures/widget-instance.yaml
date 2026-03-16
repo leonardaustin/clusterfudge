@@ -1,0 +1,10 @@
+apiVersion: example.com/v1alpha1
+kind: Widget
+metadata:
+  name: e2e-widget-blue
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+spec:
+  color: blue
+  size: medium

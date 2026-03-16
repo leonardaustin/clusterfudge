@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: e2e-ingress
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: e2e-test.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: e2e-clusterip-svc
+                port:
+                  number: 80

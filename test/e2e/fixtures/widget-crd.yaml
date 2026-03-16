@@ -1,0 +1,35 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: widgets.example.com
+  labels:
+    managed-by: kubeviewer-e2e
+spec:
+  group: example.com
+  scope: Namespaced
+  names:
+    plural: widgets
+    singular: widget
+    kind: Widget
+    shortNames:
+      - wgt
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                color:
+                  type: string
+                  description: The color of the widget
+                size:
+                  type: string
+                  enum: [small, medium, large]
+                  description: The size of the widget
+              required:
+                - color

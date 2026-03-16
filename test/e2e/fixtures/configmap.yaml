@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: e2e-configmap
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+data:
+  foo: bar
+  database_url: postgres://localhost:5432/testdb
+  max_connections: "100"

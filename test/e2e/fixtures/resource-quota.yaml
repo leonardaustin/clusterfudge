@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: e2e-resource-quota
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+spec:
+  hard:
+    pods: "50"
+    requests.cpu: "4"
+    requests.memory: 4Gi
+    limits.cpu: "8"
+    limits.memory: 8Gi
+    persistentvolumeclaims: "10"

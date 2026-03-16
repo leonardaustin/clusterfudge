@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: e2e-no-perms-sa
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+---
+# This SA intentionally has NO role bindings
+# It will receive 403 Forbidden when trying to access cluster resources

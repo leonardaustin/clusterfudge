@@ -1,0 +1,26 @@
+export const monacoTheme = {
+  base: 'vs-dark' as const,
+  inherit: true,
+  rules: [
+    { token: '', foreground: 'e8eaed', background: '13151a' },
+    { token: 'comment', foreground: '6b7280', fontStyle: 'italic' },
+    { token: 'string', foreground: '34d399' },
+    { token: 'number', foreground: 'fbbf24' },
+    { token: 'keyword', foreground: '5b8def' },
+    { token: 'type', foreground: 'a78bfa' },
+  ],
+  colors: {
+    'editor.background': '#13151a',
+    'editor.foreground': '#e8eaed',
+    'editor.lineHighlightBackground': '#1a1d24',
+    'editor.selectionBackground': '#5b8def33',
+    'editorCursor.foreground': '#5b8def',
+    'editorLineNumber.foreground': '#4a4f5a',
+    'editorLineNumber.activeForeground': '#9ba1ad',
+    'editor.selectionHighlightBackground': '#5b8def1a',
+    'editorWidget.background': '#1a1d24',
+    'editorWidget.border': '#2a2e38',
+    'editorIndentGuide.background': '#2a2e38',
+    'editorIndentGuide.activeBackground': '#3a3f4a',
+  },
+}

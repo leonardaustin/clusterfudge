@@ -1,0 +1,25 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "KubeViewer",
+  "outputfilename": "kubeviewer",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm run build",
+  "frontend:dev:watcher": "pnpm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "frontend:dir": "ui",
+  "assetdir": "ui/dist",
+  "reloaddirs": "ui/src",
+  "debounceMS": 100,
+  "version": "2",
+  "info": {
+    "productName": "KubeViewer",
+    "productVersion": "0.1.0",
+    "productIdentifier": "com.leonardaustin.kubeviewer",
+    "copyright": "2026 Leonard Austin",
+    "comments": "Kubernetes cluster viewer"
+  },
+  "author": {
+    "name": "Leonard Austin",
+    "email": "leonardaustin@users.noreply.github.com"
+  }
+}

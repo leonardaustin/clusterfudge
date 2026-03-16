@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-pod-reader-binding
+  namespace: kubeviewer-e2e
+  labels:
+    managed-by: kubeviewer-e2e
+subjects:
+  - kind: ServiceAccount
+    name: e2e-no-perms-sa
+    namespace: kubeviewer-e2e
+roleRef:
+  kind: Role
+  name: e2e-pod-reader
+  apiGroup: rbac.authorization.k8s.io
