@@ -11,10 +11,28 @@ vi.mock('@/hooks/usePodMetrics', () => ({
   usePodMetrics: vi.fn(() => ({ metrics: new Map() })),
 }))
 
+vi.mock('@/hooks/useMetricsHistory', () => ({
+  useMetricsHistory: vi.fn(() => ({ history: [], metricsUnavailable: false })),
+}))
+
 vi.mock('@/stores/clusterStore', () => ({
   useClusterStore: vi.fn((selector: (s: Record<string, unknown>) => unknown) =>
     selector({ selectedNamespace: '' })
   ),
+}))
+
+vi.mock('@/stores/uiStore', () => ({
+  useUIStore: vi.fn((selector: (s: Record<string, unknown>) => unknown) =>
+    selector({ setAITarget: vi.fn(), setBottomTrayTab: vi.fn() })
+  ),
+}))
+
+vi.mock('@/wailsjs/go/handlers/AIHandler', () => ({
+  GetAIProviderName: vi.fn(() => Promise.resolve('')),
+}))
+
+vi.mock('@/wailsjs/go/handlers/ResourceHandler', () => ({
+  GetResource: vi.fn(() => Promise.resolve(null)),
 }))
 
 import { useKubeResources } from '@/hooks/useKubeResource'
