@@ -14,7 +14,6 @@ import { ClusterOverview } from './pages/ClusterOverview'
 
 // Lazy loaded heavy views
 const PodList = lazy(() => import('./pages/PodList').then((m) => ({ default: m.PodList })))
-const PodDetail = lazy(() => import('./pages/PodDetail').then((m) => ({ default: m.PodDetail })))
 const DeploymentList = lazy(() =>
   import('./pages/DeploymentList').then((m) => ({ default: m.DeploymentList }))
 )
@@ -175,7 +174,7 @@ export default function App() {
 
             {/* Workloads */}
             <Route path="workloads/pods" element={<LazyView><PodList /></LazyView>} />
-            <Route path="workloads/pods/:namespace/:name" element={<LazyView><PodDetail /></LazyView>} />
+            <Route path="workloads/pods/:namespace/:name" element={<LazyView><PodList /></LazyView>} />
             <Route path="workloads/deployments" element={<LazyView><DeploymentList /></LazyView>} />
             <Route path="workloads/deployments/:namespace/:name" element={<LazyView><DeploymentDetail /></LazyView>} />
             <Route path="workloads/statefulsets" element={<LazyView><StatefulSetList /></LazyView>} />

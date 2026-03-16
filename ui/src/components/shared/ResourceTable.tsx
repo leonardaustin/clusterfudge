@@ -66,7 +66,7 @@ export function ResourceTable<T extends object>({
   return (
     <div className="resource-body">
       <div className="resource-table-wrap">
-        <table className="resource-table clickable">
+        <table className="resource-table">
           <thead>
             <tr>
               {columns.map((col) => {

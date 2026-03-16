@@ -13,3 +13,7 @@ export function Import(arg1) {
 export function StripManifest(arg1) {
   return window['go']['handlers']['BackupHandler']['StripManifest'](arg1);
 }
+
+export function StripManifestFromString(arg1) {
+  return window['go']['handlers']['BackupHandler']['StripManifestFromString'](arg1);
+}

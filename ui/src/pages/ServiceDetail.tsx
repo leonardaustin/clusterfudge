@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { GetResource } from '../wailsjs/go/handlers/ResourceHandler'
 import type { ResourceItem } from '../wailsjs/go/handlers/ResourceHandler'
@@ -71,6 +71,7 @@ function transformServiceDetail(item: ResourceItem): ServiceDetailData {
 }
 
 export function ServiceDetail() {
+  const navigate = useNavigate()
   const { namespace: urlNamespace, name } = useParams<{ namespace: string; name: string }>()
   const [activeTab, setActiveTab] = useState('Overview')
   const namespace = urlNamespace || 'default'
@@ -206,7 +207,7 @@ export function ServiceDetail() {
       <div className="resource-body">
         {/* Left: abridged service table */}
         <div className="resource-table-wrap">
-          <table className="resource-table clickable">
+          <table className="resource-table">
             <thead>
               <tr>
                 <th scope="col" className="col-status">Status</th>
@@ -219,7 +220,7 @@ export function ServiceDetail() {
             </thead>
             <tbody>
               {sidebarSvcs.slice(0, 6).map((svc) => (
-                <tr key={`${svc.namespace}/${svc.name}`} className={svc.name === name ? 'selected' : undefined}>
+                <tr key={`${svc.namespace}/${svc.name}`} className={svc.name === name ? 'selected' : undefined} style={{ cursor: 'pointer' }} onClick={() => navigate(`/networking/services/${svc.namespace}/${svc.name}`)}>
                   <td className="col-status">
                     <StatusDot status={svc.status} />
                   </td>
@@ -351,7 +352,7 @@ export function ServiceDetail() {
                   </div>
                 ) : (
                   <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)', overflowX: 'auto' }}>
-                    <table className="resource-table clickable" style={{ fontSize: 'var(--text-xs)' }}>
+                    <table className="resource-table" style={{ fontSize: 'var(--text-xs)' }}>
                       <thead>
                         <tr>
                           <th scope="col">Name</th>
@@ -361,7 +362,7 @@ export function ServiceDetail() {
                       </thead>
                       <tbody>
                         {matchingPods.map((pod) => (
-                          <tr key={pod.name}>
+                          <tr key={pod.name} style={{ cursor: 'pointer' }} onClick={() => navigate(`/workloads/pods/${namespace}/${pod.name}`)}>
                             <td className="name-cell">
                               <Link to={`/workloads/pods/${namespace}/${pod.name}`}>{pod.name}</Link>
                             </td>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { usePodMetrics } from '../hooks/usePodMetrics'
 import { GetResource, AddNodeTaint, RemoveNodeTaint } from '../wailsjs/go/handlers/ResourceHandler'
@@ -128,6 +128,7 @@ function transformNodeDetail(item: ResourceItem, podCount: number, metrics: Node
 }
 
 export function NodeDetail() {
+  const navigate = useNavigate()
   const { name } = useParams<{ name: string }>()
   const [activeTab, setActiveTab] = useState('Overview')
   const addToast = useToastStore((s) => s.addToast)
@@ -319,7 +320,7 @@ export function NodeDetail() {
       <div className="resource-body">
         {/* Left: abridged node table */}
         <div className="resource-table-wrap">
-          <table className="resource-table clickable">
+          <table className="resource-table">
             <thead>
               <tr>
                 <th scope="col" className="col-status">Status</th>
@@ -332,7 +333,7 @@ export function NodeDetail() {
             </thead>
             <tbody>
               {sidebarNodes.map((node) => (
-                <tr key={node.name} className={node.name === name ? 'selected' : undefined}>
+                <tr key={node.name} className={node.name === name ? 'selected' : undefined} style={{ cursor: 'pointer' }} onClick={() => navigate(`/cluster/nodes/${node.name}`)}>
                   <td className="col-status">
                     <StatusDot status={node.status} />
                   </td>
@@ -611,7 +612,7 @@ export function NodeDetail() {
                   </div>
                 ) : (
                   <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)', overflowX: 'auto', maxHeight: '200px', overflowY: 'auto' }}>
-                    <table className="resource-table clickable" style={{ fontSize: 'var(--text-xs)' }}>
+                    <table className="resource-table" style={{ fontSize: 'var(--text-xs)' }}>
                       <thead>
                         <tr>
                           <th scope="col">Name</th>
@@ -623,7 +624,7 @@ export function NodeDetail() {
                       </thead>
                       <tbody>
                         {nodePods.map((pod) => (
-                          <tr key={`${pod.namespace}/${pod.name}`}>
+                          <tr key={`${pod.namespace}/${pod.name}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`)}>
                             <td className="name-cell">
                               <Link to={`/workloads/pods/${pod.namespace}/${pod.name}`}>{pod.name}</Link>
                             </td>

@@ -656,10 +656,6 @@ a {
   transition: background var(--transition-fast);
 }
 
-.resource-table.clickable tbody tr {
-  cursor: pointer;
-}
-
 .resource-table tbody tr:hover {
   background: var(--bg-hover);
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { GetResource, ApplyResource, DryRunApply, PauseDeployment, ResumeDeployment, GetRolloutHistory } from '../wailsjs/go/handlers/ResourceHandler'
 import type { ResourceItem, RolloutRevision } from '../wailsjs/go/handlers/ResourceHandler'
@@ -94,6 +94,7 @@ function transformDeploymentDetail(item: ResourceItem): DeploymentDetailData {
 }
 
 export function DeploymentDetail() {
+  const navigate = useNavigate()
   const { namespace: urlNamespace, name } = useParams<{ namespace: string; name: string }>()
   const [activeTab, setActiveTab] = useState('Overview')
   const addToast = useToastStore((s) => s.addToast)
@@ -250,7 +251,7 @@ export function DeploymentDetail() {
       <div className="resource-body">
         {/* Left: abridged deployment table */}
         <div className="resource-table-wrap">
-          <table className="resource-table clickable">
+          <table className="resource-table">
             <thead>
               <tr>
                 <th scope="col" className="col-status">Status</th>
@@ -263,7 +264,7 @@ export function DeploymentDetail() {
             </thead>
             <tbody>
               {sidebarDeps.slice(0, 6).map((dep) => (
-                <tr key={dep.name} className={dep.name === name ? 'selected' : undefined}>
+                <tr key={dep.name} className={dep.name === name ? 'selected' : undefined} style={{ cursor: 'pointer' }} onClick={() => navigate(`/workloads/deployments/${namespace}/${dep.name}`)}>
                   <td className="col-status">
                     <StatusDot status={dep.status} />
                   </td>

@@ -33,3 +33,7 @@ export function SaveToFile(arg1) {
 export function UpdateConfig(arg1) {
   return window['go']['handlers']['ConfigHandler']['UpdateConfig'](arg1);
 }
+
+export function ValidateFilePath(arg1) {
+  return window['go']['handlers']['ConfigHandler']['ValidateFilePath'](arg1);
+}

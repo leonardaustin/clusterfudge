@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { useClusterStore } from '../stores/clusterStore'
 import { RESOURCE_CONFIG } from '../lib/resourceConfig'
@@ -30,6 +30,7 @@ function getNamespaceStyle(ns: string): { className?: string; style?: React.CSSP
 }
 
 export function SecretList() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const namespace = useClusterStore((s) => s.selectedNamespace)
@@ -90,7 +91,7 @@ export function SecretList() {
           const nsProps = getNamespaceStyle(secret.namespace)
 
           return (
-            <tr key={`${secret.namespace}/${secret.name}`}>
+            <tr key={`${secret.namespace}/${secret.name}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/config/secrets/${secret.namespace}/${secret.name}`)}>
               <td className="name-cell">
                 <Link to={`/config/secrets/${secret.namespace}/${secret.name}`}>
                   {secret.name}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { useClusterStore } from '../stores/clusterStore'
 import { formatAge, strategyColor } from '../lib/k8sFormatters'
@@ -37,6 +37,7 @@ function getNamespaceStyle(ns: string): { className?: string; style?: React.CSSP
 }
 
 export function DeploymentList() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
   const namespace = useClusterStore((s) => s.selectedNamespace)
   const cfg = RESOURCE_CONFIG.deployments
@@ -107,7 +108,7 @@ export function DeploymentList() {
           const isFailed = dep.status === 'failed'
 
           return (
-            <tr key={`${dep.namespace}/${dep.name}`}>
+            <tr key={`${dep.namespace}/${dep.name}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/workloads/deployments/${dep.namespace}/${dep.name}`)}>
               <td className="col-status">
                 <StatusDot status={dep.status} />
               </td>

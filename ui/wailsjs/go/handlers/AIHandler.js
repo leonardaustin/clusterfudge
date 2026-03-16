@@ -10,6 +10,10 @@ export function CloseAll() {
   return window['go']['handlers']['AIHandler']['CloseAll']();
 }
 
+export function FindAIPath(arg1) {
+  return window['go']['handlers']['AIHandler']['FindAIPath'](arg1);
+}
+
 export function GetAIProviderName() {
   return window['go']['handlers']['AIHandler']['GetAIProviderName']();
 }
@@ -24,6 +28,10 @@ export function SetEmitter(arg1) {
 
 export function StartAISession(arg1, arg2) {
   return window['go']['handlers']['AIHandler']['StartAISession'](arg1, arg2);
+}
+
+export function ValidateAIPath(arg1) {
+  return window['go']['handlers']['AIHandler']['ValidateAIPath'](arg1);
 }
 
 export function WriteAISession(arg1, arg2) {

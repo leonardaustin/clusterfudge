@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { useClusterStore } from '../stores/clusterStore'
 import { RESOURCE_CONFIG } from '../lib/resourceConfig'
@@ -36,6 +36,7 @@ function getNamespaceStyle(ns: string): { className?: string; style?: React.CSSP
 }
 
 export function ServiceList() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
   const namespace = useClusterStore((s) => s.selectedNamespace)
   const cfg = RESOURCE_CONFIG.services
@@ -110,7 +111,7 @@ export function ServiceList() {
           const nsProps = getNamespaceStyle(svc.namespace)
 
           return (
-            <tr key={`${svc.namespace}/${svc.name}`}>
+            <tr key={`${svc.namespace}/${svc.name}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/networking/services/${svc.namespace}/${svc.name}`)}>
               <td className="col-status">
                 <StatusDot status={svc.status} />
               </td>

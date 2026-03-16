@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { usePodMetrics } from '../hooks/usePodMetrics'
 import type { ResourceItem } from '../wailsjs/go/handlers/ResourceHandler'
@@ -324,6 +324,7 @@ function buildHexGroups(
 type ViewMode = 'cards' | 'hex' | 'table'
 
 export function NodeList() {
+  const navigate = useNavigate()
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<ViewMode>('hex')
   const selectedNamespace = useClusterStore((s) => s.selectedNamespace)
@@ -505,7 +506,7 @@ export function NodeList() {
             )
 
             return (
-              <tr key={node.name}>
+              <tr key={node.name} style={{ cursor: 'pointer' }} onClick={() => navigate(`/cluster/nodes/${node.name}`)}>
                 <td className="col-status">
                   <StatusDot status={node.status} />
                 </td>

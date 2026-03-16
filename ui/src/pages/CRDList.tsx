@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { RESOURCE_CONFIG } from '../lib/resourceConfig'
 import { formatAge, creationTimestamp } from '../lib/k8sFormatters'
@@ -26,6 +26,7 @@ function getConditionStatus(conditions: Record<string, unknown>[], type: string)
 }
 
 export function CRDList() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('')
   const cfg = RESOURCE_CONFIG.crds
   const { data: items, isLoading } = useKubeResources({
@@ -74,7 +75,7 @@ export function CRDList() {
       </ResourceHeader>
 
       <ResourceTable columns={columns} data={filtered} renderRow={(crd) => (
-          <tr key={crd.name}>
+          <tr key={crd.name} style={{ cursor: 'pointer' }} onClick={() => navigate(`/custom/${crd.group}/${crd.name.split('.')[0]}/${crd.name}`)}>
             <td className="name-cell" style={{ fontSize: 'var(--text-2xs)' }}>
               <Link to={`/custom/${crd.group}/${crd.name.split('.')[0]}/${crd.name}`}>
                 {crd.name}
