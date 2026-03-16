@@ -17,9 +17,6 @@ const PodList = lazy(() => import('./pages/PodList').then((m) => ({ default: m.P
 const DeploymentList = lazy(() =>
   import('./pages/DeploymentList').then((m) => ({ default: m.DeploymentList }))
 )
-const DeploymentDetail = lazy(() =>
-  import('./pages/DeploymentDetail').then((m) => ({ default: m.DeploymentDetail }))
-)
 const StatefulSetList = lazy(() =>
   import('./pages/StatefulSetList').then((m) => ({ default: m.StatefulSetList }))
 )
@@ -36,9 +33,6 @@ const CronJobList = lazy(() =>
 
 const ServiceList = lazy(() =>
   import('./pages/ServiceList').then((m) => ({ default: m.ServiceList }))
-)
-const ServiceDetail = lazy(() =>
-  import('./pages/ServiceDetail').then((m) => ({ default: m.ServiceDetail }))
 )
 const IngressList = lazy(() =>
   import('./pages/IngressList').then((m) => ({ default: m.IngressList }))
@@ -80,9 +74,6 @@ const ServiceAccountList = lazy(() =>
 const RBACList = lazy(() => import('./pages/RBACList').then((m) => ({ default: m.RBACList })))
 
 const NodeList = lazy(() => import('./pages/NodeList').then((m) => ({ default: m.NodeList })))
-const NodeDetail = lazy(() =>
-  import('./pages/NodeDetail').then((m) => ({ default: m.NodeDetail }))
-)
 const NamespaceList = lazy(() =>
   import('./pages/NamespaceList').then((m) => ({ default: m.NamespaceList }))
 )
@@ -176,7 +167,7 @@ export default function App() {
             <Route path="workloads/pods" element={<LazyView><PodList /></LazyView>} />
             <Route path="workloads/pods/:namespace/:name" element={<LazyView><PodList /></LazyView>} />
             <Route path="workloads/deployments" element={<LazyView><DeploymentList /></LazyView>} />
-            <Route path="workloads/deployments/:namespace/:name" element={<LazyView><DeploymentDetail /></LazyView>} />
+            <Route path="workloads/deployments/:namespace/:name" element={<LazyView><DeploymentList /></LazyView>} />
             <Route path="workloads/statefulsets" element={<LazyView><StatefulSetList /></LazyView>} />
             <Route path="workloads/daemonsets" element={<LazyView><DaemonSetList /></LazyView>} />
             <Route path="workloads/replicasets" element={<LazyView><ReplicaSetList /></LazyView>} />
@@ -185,7 +176,7 @@ export default function App() {
 
             {/* Networking */}
             <Route path="networking/services" element={<LazyView><ServiceList /></LazyView>} />
-            <Route path="networking/services/:namespace/:name" element={<LazyView><ServiceDetail /></LazyView>} />
+            <Route path="networking/services/:namespace/:name" element={<LazyView><ServiceList /></LazyView>} />
             <Route path="networking/ingresses" element={<LazyView><IngressList /></LazyView>} />
             <Route path="networking/endpoints" element={<LazyView><EndpointList /></LazyView>} />
             <Route path="networking/networkpolicies" element={<LazyView><NetworkPolicyList /></LazyView>} />
@@ -213,7 +204,7 @@ export default function App() {
 
             {/* Cluster */}
             <Route path="cluster/nodes" element={<LazyView><NodeList /></LazyView>} />
-            <Route path="cluster/nodes/:name" element={<LazyView><NodeDetail /></LazyView>} />
+            <Route path="cluster/nodes/:name" element={<LazyView><NodeList /></LazyView>} />
             <Route path="cluster/namespaces" element={<LazyView><NamespaceList /></LazyView>} />
             <Route path="cluster/events" element={<LazyView><Events /></LazyView>} />
             <Route path="cluster/priorityclasses" element={<LazyView><PriorityClassList /></LazyView>} />

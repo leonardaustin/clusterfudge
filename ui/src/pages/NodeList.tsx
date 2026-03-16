@@ -1,18 +1,26 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { usePodMetrics } from '../hooks/usePodMetrics'
-import type { ResourceItem } from '../wailsjs/go/handlers/ResourceHandler'
-import { formatAge, rawSpec, rawStatus, rawMetadata, labelsMap, parseCpu, parseMemoryMiB, getBarColor } from '../lib/k8sFormatters'
+import { GetResource, AddNodeTaint, RemoveNodeTaint } from '../wailsjs/go/handlers/ResourceHandler'
+import type { ResourceItem, PodUsage } from '../wailsjs/go/handlers/ResourceHandler'
+import { formatAge, rawSpec, rawStatus, rawMetadata, labelsMap, annotationsMap, labelsToKV, parseCpu, parseMemoryMiB, getBarColor } from '../lib/k8sFormatters'
 import { StatusDot } from '../components/shared/StatusDot'
 import { Badge } from '../components/shared/Badge'
 import { ResourceHeader } from '../components/shared/ResourceHeader'
 import { ResourceTable } from '../components/shared/ResourceTable'
 import type { Column } from '../components/shared/ResourceTable'
+import { DetailPanel } from '../components/detail/DetailPanel'
+import { DetailTabs } from '../components/detail/DetailTabs'
+import { ResourceEvents } from '../components/detail/ResourceEvents'
+import type { NodeDetailData } from '../data/detailTypes'
 import type { ClusterNode, BadgeColor, BarColor, NodeCondition, NodeTaint, NodeAddress, AllocatedResources, HexPod, NodeHexGroup } from '../data/types'
 import { useClusterStore } from '../stores/clusterStore'
+import { useToastStore } from '../stores/toastStore'
 import { HexMap } from '../components/hex/HexMap'
 import { ContextMenu } from '../components/hex/ContextMenu'
+
+const DETAIL_TABS = ['Overview', 'YAML', 'Events']
 
 const columns: Column[] = [
   { key: 'status', label: 'Status', className: 'col-status' },
@@ -116,6 +124,94 @@ function transformNode(item: ResourceItem, podCount: number, metrics: NodeMetric
     addresses,
     ephemeralStorage: `${Math.round(ephStorageGiB * 10) / 10}Gi`,
     allocatedResources,
+  }
+}
+
+function transformNodeDetail(item: ResourceItem, podCount: number, metrics: NodeMetrics): NodeDetailData {
+  const spec = rawSpec(item)
+  const status = rawStatus(item)
+  const meta = rawMetadata(item)
+  const labels = labelsMap(item)
+  const annotations = annotationsMap(item)
+  const nodeInfo = (status.nodeInfo || {}) as Record<string, string>
+  const allocatable = (status.allocatable || {}) as Record<string, string>
+  const capacity = (status.capacity || {}) as Record<string, string>
+
+  const conditions = ((status.conditions || []) as Array<Record<string, unknown>>).map((c) => ({
+    type: c.type as string,
+    status: c.status === 'True',
+    reason: (c.reason as string) || '',
+    message: (c.message as string) || '',
+    lastTransitionTime: (c.lastTransitionTime as string) || '',
+  }))
+
+  const taints = ((spec.taints || []) as Array<Record<string, unknown>>).map((t) => ({
+    key: (t.key as string) || '',
+    value: (t.value as string) || '',
+    effect: (t.effect as string) || '',
+  }))
+
+  const addresses = ((status.addresses || []) as Array<Record<string, string>>).map((a) => ({
+    type: a.type || '',
+    address: a.address || '',
+  }))
+
+  const readyCond = conditions.find((c) => c.type === 'Ready')
+
+  const cpuAllocatable = parseCpu(allocatable.cpu)
+  const memAllocatable = parseMemoryMiB(allocatable.memory)
+  const cpuPercent = cpuAllocatable > 0 ? Math.round((metrics.cpuUsedMillis / cpuAllocatable) * 100) : 0
+  const memPercent = memAllocatable > 0 ? Math.round((metrics.memUsedMiB / memAllocatable) * 100) : 0
+
+  return {
+    name: item.name,
+    roles: nodeRoles(labels),
+    status: readyCond?.status ? 'Ready' : 'NotReady',
+    version: nodeInfo.kubeletVersion || '',
+    osImage: nodeInfo.osImage || '',
+    os: nodeInfo.operatingSystem || 'linux',
+    arch: nodeInfo.architecture || 'amd64',
+    kernel: nodeInfo.kernelVersion || '',
+    containerRuntime: nodeInfo.containerRuntimeVersion || '',
+    addresses,
+    labels: labelsToKV(labels),
+    annotations: labelsToKV(annotations),
+    created: (meta.creationTimestamp as string) || '',
+    conditions,
+    taints,
+    resources: {
+      cpu: {
+        capacity: capacity.cpu || '0',
+        allocatable: `${cpuAllocatable}m`,
+        requests: `${metrics.cpuRequests}m`,
+        limits: `${metrics.cpuLimits}m`,
+        usage: `${metrics.cpuUsedMillis}m`,
+        usagePercent: cpuPercent,
+      },
+      memory: {
+        capacity: capacity.memory || '0',
+        allocatable: `${Math.round(memAllocatable / 1024 * 10) / 10}Gi`,
+        requests: `${Math.round(metrics.memRequests)}Mi`,
+        limits: `${Math.round(metrics.memLimits)}Mi`,
+        usage: `${Math.round(metrics.memUsedMiB)}Mi`,
+        usagePercent: memPercent,
+      },
+      ephemeralStorage: {
+        capacity: capacity['ephemeral-storage'] || '0',
+        allocatable: allocatable['ephemeral-storage'] || '0',
+        usage: '-',
+        usagePercent: 0,
+      },
+      pods: {
+        capacity: parseInt(capacity.pods || '110', 10),
+        allocatable: parseInt(allocatable.pods || '110', 10),
+        running: podCount,
+        usagePercent: parseInt(allocatable.pods || '110', 10) > 0 ? Math.round((podCount / parseInt(allocatable.pods || '110', 10)) * 100) : 0,
+      },
+    },
+    pods: [],
+    events: [],
+    yaml: JSON.stringify(item.raw, null, 2),
   }
 }
 
@@ -325,10 +421,28 @@ type ViewMode = 'cards' | 'hex' | 'table'
 
 export function NodeList() {
   const navigate = useNavigate()
+  const { name: selectedName } = useParams<{ name?: string }>()
+  const panelOpen = !!selectedName
+
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<ViewMode>('hex')
+  const [activeTab, setActiveTab] = useState('Overview')
   const selectedNamespace = useClusterStore((s) => s.selectedNamespace)
+  const addToast = useToastStore((s) => s.addToast)
 
+  // Detail state
+  const [detail, setDetail] = useState<NodeDetailData | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+
+  // Taint management state
+  const [showAddTaint, setShowAddTaint] = useState(false)
+  const [newTaintKey, setNewTaintKey] = useState('')
+  const [newTaintValue, setNewTaintValue] = useState('')
+  const [newTaintEffect, setNewTaintEffect] = useState('NoSchedule')
+  const [taintLoading, setTaintLoading] = useState(false)
+
+  // List data
   const { data: nodeItems, isLoading, error } = useKubeResources({
     group: '', version: 'v1', resource: 'nodes', namespace: '',
   })
@@ -337,8 +451,9 @@ export function NodeList() {
   })
   const { metrics: podMetrics } = usePodMetrics('')
 
-  const nodes = useMemo(() => {
-    const podCountByNode = new Map<string, number>()
+  // Aggregated node metrics (reused for both list and detail)
+  const nodeAggregates = useMemo(() => {
+    const podCounts = new Map<string, number>()
     const metricsPerNode = new Map<string, NodeMetrics>()
 
     for (const pod of podItems) {
@@ -346,7 +461,7 @@ export function NodeList() {
       const nodeName = (spec.nodeName as string) || ''
       if (!nodeName) continue
 
-      podCountByNode.set(nodeName, (podCountByNode.get(nodeName) || 0) + 1)
+      podCounts.set(nodeName, (podCounts.get(nodeName) || 0) + 1)
 
       if (!metricsPerNode.has(nodeName)) {
         metricsPerNode.set(nodeName, { cpuUsedMillis: 0, memUsedMiB: 0, cpuRequests: 0, cpuLimits: 0, memRequests: 0, memLimits: 0 })
@@ -372,9 +487,108 @@ export function NodeList() {
       }
     }
 
+    return { podCounts, metricsPerNode }
+  }, [podItems, podMetrics])
+
+  const nodes = useMemo(() => {
     const defaultMetrics: NodeMetrics = { cpuUsedMillis: 0, memUsedMiB: 0, cpuRequests: 0, cpuLimits: 0, memRequests: 0, memLimits: 0 }
-    return nodeItems.map((item) => transformNode(item, podCountByNode.get(item.name) || 0, metricsPerNode.get(item.name) || defaultMetrics))
-  }, [nodeItems, podItems, podMetrics])
+    return nodeItems.map((item) => transformNode(item, nodeAggregates.podCounts.get(item.name) || 0, nodeAggregates.metricsPerNode.get(item.name) || defaultMetrics))
+  }, [nodeItems, nodeAggregates])
+
+  // Pods scheduled on the selected node (for detail panel)
+  const nodePods = useMemo(() => {
+    if (!selectedName) return []
+    return podItems
+      .filter((pod) => {
+        const spec = rawSpec(pod)
+        return (spec.nodeName as string) === selectedName
+      })
+      .map((pod) => {
+        const status = rawStatus(pod)
+        const phase = (status.phase as string) || 'Unknown'
+        const key = `${pod.namespace}/${pod.name}`
+        const m: PodUsage | undefined = podMetrics.get(key)
+        return {
+          name: pod.name,
+          namespace: pod.namespace,
+          status: phase,
+          cpu: m ? `${Math.round(m.cpuCores * 1000)}m` : '-',
+          memory: m ? `${Math.round(m.memoryMiB)}Mi` : '-',
+        }
+      })
+  }, [selectedName, podItems, podMetrics])
+
+  // Detail fetch
+  useEffect(() => {
+    if (!selectedName) {
+      setDetail(null)
+      setDetailError(null)
+      return
+    }
+    let cancelled = false
+    setDetailLoading(true)
+    setDetailError(null)
+
+    const defaultMetrics: NodeMetrics = { cpuUsedMillis: 0, memUsedMiB: 0, cpuRequests: 0, cpuLimits: 0, memRequests: 0, memLimits: 0 }
+
+    GetResource('', 'v1', 'nodes', '', selectedName)
+      .then((item) => {
+        if (cancelled) return
+        setDetail(transformNodeDetail(item, nodeAggregates.podCounts.get(selectedName) || 0, nodeAggregates.metricsPerNode.get(selectedName) || defaultMetrics))
+        setDetailLoading(false)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setDetailError(String(err))
+        setDetailLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [selectedName, nodeAggregates])
+
+  // Reset tab when switching nodes
+  useEffect(() => {
+    setActiveTab('Overview')
+  }, [selectedName])
+
+  // Taint management callbacks
+  const handleAddTaint = useCallback(async () => {
+    if (!selectedName || !newTaintKey.trim()) return
+    setTaintLoading(true)
+    try {
+      await AddNodeTaint(selectedName, newTaintKey.trim(), newTaintValue.trim(), newTaintEffect)
+      addToast({ type: 'success', title: `Added taint ${newTaintKey}` })
+      setShowAddTaint(false)
+      setNewTaintKey('')
+      setNewTaintValue('')
+      setNewTaintEffect('NoSchedule')
+      // Refresh detail
+      const item = await GetResource('', 'v1', 'nodes', '', selectedName)
+      const defaultMetrics: NodeMetrics = { cpuUsedMillis: 0, memUsedMiB: 0, cpuRequests: 0, cpuLimits: 0, memRequests: 0, memLimits: 0 }
+      setDetail(transformNodeDetail(item, nodeAggregates.podCounts.get(selectedName) || 0, nodeAggregates.metricsPerNode.get(selectedName) || defaultMetrics))
+    } catch (err) {
+      addToast({ type: 'error', title: 'Failed to add taint', description: String(err) })
+    } finally {
+      setTaintLoading(false)
+    }
+  }, [selectedName, newTaintKey, newTaintValue, newTaintEffect, addToast, nodeAggregates])
+
+  const handleRemoveTaint = useCallback(async (taintKey: string) => {
+    if (!selectedName) return
+    setTaintLoading(true)
+    try {
+      await RemoveNodeTaint(selectedName, taintKey)
+      addToast({ type: 'success', title: `Removed taint ${taintKey}` })
+      // Refresh detail
+      const item = await GetResource('', 'v1', 'nodes', '', selectedName)
+      const defaultMetrics: NodeMetrics = { cpuUsedMillis: 0, memUsedMiB: 0, cpuRequests: 0, cpuLimits: 0, memRequests: 0, memLimits: 0 }
+      setDetail(transformNodeDetail(item, nodeAggregates.podCounts.get(selectedName) || 0, nodeAggregates.metricsPerNode.get(selectedName) || defaultMetrics))
+    } catch (err) {
+      addToast({ type: 'error', title: 'Failed to remove taint', description: String(err) })
+    } finally {
+      setTaintLoading(false)
+    }
+  }, [selectedName, addToast, nodeAggregates])
 
   // Hex map groups — filter pods by selected namespace for the hex visualization
   const nodeHexGroups = useMemo(() => {
@@ -453,90 +667,424 @@ export function NodeList() {
         )}
       </div>
 
-      {viewMode === 'cards' && (
-        <div className="node-detail-cards">
-          {nodes.map((node) => (
-            <NodeCard
-              key={node.name}
-              node={node}
-              expanded={expandedNodes.has(node.name)}
-              onToggle={() => toggleNode(node.name)}
-            />
-          ))}
-        </div>
-      )}
-
-      {viewMode === 'hex' && (
-        <>
-          <HexMap groups={nodeHexGroups} onContextMenu={handleContextMenu} />
-
-          {/* Legend */}
-          <div className="hex-legend">
-            <span className="hex-legend-title">CPU Usage</span>
-            <div className="hex-legend-gradient">
-              <span>0%</span>
-              <div className="hex-legend-bar" />
-              <span>100%</span>
-            </div>
-            <span style={{ marginLeft: 'var(--space-4)' }}>
-              <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#60a5fa', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
-              Completed
-            </span>
-            <span>
-              <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#6b7280', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
-              Pending
-            </span>
+      <div style={panelOpen ? { flex: 1, overflow: 'hidden', display: 'flex' } : { display: 'contents' }}>
+        {viewMode === 'cards' && (
+          <div className="node-detail-cards">
+            {nodes.map((node) => (
+              <NodeCard
+                key={node.name}
+                node={node}
+                expanded={expandedNodes.has(node.name)}
+                onToggle={() => toggleNode(node.name)}
+              />
+            ))}
           </div>
+        )}
 
-          <ContextMenu
-            visible={ctxMenu.visible}
-            x={ctxMenu.x}
-            y={ctxMenu.y}
-            pod={ctxMenu.pod}
-            onClose={closeContextMenu}
-          />
-        </>
-      )}
+        {viewMode === 'hex' && (
+          <>
+            <HexMap groups={nodeHexGroups} onContextMenu={handleContextMenu} />
 
-      {viewMode === 'table' && (
-        <ResourceTable columns={columns} data={nodes} renderRow={(node) => {
-            const internalIP = node.addresses.find((a) => a.type === 'InternalIP')
-            const pressureConditions = node.conditions.filter(
-              (c) => c.type !== 'Ready' && c.status === 'True'
-            )
+            {/* Legend */}
+            <div className="hex-legend">
+              <span className="hex-legend-title">CPU Usage</span>
+              <div className="hex-legend-gradient">
+                <span>0%</span>
+                <div className="hex-legend-bar" />
+                <span>100%</span>
+              </div>
+              <span style={{ marginLeft: 'var(--space-4)' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#60a5fa', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
+                Completed
+              </span>
+              <span>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#6b7280', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
+                Pending
+              </span>
+            </div>
 
-            return (
-              <tr key={node.name} style={{ cursor: 'pointer' }} onClick={() => navigate(`/cluster/nodes/${node.name}`)}>
-                <td className="col-status">
-                  <StatusDot status={node.status} />
-                </td>
-                <td className="name-cell">
-                  <Link to={`/cluster/nodes/${node.name}`}>{node.name}</Link>
-                </td>
-                <td>
-                  <Badge color={node.roleBadgeColor}>{node.roles}</Badge>
-                </td>
-                <td className="mono">{node.version}</td>
-                <td className="tabular">{node.cpuCores}</td>
-                <td className="tabular">{node.memory}</td>
-                <td className="tabular">{node.pods}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
-                    <Badge color="green">Ready</Badge>
-                    {pressureConditions.map((c) => (
-                      <Badge key={c.type} color="red">{c.type}</Badge>
-                    ))}
-                    {node.taints.length > 0 && (
-                      <Badge color="gray">{node.taints.length} taint{node.taints.length > 1 ? 's' : ''}</Badge>
-                    )}
-                  </div>
-                </td>
-                <td className="mono">{internalIP?.address || '—'}</td>
-                <td>{node.age}</td>
-              </tr>
-            )
-          }} />
-      )}
+            <ContextMenu
+              visible={ctxMenu.visible}
+              x={ctxMenu.x}
+              y={ctxMenu.y}
+              pod={ctxMenu.pod}
+              onClose={closeContextMenu}
+            />
+          </>
+        )}
+
+        {viewMode === 'table' && (
+          <ResourceTable columns={columns} data={nodes} renderRow={(node) => {
+              const internalIP = node.addresses.find((a) => a.type === 'InternalIP')
+              const pressureConditions = node.conditions.filter(
+                (c) => c.type !== 'Ready' && c.status === 'True'
+              )
+              const isSelected = node.name === selectedName
+
+              return (
+                <tr key={node.name} className={isSelected ? 'selected' : undefined} style={{ cursor: 'pointer' }} onClick={() => navigate(`/cluster/nodes/${node.name}`)}>
+                  <td className="col-status">
+                    <StatusDot status={node.status} />
+                  </td>
+                  <td className="name-cell">{node.name}</td>
+                  <td>
+                    <Badge color={node.roleBadgeColor}>{node.roles}</Badge>
+                  </td>
+                  <td className="mono">{node.version}</td>
+                  <td className="tabular">{node.cpuCores}</td>
+                  <td className="tabular">{node.memory}</td>
+                  <td className="tabular">{node.pods}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+                      <Badge color="green">Ready</Badge>
+                      {pressureConditions.map((c) => (
+                        <Badge key={c.type} color="red">{c.type}</Badge>
+                      ))}
+                      {node.taints.length > 0 && (
+                        <Badge color="gray">{node.taints.length} taint{node.taints.length > 1 ? 's' : ''}</Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="mono">{internalIP?.address || '\u2014'}</td>
+                  <td>{node.age}</td>
+                </tr>
+              )
+            }} />
+        )}
+
+        {panelOpen && (
+          <>
+            {detailLoading && !detail ? (
+              <DetailPanel
+                title="Loading..."
+                subtitle=""
+                onClose={() => navigate('/cluster/nodes')}
+              >
+                <div style={{ padding: 'var(--space-4)', color: 'var(--text-secondary)' }}>Loading...</div>
+              </DetailPanel>
+            ) : detailError ? (
+              <DetailPanel
+                title="Error"
+                subtitle=""
+                onClose={() => navigate('/cluster/nodes')}
+              >
+                <div style={{ padding: 'var(--space-4)', color: 'var(--text-secondary)' }}>
+                  {detailError}
+                </div>
+              </DetailPanel>
+            ) : detail ? (
+              <DetailPanel
+                title={detail.name}
+                subtitle={`Node (${detail.roles})`}
+                onClose={() => navigate('/cluster/nodes')}
+              >
+                <DetailTabs tabs={DETAIL_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+
+                <div className="detail-panel-body">
+                  {activeTab === 'Overview' && (
+                    <>
+                      {/* Status badges */}
+                      <div style={{ marginBottom: 'var(--space-4)' }}>
+                        <span className="badge badge-green">{detail.status}</span>
+                        <span className={`badge badge-${detail.roles === 'control-plane' ? 'purple' : 'gray'}`} style={{ marginLeft: '4px' }}>
+                          {detail.roles}
+                        </span>
+                      </div>
+
+                      {/* System Info */}
+                      <div className="prop-list">
+                        <span className="prop-group-title">System Info</span>
+
+                        <span className="prop-label">Name</span>
+                        <span className="prop-value">{detail.name}</span>
+
+                        <span className="prop-label">Roles</span>
+                        <span className="prop-value">{detail.roles}</span>
+
+                        <span className="prop-label">Version</span>
+                        <span className="prop-value mono">{detail.version}</span>
+
+                        <span className="prop-label">OS / Arch</span>
+                        <span className="prop-value">{detail.os}/{detail.arch}</span>
+
+                        <span className="prop-label">OS Image</span>
+                        <span className="prop-value">{detail.osImage}</span>
+
+                        <span className="prop-label">Kernel</span>
+                        <span className="prop-value mono">{detail.kernel}</span>
+
+                        <span className="prop-label">Container Runtime</span>
+                        <span className="prop-value mono">{detail.containerRuntime}</span>
+
+                        <span className="prop-label">Created</span>
+                        <span className="prop-value">{detail.created}</span>
+
+                        <span className="prop-group-title">Addresses</span>
+                      </div>
+                      <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xs)' }}>
+                        {detail.addresses.map((addr) => (
+                          <div
+                            key={addr.type}
+                            style={{
+                              display: 'flex',
+                              gap: 'var(--space-3)',
+                              padding: 'var(--space-1) 0',
+                              color: 'var(--text-secondary)',
+                            }}
+                          >
+                            <span style={{ minWidth: '100px', color: 'var(--text-tertiary)' }}>{addr.type}</span>
+                            <span className="mono">{addr.address}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Labels */}
+                      <div className="prop-list" style={{ marginTop: 'var(--space-4)' }}>
+                        <span className="prop-group-title">Labels</span>
+                      </div>
+                      <div style={{ marginTop: 'var(--space-2)', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {detail.labels.map((l) => (
+                          <span key={l.key} className="tag">
+                            {l.key}{l.value ? `=${l.value}` : ''}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Conditions */}
+                      <div className="prop-list" style={{ marginTop: 'var(--space-4)' }}>
+                        <span className="prop-group-title">Conditions</span>
+                      </div>
+                      <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)' }}>
+                        {detail.conditions.map((cond) => {
+                          const isGood = (cond.type === 'Ready' && cond.status) || (cond.type !== 'Ready' && !cond.status)
+                          return (
+                            <div
+                              key={cond.type}
+                              style={{
+                                display: 'flex',
+                                gap: 'var(--space-3)',
+                                padding: 'var(--space-1) 0',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              <span style={{ color: isGood ? 'var(--green)' : 'var(--red)' }}>
+                                {isGood ? '\u2713' : '\u2717'}
+                              </span>
+                              <span style={{ minWidth: '140px' }}>{cond.type}</span>
+                              <span style={{ color: 'var(--text-tertiary)' }}>{cond.reason}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      {/* Taints */}
+                      <div className="prop-list" style={{ marginTop: 'var(--space-4)' }}>
+                        <span className="prop-group-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          Taints ({detail.taints.length})
+                          <button
+                            className="settings-btn"
+                            style={{ fontSize: 'var(--text-2xs)', padding: '1px 6px', marginLeft: 'auto' }}
+                            onClick={() => setShowAddTaint(!showAddTaint)}
+                            disabled={taintLoading}
+                          >
+                            {showAddTaint ? 'Cancel' : '+ Add Taint'}
+                          </button>
+                        </span>
+                      </div>
+                      {showAddTaint && (
+                        <div style={{ marginTop: 'var(--space-2)', padding: 'var(--space-2)', border: '1px solid var(--border)', borderRadius: '4px', fontSize: 'var(--text-xs)' }}>
+                          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'end' }}>
+                            <div>
+                              <label htmlFor="taint-key" style={{ display: 'block', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Key</label>
+                              <input
+                                id="taint-key"
+                                className="settings-input"
+                                value={newTaintKey}
+                                onChange={(e) => setNewTaintKey(e.target.value)}
+                                style={{ width: '120px', fontSize: 'var(--text-xs)' }}
+                                placeholder="node.kubernetes.io/..."
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="taint-value" style={{ display: 'block', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Value</label>
+                              <input
+                                id="taint-value"
+                                className="settings-input"
+                                value={newTaintValue}
+                                onChange={(e) => setNewTaintValue(e.target.value)}
+                                style={{ width: '100px', fontSize: 'var(--text-xs)' }}
+                                placeholder="optional"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="taint-effect" style={{ display: 'block', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Effect</label>
+                              <select
+                                id="taint-effect"
+                                className="settings-input"
+                                value={newTaintEffect}
+                                onChange={(e) => setNewTaintEffect(e.target.value)}
+                                style={{ fontSize: 'var(--text-xs)' }}
+                              >
+                                <option value="NoSchedule">NoSchedule</option>
+                                <option value="PreferNoSchedule">PreferNoSchedule</option>
+                                <option value="NoExecute">NoExecute</option>
+                              </select>
+                            </div>
+                            <button
+                              className="settings-btn"
+                              style={{ fontSize: 'var(--text-2xs)', padding: '2px 8px' }}
+                              onClick={handleAddTaint}
+                              disabled={taintLoading || !newTaintKey.trim()}
+                            >
+                              {taintLoading ? 'Adding...' : 'Add'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {detail.taints.length === 0 ? (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', padding: 'var(--space-2) 0' }}>
+                          No taints
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)' }}>
+                          {detail.taints.map((taint, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                display: 'flex',
+                                gap: 'var(--space-3)',
+                                padding: 'var(--space-1) 0',
+                                color: 'var(--text-secondary)',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <span className="mono" style={{ color: 'var(--text-primary)' }}>
+                                {taint.key}{taint.value ? `=${taint.value}` : ''}
+                              </span>
+                              <span className={`badge badge-${taint.effect === 'NoSchedule' ? 'red' : taint.effect === 'NoExecute' ? 'red' : 'yellow'}`} style={{ fontSize: 'var(--text-2xs)' }}>
+                                {taint.effect}
+                              </span>
+                              <button
+                                className="settings-btn danger"
+                                style={{ fontSize: 'var(--text-2xs)', padding: '0px 4px', marginLeft: 'auto' }}
+                                onClick={() => handleRemoveTaint(taint.key)}
+                                disabled={taintLoading}
+                                aria-label={`Remove taint ${taint.key}`}
+                              >
+                                &#10005;
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Resource Capacity */}
+                      <div className="prop-list" style={{ marginTop: 'var(--space-4)' }}>
+                        <span className="prop-group-title">Resource Capacity</span>
+                      </div>
+                      <div style={{ marginTop: 'var(--space-3)' }}>
+                        <div style={{ marginBottom: 'var(--space-4)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: '2px' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>CPU</span>
+                            <span className="mono" style={{ color: 'var(--text-primary)' }}>{detail.resources.cpu.usage} / {detail.resources.cpu.allocatable} ({detail.resources.cpu.usagePercent}%)</span>
+                          </div>
+                          <div className="metric-bar" style={{ height: '3px', marginTop: '2px' }}>
+                            <div className={`metric-bar-fill ${getBarColor(detail.resources.cpu.usagePercent)}`} style={{ width: `${detail.resources.cpu.usagePercent}%` }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                            <span>Requests: {detail.resources.cpu.requests}</span>
+                            <span>Limits: {detail.resources.cpu.limits}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 'var(--space-4)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: '2px' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Memory</span>
+                            <span className="mono" style={{ color: 'var(--text-primary)' }}>{detail.resources.memory.usage} / {detail.resources.memory.allocatable} ({detail.resources.memory.usagePercent}%)</span>
+                          </div>
+                          <div className="metric-bar" style={{ height: '3px', marginTop: '2px' }}>
+                            <div className={`metric-bar-fill ${getBarColor(detail.resources.memory.usagePercent)}`} style={{ width: `${detail.resources.memory.usagePercent}%` }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-2xs)', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                            <span>Requests: {detail.resources.memory.requests}</span>
+                            <span>Limits: {detail.resources.memory.limits}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 'var(--space-4)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', marginBottom: '2px' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Pods</span>
+                            <span className="mono" style={{ color: 'var(--text-primary)' }}>{detail.resources.pods.running} / {detail.resources.pods.allocatable} ({detail.resources.pods.usagePercent}%)</span>
+                          </div>
+                          <div className="metric-bar" style={{ height: '3px', marginTop: '2px' }}>
+                            <div className={`metric-bar-fill ${getBarColor(detail.resources.pods.usagePercent)}`} style={{ width: `${detail.resources.pods.usagePercent}%` }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scheduled Pods */}
+                      <div className="prop-list" style={{ marginTop: 'var(--space-4)' }}>
+                        <span className="prop-group-title">Scheduled Pods ({nodePods.length})</span>
+                      </div>
+                      {nodePods.length === 0 ? (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', padding: 'var(--space-2) 0' }}>
+                          No pods scheduled on this node
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)', overflowX: 'auto', maxHeight: '200px', overflowY: 'auto' }}>
+                          <table className="resource-table" style={{ fontSize: 'var(--text-xs)' }}>
+                            <thead>
+                              <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Namespace</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">CPU</th>
+                                <th scope="col">Memory</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {nodePods.map((pod) => (
+                                <tr key={`${pod.namespace}/${pod.name}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`)}>
+                                  <td className="name-cell">
+                                    <Link to={`/workloads/pods/${pod.namespace}/${pod.name}`}>{pod.name}</Link>
+                                  </td>
+                                  <td>{pod.namespace}</td>
+                                  <td>
+                                    <StatusDot status={pod.status.toLowerCase()} />
+                                    {' '}{pod.status}
+                                  </td>
+                                  <td className="mono">{pod.cpu}</td>
+                                  <td className="mono">{pod.memory}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeTab === 'YAML' && (
+                    <div className="log-viewer" style={{ maxHeight: '500px' }}>
+                      <pre style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+                        {detail.yaml}
+                      </pre>
+                    </div>
+                  )}
+
+                  {activeTab === 'Events' && (
+                    <ResourceEvents
+                      name={detail.name}
+                      namespace={undefined}
+                      resourceType="nodes"
+                    />
+                  )}
+                </div>
+              </DetailPanel>
+            ) : null}
+          </>
+        )}
+      </div>
     </div>
   )
 }
