@@ -7,7 +7,7 @@ import { ShortcutHelpOverlay } from "./ShortcutHelpOverlay";
 
 export function AppShellShortcuts() {
   const navigate = useNavigate();
-  const { toggleSidebar, toggleBottomTray } = useUIStore();
+  const { toggleSidebar, toggleBottomTray, openOrToggleTrayTab } = useUIStore();
   const { togglePalette } = useCommandPalette();
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -30,6 +30,11 @@ export function AppShellShortcuts() {
     { key: "/",            handler: togglePalette,                    priority: 50 },
     { key: "Cmd+Shift+N", handler: () => { /* open namespace dropdown */ }, priority: 50 },
     { key: "Cmd+Shift+C", handler: () => { /* open cluster dropdown */   }, priority: 50 },
+    // Bottom tray tab shortcuts
+    { key: "Cmd+1",       handler: () => openOrToggleTrayTab("logs"),     priority: 50 },
+    { key: "Cmd+2",       handler: () => openOrToggleTrayTab("terminal"), priority: 50 },
+    { key: "Cmd+3",       handler: () => openOrToggleTrayTab("events"),   priority: 50 },
+    { key: "Cmd+4",       handler: () => openOrToggleTrayTab("ai"),       priority: 50 },
   ]);
 
   return <ShortcutHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />;

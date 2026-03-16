@@ -7,6 +7,8 @@ import {
   type EventInfo,
 } from "@/wailsjs/go/handlers/ResourceHandler";
 import { useClusterStore } from "@/stores/clusterStore";
+import { useSelectionStore } from "@/stores/selectionStore";
+import { useUIStore } from "@/stores/uiStore";
 
 const REFRESH_INTERVAL = 10_000; // 10 seconds
 
@@ -27,11 +29,19 @@ export default function EventsTab() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const activeNamespace = useClusterStore((s) => s.selectedNamespace);
+  const selectedResource = useSelectionStore((s) => s.selectedResource);
+  const eventsResourceFilter = useUIStore((s) => s.eventsResourceFilter);
+  const setEventsResourceFilter = useUIStore((s) => s.setEventsResourceFilter);
 
   // Filter state
   const [warningsOnly, setWarningsOnly] = useState(false);
   const [reasonFilter, setReasonFilter] = useState("");
   const [kindFilter, setKindFilter] = useState("");
+
+  // Clear resource filter when selected resource changes
+  useEffect(() => {
+    setEventsResourceFilter(null);
+  }, [selectedResource?.name, selectedResource?.kind, setEventsResourceFilter]);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -79,8 +89,16 @@ export default function EventsTab() {
     if (kindFilter) {
       result = result.filter((e) => e.objectKind === kindFilter);
     }
+    if (eventsResourceFilter) {
+      result = result.filter(
+        (e) =>
+          e.objectKind === eventsResourceFilter.kind &&
+          e.objectName === eventsResourceFilter.name &&
+          e.objectNamespace === eventsResourceFilter.namespace
+      );
+    }
     return result;
-  }, [events, warningsOnly, reasonFilter, kindFilter]);
+  }, [events, warningsOnly, reasonFilter, kindFilter, eventsResourceFilter]);
 
   // Group events by involvedObject for correlation view
   const groupedEvents = useMemo(() => {
@@ -114,8 +132,9 @@ export default function EventsTab() {
     if (warningsOnly) count++;
     if (reasonFilter) count++;
     if (kindFilter) count++;
+    if (eventsResourceFilter) count++;
     return count;
-  }, [warningsOnly, reasonFilter, kindFilter]);
+  }, [warningsOnly, reasonFilter, kindFilter, eventsResourceFilter]);
 
   if (error) {
     return (
@@ -245,6 +264,32 @@ export default function EventsTab() {
           ))}
         </select>
 
+        {/* Resource filter toggle */}
+        {selectedResource && (
+          <button
+            onClick={() => {
+              if (eventsResourceFilter) {
+                setEventsResourceFilter(null);
+              } else {
+                setEventsResourceFilter({
+                  kind: selectedResource.kind,
+                  name: selectedResource.name,
+                  namespace: selectedResource.namespace || "",
+                });
+              }
+            }}
+            data-testid="resource-filter-toggle"
+            className={cn(
+              "text-2xs px-2 py-0.5 rounded border transition-colors",
+              eventsResourceFilter
+                ? "bg-accent/20 text-accent border-accent/40"
+                : "bg-bg-tertiary text-text-tertiary border-border hover:text-text-secondary"
+            )}
+          >
+            Filter to {selectedResource.kind}/{selectedResource.name}
+          </button>
+        )}
+
         {/* Clear filters */}
         {activeFilterCount > 0 && (
           <button
@@ -252,6 +297,7 @@ export default function EventsTab() {
               setWarningsOnly(false);
               setReasonFilter("");
               setKindFilter("");
+              setEventsResourceFilter(null);
             }}
             data-testid="clear-filters"
             className="text-2xs text-text-tertiary hover:text-text-secondary transition-colors ml-1"

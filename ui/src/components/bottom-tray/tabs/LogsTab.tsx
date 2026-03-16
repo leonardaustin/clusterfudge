@@ -5,7 +5,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { SelectedResource } from "@/stores/selectionStore";
+import { useSelectionStore } from "@/stores/selectionStore";
 import {
   StreamLogs,
   StopLogStream,
@@ -15,14 +15,11 @@ import {
 import { EventsOn } from "@/wailsjs/runtime/runtime";
 import { LogLineRow, type TimestampMode } from "@/components/logs/LogLine";
 import { useToastStore } from "@/stores/toastStore";
-
-interface LogsTabProps {
-  resource: SelectedResource | null;
-}
+import { PodPicker, type PodPickerValue } from "../PodPicker";
 
 const MAX_LINES = 10_000;
 
-export default function LogsTab({ resource }: LogsTabProps) {
+export default function LogsTab() {
   const [lines, setLines] = useState<LogLineEvent[]>([]);
   const [isFollowing, setIsFollowing] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,18 +27,48 @@ export default function LogsTab({ resource }: LogsTabProps) {
   const [wrapLines, setWrapLines] = useState(false);
   const [timestampMode, setTimestampMode] = useState<TimestampMode>("relative");
   const [showPrevious, setShowPrevious] = useState(false);
-  const [selectedContainer, setSelectedContainer] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(true);
+
+  // Pod picker state
+  const [picked, setPicked] = useState<PodPickerValue | null>(null);
+
+  // Subscribe to selectionStore - auto-populate when a Pod is selected
+  const selectedResource = useSelectionStore((s) => s.selectedResource);
+  useEffect(() => {
+    if (selectedResource?.kind === "Pod" && selectedResource.namespace) {
+      const containers = (() => {
+        const spec = selectedResource.raw?.spec;
+        if (!spec || typeof spec !== "object") return [];
+        const s = spec as Record<string, unknown>;
+        if (!Array.isArray(s.containers)) return [];
+        return (s.containers as Array<Record<string, unknown>>)
+          .filter((c) => typeof c.name === "string")
+          .map((c) => c.name as string);
+      })();
+      setPicked({
+        namespace: selectedResource.namespace,
+        podName: selectedResource.name,
+        containerName: containers[0] || "",
+        raw: selectedResource.raw,
+      });
+    }
+  }, [selectedResource?.kind, selectedResource?.name, selectedResource?.namespace, selectedResource?.raw]);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Extract containers from raw resource with runtime type validation
+  // Derived state from picked pod
+  const namespace = picked?.namespace || "";
+  const podName = picked?.podName || "";
+  const containerName = picked?.containerName || "";
+  const isPod = !!podName && !!namespace;
+
+  // Extract containers from picked raw for the inline container selector
   const containers: string[] = (() => {
-    const spec = resource?.raw?.spec;
+    const spec = picked?.raw?.spec;
     if (!spec || typeof spec !== "object") return [];
     const s = spec as Record<string, unknown>;
     if (!Array.isArray(s.containers)) return [];
@@ -50,29 +77,17 @@ export default function LogsTab({ resource }: LogsTabProps) {
       .map((c) => c.name);
   })();
 
-  const isPod = resource?.kind === "Pod";
-
-  // Reset selected container when containers list changes and current selection is invalid.
-  const containersKey = containers.join(',')
+  // Start streaming when picked pod changes
   useEffect(() => {
-    if (containers.length > 0 && !containers.includes(selectedContainer)) {
-      Promise.resolve().then(() => setSelectedContainer(containers[0]))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containersKey])
-
-  // Start streaming when container changes
-  useEffect(() => {
-    if (!resource || !isPod || !resource.namespace) return;
+    if (!isPod) return;
 
     let active = true;
-    const container = selectedContainer || containers[0] || "";
-    // Clear lines asynchronously to avoid synchronous setState in effect body.
+    const container = containerName || containers[0] || "";
     Promise.resolve().then(() => { if (active) setLines([]); });
 
     StreamLogs({
-      namespace: resource.namespace,
-      podName: resource.name,
+      namespace,
+      podName,
       containerName: container,
       follow: true,
       tailLines: 500,
@@ -85,7 +100,7 @@ export default function LogsTab({ resource }: LogsTabProps) {
       }
     });
 
-    const eventName = `logs:${resource.namespace}/${resource.name}`;
+    const eventName = `logs:${namespace}/${podName}`;
     const cleanupEvents = EventsOn(eventName, (line: unknown) => {
       if (!active || !mountedRef.current) return;
       const logLine = line as LogLineEvent;
@@ -101,9 +116,9 @@ export default function LogsTab({ resource }: LogsTabProps) {
     return () => {
       active = false;
       cleanupEvents();
-      StopLogStream(resource.namespace!, resource.name);
+      StopLogStream(namespace, podName);
     };
-  }, [resource?.name, resource?.namespace, selectedContainer, showPrevious, isPod]);
+  }, [podName, namespace, containerName, showPrevious, isPod]);
 
   // Auto-scroll when following
   useEffect(() => {
@@ -123,12 +138,12 @@ export default function LogsTab({ resource }: LogsTabProps) {
   );
 
   const handleDownload = useCallback(async () => {
-    if (!resource || !resource.namespace) return;
-    const container = selectedContainer || containers[0] || "";
+    if (!isPod) return;
+    const container = containerName || containers[0] || "";
     try {
       const content = await DownloadLogs({
-        namespace: resource.namespace,
-        podName: resource.name,
+        namespace,
+        podName,
         containerName: container,
         follow: false,
         tailLines: 100_000,
@@ -139,13 +154,19 @@ export default function LogsTab({ resource }: LogsTabProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${resource.name}-${container}.log`;
+      a.download = `${podName}-${container}.log`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       useToastStore.getState().addToast({ type: 'error', title: 'Failed to download logs', description: err instanceof Error ? err.message : String(err) });
     }
-  }, [resource, selectedContainer, containers]);
+  }, [isPod, namespace, podName, containerName, containers]);
+
+  const handleContainerChange = (container: string) => {
+    if (picked) {
+      setPicked({ ...picked, containerName: container });
+    }
+  };
 
   // Validate regex when in regex mode
   const searchRegex = (() => {
@@ -169,11 +190,16 @@ export default function LogsTab({ resource }: LogsTabProps) {
           )
     : lines;
 
-  if (!resource || !isPod) {
+  if (!isPod) {
     return (
-      <div className="flex items-center justify-center h-full gap-2 text-text-tertiary text-sm">
-        <ScrollText className="w-4 h-4" />
-        <span>Select a pod to stream logs</span>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
+          <PodPicker value={picked} onSelect={setPicked} />
+        </div>
+        <div className="flex items-center justify-center flex-1 gap-2 text-text-tertiary text-sm">
+          <ScrollText className="w-4 h-4" />
+          <span>Select a pod to stream logs</span>
+        </div>
       </div>
     );
   }
@@ -182,11 +208,14 @@ export default function LogsTab({ resource }: LogsTabProps) {
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
-        {/* Container selector */}
+        {/* Pod picker */}
+        <PodPicker value={picked} onSelect={setPicked} />
+
+        {/* Container selector (when multi-container and picked via PodPicker) */}
         {containers.length > 1 && (
           <select
-            value={selectedContainer}
-            onChange={(e) => setSelectedContainer(e.target.value)}
+            value={containerName}
+            onChange={(e) => handleContainerChange(e.target.value)}
             className="text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary"
           >
             {containers.map((c) => (

@@ -13,21 +13,12 @@ const TAB_ICONS: Record<TrayTab, React.ComponentType<{ className?: string }>> = 
 export function StatusBar() {
   const bottomTrayOpen = useUIStore((s) => s.bottomTrayOpen);
   const bottomTrayTab = useUIStore((s) => s.bottomTrayTab);
-  const toggleBottomTray = useUIStore((s) => s.toggleBottomTray);
-  const setBottomTrayTab = useUIStore((s) => s.setBottomTrayTab);
+  const openOrToggleTrayTab = useUIStore((s) => s.openOrToggleTrayTab);
   const activeCluster = useClusterStore((s) => s.activeCluster);
   const clusters = useClusterStore((s) => s.clusters);
 
   const current = clusters.find((c) => c.name === activeCluster);
   const isConnected = current?.status === "connected";
-
-  const handleTabClick = (tab: TrayTab) => {
-    if (bottomTrayOpen && bottomTrayTab === tab) {
-      toggleBottomTray();
-    } else {
-      setBottomTrayTab(tab);
-    }
-  };
 
   return (
     <div className="flex items-center h-6 px-2 border-t border-border bg-bg-secondary text-2xs text-text-tertiary select-none flex-shrink-0 gap-3">
@@ -53,7 +44,7 @@ export function StatusBar() {
         return (
           <button
             key={tab}
-            onClick={() => handleTabClick(tab)}
+            onClick={() => openOrToggleTrayTab(tab)}
             className={cn(
               "flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors",
               active

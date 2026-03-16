@@ -21,6 +21,7 @@ import { usePodMetrics } from '../hooks/usePodMetrics'
 import { formatAge, parseCpu, parseMemoryMiB, rawSpec, rawStatus, rawMetadata, labelsMap, annotationsMap, labelsToKV } from '../lib/k8sFormatters'
 import { RESOURCE_CONFIG } from '../lib/resourceConfig'
 import { useClusterStore } from '../stores/clusterStore'
+import { useSelectionStore } from '../stores/selectionStore'
 import { useUIStore } from '../stores/uiStore'
 import { GetAIProviderName } from '../wailsjs/go/handlers/AIHandler'
 import { GetResource } from '../wailsjs/go/handlers/ResourceHandler'
@@ -195,6 +196,8 @@ export function PodList() {
   const detailNamespace = selectedNamespace || 'default'
   const setAITarget = useUIStore((s) => s.setAITarget)
   const setBottomTrayTab = useUIStore((s) => s.setBottomTrayTab)
+  const setSelectedResource = useSelectionStore((s) => s.setSelectedResource)
+  const clearSelection = useSelectionStore((s) => s.clearSelection)
 
   // List data
   const podCfg = RESOURCE_CONFIG.pods
@@ -245,6 +248,21 @@ export function PodList() {
     })()
     return () => { cancelled = true }
   }, [selectedName, detailNamespace])
+
+  // Write to selectionStore when detail panel opens/closes
+  useEffect(() => {
+    if (selectedName && detailRaw) {
+      setSelectedResource({
+        kind: 'Pod',
+        name: selectedName,
+        namespace: detailNamespace,
+        path: `/workloads/pods/${detailNamespace}/${selectedName}`,
+        raw: detailRaw,
+      })
+    } else if (!selectedName) {
+      clearSelection()
+    }
+  }, [selectedName, detailNamespace, detailRaw, setSelectedResource, clearSelection])
 
   // Reset tab when switching pods
   useEffect(() => {
@@ -415,8 +433,32 @@ export function PodList() {
                 subtitle={`Pod in "${detail.namespace}" namespace`}
                 onClose={() => navigate('/workloads/pods')}
               >
-                {/* Action bar with AI Diagnose */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '0 var(--space-4)', paddingTop: 'var(--space-2)' }}>
+                {/* Action bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '0 var(--space-4)', paddingTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setBottomTrayTab('logs')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+                    style={{
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-secondary)',
+                      background: 'var(--bg-tertiary, transparent)',
+                    }}
+                    title="View logs in bottom tray"
+                  >
+                    View Logs
+                  </button>
+                  <button
+                    onClick={() => setBottomTrayTab('terminal')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
+                    style={{
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-secondary)',
+                      background: 'var(--bg-tertiary, transparent)',
+                    }}
+                    title="Open shell in bottom tray"
+                  >
+                    Open Shell
+                  </button>
                   {aiProviderName && selectedName && (
                     <button
                       onClick={() => {

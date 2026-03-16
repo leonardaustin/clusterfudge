@@ -1,9 +1,9 @@
 import type { SearchAddon as SearchAddonType } from "@xterm/addon-search";
-import type { ITheme } from "@xterm/xterm";
 import { Terminal as TerminalIcon, Search, ChevronUp, ChevronDown, X, Plus } from "lucide-react";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import type { SelectedResource } from "@/stores/selectionStore";
+import { TERMINAL_THEMES, type TerminalThemeName } from "@/lib/terminalThemes";
+import { useSelectionStore } from "@/stores/selectionStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useToastStore } from "@/stores/toastStore";
 import {
@@ -12,69 +12,7 @@ import {
   CloseExec,
 } from "@/wailsjs/go/handlers/StreamHandler";
 import { EventsOn } from "@/wailsjs/runtime/runtime";
-
-// ── Theme definitions ──────────────────────────────────────────────────────
-
-const TERMINAL_THEMES: Record<string, ITheme> = {
-  dark: {
-    background: "#0A0A0B",
-    foreground: "#EDEDEF",
-    cursor: "#7C5CFC",
-    selectionBackground: "#7C5CFC33",
-    black: "#1A1A1E",
-    red: "#F87171",
-    green: "#4ADE80",
-    yellow: "#FBBF24",
-    blue: "#60A5FA",
-    magenta: "#C084FC",
-    cyan: "#22D3EE",
-    white: "#EDEDEF",
-  },
-  light: {
-    background: "#FFFFFF",
-    foreground: "#1A1A1E",
-    cursor: "#5B8DEF",
-    selectionBackground: "#5B8DEF33",
-    black: "#E5E5E5",
-    red: "#DC2626",
-    green: "#16A34A",
-    yellow: "#CA8A04",
-    blue: "#2563EB",
-    magenta: "#9333EA",
-    cyan: "#0891B2",
-    white: "#1A1A1E",
-  },
-  monokai: {
-    background: "#272822",
-    foreground: "#F8F8F2",
-    cursor: "#F92672",
-    selectionBackground: "#F9267233",
-    black: "#272822",
-    red: "#F92672",
-    green: "#A6E22E",
-    yellow: "#E6DB74",
-    blue: "#66D9EF",
-    magenta: "#AE81FF",
-    cyan: "#A1EFE4",
-    white: "#F8F8F2",
-  },
-  solarized: {
-    background: "#002B36",
-    foreground: "#839496",
-    cursor: "#CB4B16",
-    selectionBackground: "#CB4B1633",
-    black: "#073642",
-    red: "#DC322F",
-    green: "#859900",
-    yellow: "#B58900",
-    blue: "#268BD2",
-    magenta: "#D33682",
-    cyan: "#2AA198",
-    white: "#EEE8D5",
-  },
-};
-
-type TerminalThemeName = keyof typeof TERMINAL_THEMES;
+import { PodPicker, type PodPickerValue } from "../PodPicker";
 
 // ── Session types ──────────────────────────────────────────────────────────
 
@@ -91,13 +29,9 @@ interface TerminalSession {
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-interface TerminalTabProps {
-  resource: SelectedResource | null;
-}
-
 let nextSessionSeq = 1;
 
-export default function TerminalTab({ resource }: TerminalTabProps) {
+export default function TerminalTab() {
   const [sessions, setSessions] = useState<TerminalSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string>("");
   const [selectedContainer, setSelectedContainer] = useState("");
@@ -115,22 +49,43 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
   const termTheme = useSettingsStore((s) => s.terminalTheme) as TerminalThemeName;
   const updateSetting = useSettingsStore((s) => s.update);
 
-  const containers = useMemo<string[]>(() => {
-    if (
-      resource?.raw?.spec &&
-      typeof resource.raw.spec === "object" &&
-      "containers" in (resource.raw.spec as Record<string, unknown>)
-    ) {
-      return (
-        ((resource.raw.spec as Record<string, unknown>).containers as Array<{ name: string }>)?.map(
-          (c) => c.name
-        ) ?? []
-      );
-    }
-    return [];
-  }, [resource?.raw?.spec]);
+  // Pod picker state
+  const [picked, setPicked] = useState<PodPickerValue | null>(null);
 
-  const isPod = resource?.kind === "Pod";
+  // Subscribe to selectionStore - auto-populate when a Pod is selected
+  const selectedResource = useSelectionStore((s) => s.selectedResource);
+  useEffect(() => {
+    if (selectedResource?.kind === "Pod" && selectedResource.namespace) {
+      const rawContainers = (() => {
+        const spec = selectedResource.raw?.spec;
+        if (!spec || typeof spec !== "object") return [];
+        const s = spec as Record<string, unknown>;
+        if (!Array.isArray(s.containers)) return [];
+        return (s.containers as Array<Record<string, unknown>>)
+          .filter((c) => typeof c.name === "string")
+          .map((c) => c.name as string);
+      })();
+      setPicked({
+        namespace: selectedResource.namespace,
+        podName: selectedResource.name,
+        containerName: rawContainers[0] || "",
+        raw: selectedResource.raw,
+      });
+    }
+  }, [selectedResource?.kind, selectedResource?.name, selectedResource?.namespace, selectedResource?.raw]);
+
+  // Derived state from picked pod
+  const namespace = picked?.namespace || "";
+  const podName = picked?.podName || "";
+  const isPod = !!podName && !!namespace;
+
+  const containers = useMemo<string[]>(() => {
+    const raw = picked?.raw;
+    if (!raw?.spec || typeof raw.spec !== "object") return [];
+    const spec = raw.spec as Record<string, unknown>;
+    if (!Array.isArray(spec.containers)) return [];
+    return (spec.containers as Array<{ name: string }>)?.map((c) => c.name) ?? [];
+  }, [picked?.raw]);
 
   // Set initial container when containers list changes
   useEffect(() => {
@@ -143,7 +98,7 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
   // Get active session
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
 
-  // Clean up all sessions when resource changes or unmounts
+  // Clean up all sessions when picked pod changes or unmounts
   useEffect(() => {
     return () => {
       setSessions((prev) => {
@@ -154,17 +109,15 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
       });
       setActiveSessionId("");
     };
-  }, [resource?.name, resource?.namespace]);
+  }, [podName, namespace]);
 
   // Auto-create first session when pod is selected and there are no sessions
   useEffect(() => {
-    if (isPod && resource?.namespace && sessions.length === 0 && containers.length > 0) {
+    if (isPod && sessions.length === 0 && containers.length > 0) {
       createNewSession();
     }
-    // createNewSession is defined below (useCallback) but is available when this effect runs
-    // since effects execute after all hooks are evaluated during render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPod, resource?.name, resource?.namespace, containers.length, sessions.length]);
+  }, [isPod, podName, namespace, containers.length, sessions.length]);
 
   // Handle Ctrl+F to open search
   useEffect(() => {
@@ -261,7 +214,7 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
   }
 
   const createNewSession = useCallback(async () => {
-    if (!resource || !isPod || !resource.namespace || !termContainerRef.current) return;
+    if (!isPod || !namespace || !termContainerRef.current) return;
 
     const container = selectedContainer || containers[0] || "";
     const sessionLocalId = `session-${nextSessionSeq++}`;
@@ -333,8 +286,8 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
           : ["/bin/sh", "-c", "bash || sh"];
 
         backendSessionId = await StartExec({
-          namespace: resource.namespace,
-          podName: resource.name,
+          namespace,
+          podName,
           containerName: container,
           command,
           tty: true,
@@ -397,7 +350,7 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
       console.error('[TerminalTab] Failed to initialize terminal:', err);
       useToastStore.getState().addToast({ type: 'error', title: 'Failed to initialize terminal', description: err instanceof Error ? err.message : String(err) });
     }
-  }, [resource, isPod, selectedContainer, containers, termFontSize, termCursorStyle, termCursorBlink, termShell, termCopyOnSelect, termTheme]);
+  }, [isPod, namespace, podName, selectedContainer, containers, termFontSize, termCursorStyle, termCursorBlink, termShell, termCopyOnSelect, termTheme]);
 
   const closeSession = useCallback((sessionId: string) => {
     setSessions((prev) => {
@@ -452,21 +405,29 @@ export default function TerminalTab({ resource }: TerminalTabProps) {
     [commitTabRename, cancelTabRename]
   );
 
-  if (!resource || !isPod) {
+  if (!isPod) {
     return (
-      <div className="flex items-center justify-center h-full gap-2 text-text-tertiary text-sm">
-        <TerminalIcon className="w-4 h-4" />
-        <span>Select a pod to open a terminal</span>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
+          <PodPicker value={picked} onSelect={setPicked} />
+        </div>
+        <div className="flex items-center justify-center flex-1 gap-2 text-text-tertiary text-sm">
+          <TerminalIcon className="w-4 h-4" />
+          <span>Select a pod to open a terminal</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar: session tabs + container selector + theme selector + search */}
+      {/* Toolbar: pod picker + session tabs + container selector + theme selector + search */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
+        {/* Pod picker */}
+        <PodPicker value={picked} onSelect={setPicked} />
+
         {/* Session tabs */}
-        <div className="flex items-center gap-0.5 overflow-x-auto max-w-[50%]" data-testid="session-tabs">
+        <div className="flex items-center gap-0.5 overflow-x-auto max-w-[30%]" data-testid="session-tabs">
           {sessions.map((session) => (
             <div
               key={session.id}

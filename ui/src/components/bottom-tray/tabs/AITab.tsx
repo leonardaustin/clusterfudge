@@ -1,69 +1,10 @@
-import type { ITheme } from "@xterm/xterm";
 import { Bot } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useAISession } from "@/hooks/useAISession";
+import { TERMINAL_THEMES } from "@/lib/terminalThemes";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUIStore } from "@/stores/uiStore";
 import { EventsOn } from "@/wailsjs/runtime/runtime";
-
-const TERMINAL_THEMES: Record<string, ITheme> = {
-  dark: {
-    background: "#0A0A0B",
-    foreground: "#EDEDEF",
-    cursor: "#7C5CFC",
-    selectionBackground: "#7C5CFC33",
-    black: "#1A1A1E",
-    red: "#F87171",
-    green: "#4ADE80",
-    yellow: "#FBBF24",
-    blue: "#60A5FA",
-    magenta: "#C084FC",
-    cyan: "#22D3EE",
-    white: "#EDEDEF",
-  },
-  light: {
-    background: "#FFFFFF",
-    foreground: "#1A1A1E",
-    cursor: "#5B8DEF",
-    selectionBackground: "#5B8DEF33",
-    black: "#E5E5E5",
-    red: "#DC2626",
-    green: "#16A34A",
-    yellow: "#CA8A04",
-    blue: "#2563EB",
-    magenta: "#9333EA",
-    cyan: "#0891B2",
-    white: "#1A1A1E",
-  },
-  monokai: {
-    background: "#272822",
-    foreground: "#F8F8F2",
-    cursor: "#F92672",
-    selectionBackground: "#F9267233",
-    black: "#272822",
-    red: "#F92672",
-    green: "#A6E22E",
-    yellow: "#E6DB74",
-    blue: "#66D9EF",
-    magenta: "#AE81FF",
-    cyan: "#A1EFE4",
-    white: "#F8F8F2",
-  },
-  solarized: {
-    background: "#002B36",
-    foreground: "#839496",
-    cursor: "#CB4B16",
-    selectionBackground: "#CB4B1633",
-    black: "#073642",
-    red: "#DC322F",
-    green: "#859900",
-    yellow: "#B58900",
-    blue: "#268BD2",
-    magenta: "#D33682",
-    cyan: "#2AA198",
-    white: "#EEE8D5",
-  },
-};
 
 export default function AITab() {
   const aiTarget = useUIStore((s) => s.aiTarget);

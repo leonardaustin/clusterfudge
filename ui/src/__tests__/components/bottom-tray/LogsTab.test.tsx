@@ -14,32 +14,46 @@ vi.mock("@/wailsjs/runtime/runtime", () => ({
   EventsOff: vi.fn(),
 }));
 
+// Mock PodPicker to avoid ListResources calls
+vi.mock("@/components/bottom-tray/PodPicker", () => ({
+  PodPicker: () => (
+    <div data-testid="pod-picker">PodPicker mock</div>
+  ),
+}));
+
 import LogsTab from "@/components/bottom-tray/tabs/LogsTab";
-import type { SelectedResource } from "@/stores/selectionStore";
+import { useSelectionStore, type SelectedResource } from "@/stores/selectionStore";
+
+function setSelection(resource: SelectedResource | null) {
+  useSelectionStore.getState().setSelectedResource(resource);
+}
 
 describe("LogsTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useSelectionStore.getState().clearSelection();
   });
 
-  it("shows placeholder when no resource selected", () => {
-    render(<LogsTab resource={null} />);
+  it("shows pod picker and placeholder when no resource selected", () => {
+    render(<LogsTab />);
+    expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(screen.getByText("Select a pod to stream logs")).toBeInTheDocument();
   });
 
-  it("shows placeholder for non-pod resources", () => {
-    const resource: SelectedResource = {
+  it("shows pod picker and placeholder for non-pod resources", () => {
+    setSelection({
       kind: "Service",
       name: "my-service",
       namespace: "default",
       path: "/services/my-service",
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
+    expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(screen.getByText("Select a pod to stream logs")).toBeInTheDocument();
   });
 
   it("renders toolbar and log area for pod resource", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -49,8 +63,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     // Should show the search input
     expect(screen.getByPlaceholderText("Search logs...")).toBeInTheDocument();
@@ -64,32 +78,11 @@ describe("LogsTab", () => {
     expect(screen.getByText("Waiting for logs...")).toBeInTheDocument();
   });
 
-  it("shows container selector for multi-container pods", () => {
-    const resource: SelectedResource = {
-      kind: "Pod",
-      name: "my-pod",
-      namespace: "default",
-      path: "/pods/my-pod",
-      raw: {
-        spec: {
-          containers: [{ name: "app" }, { name: "sidecar" }],
-        },
-      },
-    };
-    render(<LogsTab resource={resource} />);
-
-    const selects = screen.getAllByRole("combobox");
-    // First combobox is container selector, second is timestamp mode
-    expect(selects.length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("app")).toBeInTheDocument();
-    expect(screen.getByText("sidecar")).toBeInTheDocument();
-  });
-
   it("calls StreamLogs on mount with pod resource", async () => {
     const { StreamLogs } = await import(
       "@/wailsjs/go/handlers/StreamHandler"
     );
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "test-pod",
       namespace: "test-ns",
@@ -99,8 +92,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     expect(StreamLogs).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -116,7 +109,7 @@ describe("LogsTab", () => {
     const { StopLogStream } = await import(
       "@/wailsjs/go/handlers/StreamHandler"
     );
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "cleanup-pod",
       namespace: "default",
@@ -126,8 +119,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    const { unmount } = render(<LogsTab resource={resource} />);
+    });
+    const { unmount } = render(<LogsTab />);
     unmount();
 
     expect(StopLogStream).toHaveBeenCalledWith("default", "cleanup-pod");
@@ -135,7 +128,7 @@ describe("LogsTab", () => {
 
   it("toggles follow mode", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "toggle-pod",
       namespace: "default",
@@ -145,8 +138,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     const followBtn = screen.getByText("Following");
     await user.click(followBtn);
@@ -155,7 +148,7 @@ describe("LogsTab", () => {
 
   it("search input filters display text", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "search-pod",
       namespace: "default",
@@ -165,8 +158,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     const searchInput = screen.getByPlaceholderText("Search logs...");
     await user.type(searchInput, "error");
@@ -176,7 +169,7 @@ describe("LogsTab", () => {
   // ── Regex mode toggle tests ──
 
   it("shows regex toggle button", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "regex-pod",
       namespace: "default",
@@ -186,8 +179,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     expect(screen.getByLabelText("Plain text mode active")).toBeInTheDocument();
     expect(screen.getByText(".*")).toBeInTheDocument();
@@ -195,7 +188,7 @@ describe("LogsTab", () => {
 
   it("toggles regex mode on click", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "regex-toggle-pod",
       namespace: "default",
@@ -205,8 +198,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     const regexBtn = screen.getByText(".*");
     expect(screen.getByLabelText("Plain text mode active")).toBeInTheDocument();
@@ -220,7 +213,7 @@ describe("LogsTab", () => {
 
   it("shows red border on invalid regex", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "invalid-regex-pod",
       namespace: "default",
@@ -230,8 +223,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     // Enable regex mode
     await user.click(screen.getByText(".*"));
@@ -248,7 +241,7 @@ describe("LogsTab", () => {
 
   it("does not show red border for valid regex", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "valid-regex-pod",
       namespace: "default",
@@ -258,8 +251,8 @@ describe("LogsTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<LogsTab resource={resource} />);
+    });
+    render(<LogsTab />);
 
     // Enable regex mode
     await user.click(screen.getByText(".*"));

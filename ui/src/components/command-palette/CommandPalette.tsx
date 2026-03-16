@@ -117,7 +117,7 @@ function useActionCommands(
 function useContextCommands(close: () => void, navigate: ReturnType<typeof useNavigate>, mountedRef: React.RefObject<boolean>): PaletteItem[] {
   const location = useLocation();
   const { selectedResource } = useSelectionStore();
-  const { setBottomTrayTab, toggleBottomTray } = useUIStore();
+  const { setBottomTrayTab } = useUIStore();
   const addToast = useToastStore((s) => s.addToast);
   const items: PaletteItem[] = [];
 
@@ -134,12 +134,12 @@ function useContextCommands(close: () => void, navigate: ReturnType<typeof useNa
       {
         id: "ctx-view-logs", label: `View Logs: ${selectedResource.name}`,
         icon: FileText, shortcut: "L", group: "Context",
-        onSelect: () => { setBottomTrayTab("logs"); toggleBottomTray(); close(); },
+        onSelect: () => { setBottomTrayTab("logs"); close(); },
       },
       {
         id: "ctx-exec", label: `Exec Shell: ${selectedResource.name}`,
         icon: Terminal, shortcut: "X", group: "Context",
-        onSelect: () => { setBottomTrayTab("terminal"); toggleBottomTray(); close(); },
+        onSelect: () => { setBottomTrayTab("terminal"); close(); },
       },
       {
         id: "ctx-edit-yaml", label: `Edit YAML: ${selectedResource.name}`,

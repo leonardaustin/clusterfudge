@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useKubeResources } from '../hooks/useKubeResource'
 import { useClusterStore } from '../stores/clusterStore'
+import { useSelectionStore } from '../stores/selectionStore'
 import { RESOURCE_CONFIG } from '../lib/resourceConfig'
 import { formatAge, formatServicePorts, formatSelector, serviceTypeBadgeColor, rawSpec, rawStatus, rawMetadata, labelsMap, annotationsMap, labelsToKV } from '../lib/k8sFormatters'
 import { StatusDot } from '../components/shared/StatusDot'
@@ -114,6 +115,8 @@ export function ServiceList() {
 
   const listNamespace = useClusterStore((s) => s.selectedNamespace)
   const detailNamespace = selectedNamespace || 'default'
+  const setSelectedResource = useSelectionStore((s) => s.setSelectedResource)
+  const clearSelection = useSelectionStore((s) => s.clearSelection)
 
   // List data
   const cfg = RESOURCE_CONFIG.services
@@ -188,6 +191,20 @@ export function ServiceList() {
     })()
     return () => { cancelled = true }
   }, [selectedName, detailNamespace])
+
+  // Write to selectionStore when detail panel opens/closes
+  useEffect(() => {
+    if (selectedName && detail) {
+      setSelectedResource({
+        kind: 'Service',
+        name: selectedName,
+        namespace: detailNamespace,
+        path: `/networking/services/${detailNamespace}/${selectedName}`,
+      })
+    } else if (!selectedName) {
+      clearSelection()
+    }
+  }, [selectedName, detailNamespace, detail, setSelectedResource, clearSelection])
 
   // Reset tab when switching services
   useEffect(() => {

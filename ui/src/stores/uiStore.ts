@@ -30,6 +30,9 @@ interface UIState {
   // Shortcuts
   shortcutsEnabled: boolean;
 
+  // Events resource filter
+  eventsResourceFilter: { kind: string; name: string; namespace: string } | null;
+
   // Actions
   toggleSidebar: () => void;
   setSidebarCollapsed: (v: boolean) => void;
@@ -41,8 +44,11 @@ interface UIState {
   setBottomTrayOpen: (v: boolean) => void;
   setBottomTrayHeight: (updater: number | ((prev: number) => number)) => void;
   setBottomTrayTab: (tab: TrayTab) => void;
+  openOrToggleTrayTab: (tab: TrayTab) => void;
 
   setAITarget: (target: { namespace: string; name: string } | null) => void;
+
+  setEventsResourceFilter: (filter: { kind: string; name: string; namespace: string } | null) => void;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -64,6 +70,7 @@ export const useUIStore = create<UIState>()(
       theme: "dark" as Theme,
       collapsedSections: {},
       shortcutsEnabled: true,
+      eventsResourceFilter: null,
 
       toggleSidebar:    () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
@@ -84,8 +91,17 @@ export const useUIStore = create<UIState>()(
           bottomTrayHeight: typeof updater === "function" ? updater(s.bottomTrayHeight) : updater,
         })),
       setBottomTrayTab: (tab) => set({ bottomTrayTab: tab, bottomTrayOpen: true }),
+      openOrToggleTrayTab: (tab) =>
+        set((s) => {
+          if (s.bottomTrayOpen && s.bottomTrayTab === tab) {
+            return { bottomTrayOpen: false };
+          }
+          return { bottomTrayTab: tab, bottomTrayOpen: true };
+        }),
 
       setAITarget: (target) => set({ aiTarget: target }),
+
+      setEventsResourceFilter: (filter) => set({ eventsResourceFilter: filter }),
 
       setTheme:   (theme) => set({ theme }),
       toggleTheme: () => set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
@@ -102,6 +118,13 @@ export const useUIStore = create<UIState>()(
         }),
       isSectionOpen: (id): boolean => !get().collapsedSections[id],
     }),
-    { name: "kubeviewer-ui" }
+    {
+      name: "kubeviewer-ui",
+      partialize: (state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { eventsResourceFilter, ...persisted } = state;
+        return persisted;
+      },
+    }
   )
 );

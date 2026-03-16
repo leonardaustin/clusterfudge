@@ -16,6 +16,7 @@ import { ResourceEvents } from '../components/detail/ResourceEvents'
 import type { NodeDetailData } from '../data/detailTypes'
 import type { ClusterNode, BadgeColor, BarColor, NodeCondition, NodeTaint, NodeAddress, AllocatedResources, HexPod, NodeHexGroup } from '../data/types'
 import { useClusterStore } from '../stores/clusterStore'
+import { useSelectionStore } from '../stores/selectionStore'
 import { useToastStore } from '../stores/toastStore'
 import { HexMap } from '../components/hex/HexMap'
 import { ContextMenu } from '../components/hex/ContextMenu'
@@ -429,6 +430,8 @@ export function NodeList() {
   const [activeTab, setActiveTab] = useState('Overview')
   const selectedNamespace = useClusterStore((s) => s.selectedNamespace)
   const addToast = useToastStore((s) => s.addToast)
+  const setSelectedResource = useSelectionStore((s) => s.setSelectedResource)
+  const clearSelection = useSelectionStore((s) => s.clearSelection)
 
   // Detail state
   const [detail, setDetail] = useState<NodeDetailData | null>(null)
@@ -545,6 +548,19 @@ export function NodeList() {
 
     return () => { cancelled = true }
   }, [selectedName, nodeAggregates])
+
+  // Write to selectionStore when detail panel opens/closes
+  useEffect(() => {
+    if (selectedName && detail) {
+      setSelectedResource({
+        kind: 'Node',
+        name: selectedName,
+        path: `/cluster/nodes/${selectedName}`,
+      })
+    } else if (!selectedName) {
+      clearSelection()
+    }
+  }, [selectedName, detail, setSelectedResource, clearSelection])
 
   // Reset tab when switching nodes
   useEffect(() => {

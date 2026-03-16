@@ -55,36 +55,50 @@ vi.mock("@/wailsjs/runtime/runtime", () => ({
   EventsOff: vi.fn(),
 }));
 
+// Mock PodPicker to avoid ListResources calls
+vi.mock("@/components/bottom-tray/PodPicker", () => ({
+  PodPicker: () => (
+    <div data-testid="pod-picker">PodPicker mock</div>
+  ),
+}));
+
 import TerminalTab from "@/components/bottom-tray/tabs/TerminalTab";
-import type { SelectedResource } from "@/stores/selectionStore";
+import { useSelectionStore, type SelectedResource } from "@/stores/selectionStore";
+
+function setSelection(resource: SelectedResource | null) {
+  useSelectionStore.getState().setSelectedResource(resource);
+}
 
 describe("TerminalTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useSelectionStore.getState().clearSelection();
   });
 
-  it("shows placeholder when no resource selected", () => {
-    render(<TerminalTab resource={null} />);
+  it("shows pod picker and placeholder when no resource selected", () => {
+    render(<TerminalTab />);
+    expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(
       screen.getByText("Select a pod to open a terminal")
     ).toBeInTheDocument();
   });
 
-  it("shows placeholder for non-pod resources", () => {
-    const resource: SelectedResource = {
+  it("shows pod picker and placeholder for non-pod resources", () => {
+    setSelection({
       kind: "Deployment",
       name: "my-deploy",
       namespace: "default",
       path: "/deployments/my-deploy",
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
+    expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(
       screen.getByText("Select a pod to open a terminal")
     ).toBeInTheDocument();
   });
 
   it("renders terminal container for pod resource", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -94,14 +108,14 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    const { container } = render(<TerminalTab resource={resource} />);
+    });
+    const { container } = render(<TerminalTab />);
     // Should have the terminal div (now relative container)
     expect(container.querySelector(".flex-1.min-h-0.relative")).toBeInTheDocument();
   });
 
   it("shows container selector for multi-container pods", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "multi-pod",
       namespace: "default",
@@ -111,8 +125,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "app" }, { name: "sidecar" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     expect(screen.getByText("Container:")).toBeInTheDocument();
     // Container names appear in the dropdown options
@@ -125,7 +139,7 @@ describe("TerminalTab", () => {
   });
 
   it("shows search button for pod resources", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -135,14 +149,14 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
     expect(screen.getByLabelText("Search terminal")).toBeInTheDocument();
   });
 
   it("opens search bar when search button is clicked", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -152,8 +166,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     await user.click(screen.getByLabelText("Search terminal"));
     expect(screen.getByTestId("terminal-search-bar")).toBeInTheDocument();
@@ -162,7 +176,7 @@ describe("TerminalTab", () => {
 
   it("shows next/previous/close buttons in search bar", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -172,8 +186,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     await user.click(screen.getByLabelText("Search terminal"));
     expect(screen.getByLabelText("Next match")).toBeInTheDocument();
@@ -183,7 +197,7 @@ describe("TerminalTab", () => {
 
   it("closes search bar when close button is clicked", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -193,8 +207,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     await user.click(screen.getByLabelText("Search terminal"));
     expect(screen.getByTestId("terminal-search-bar")).toBeInTheDocument();
@@ -205,7 +219,7 @@ describe("TerminalTab", () => {
 
   it("closes search bar on Escape key", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -215,8 +229,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     await user.click(screen.getByLabelText("Search terminal"));
     const input = screen.getByPlaceholderText("Search...");
@@ -226,7 +240,7 @@ describe("TerminalTab", () => {
 
   it("disables next/previous buttons when search term is empty", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "my-pod",
       namespace: "default",
@@ -236,8 +250,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     await user.click(screen.getByLabelText("Search terminal"));
     expect(screen.getByLabelText("Next match")).toBeDisabled();
@@ -248,7 +262,7 @@ describe("TerminalTab", () => {
     await import(
       "@/wailsjs/go/handlers/StreamHandler"
     );
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "cleanup-pod",
       namespace: "default",
@@ -258,8 +272,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    const { unmount } = render(<TerminalTab resource={resource} />);
+    });
+    const { unmount } = render(<TerminalTab />);
     // Wait a tick for async init
     await new Promise((r) => setTimeout(r, 100));
     unmount();
@@ -270,7 +284,7 @@ describe("TerminalTab", () => {
   // ── New tests for multi-tab, themes, and renaming ──
 
   it("shows session tabs and new session button", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "tab-pod",
       namespace: "default",
@@ -280,8 +294,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     // Should show session tabs container
     expect(screen.getByTestId("session-tabs")).toBeInTheDocument();
@@ -291,7 +305,7 @@ describe("TerminalTab", () => {
 
   it("creates a new session when + button is clicked", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "multi-tab-pod",
       namespace: "default",
@@ -301,8 +315,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "app" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     // Wait for auto-created first session
     await new Promise((r) => setTimeout(r, 50));
@@ -319,7 +333,7 @@ describe("TerminalTab", () => {
   });
 
   it("shows theme selector dropdown", () => {
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "theme-pod",
       namespace: "default",
@@ -329,8 +343,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     const themeSelector = screen.getByLabelText("Terminal theme");
     expect(themeSelector).toBeInTheDocument();
@@ -343,7 +357,7 @@ describe("TerminalTab", () => {
 
   it("enables tab rename on double-click", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "rename-pod",
       namespace: "default",
@@ -353,8 +367,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
 
     // Wait for auto-created first session
     await new Promise((r) => setTimeout(r, 50));
@@ -371,7 +385,7 @@ describe("TerminalTab", () => {
 
   it("saves tab rename on Enter", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "rename-enter-pod",
       namespace: "default",
@@ -381,8 +395,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "shell" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
     await new Promise((r) => setTimeout(r, 100));
 
     const tabs = screen.getByTestId("session-tabs");
@@ -402,7 +416,7 @@ describe("TerminalTab", () => {
 
   it("cancels tab rename on Escape", async () => {
     const user = userEvent.setup();
-    const resource: SelectedResource = {
+    setSelection({
       kind: "Pod",
       name: "rename-esc-pod",
       namespace: "default",
@@ -412,8 +426,8 @@ describe("TerminalTab", () => {
           containers: [{ name: "main" }],
         },
       },
-    };
-    render(<TerminalTab resource={resource} />);
+    });
+    render(<TerminalTab />);
     await new Promise((r) => setTimeout(r, 50));
 
     const tabs = screen.getByTestId("session-tabs");

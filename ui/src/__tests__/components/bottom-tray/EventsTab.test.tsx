@@ -250,7 +250,9 @@ describe("EventsTab", () => {
     render(<EventsTab />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("reason-filter")).toBeInTheDocument();
+      const reasonFilter = screen.getByTestId("reason-filter") as HTMLSelectElement;
+      const options = Array.from(reasonFilter.options).map((o) => o.value);
+      expect(options).toContain("BackOff");
     });
 
     const reasonFilter = screen.getByTestId("reason-filter") as HTMLSelectElement;

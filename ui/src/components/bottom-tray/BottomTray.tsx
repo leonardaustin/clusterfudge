@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useRef } from "react";
 import { Bot, Terminal, ScrollText, AlertCircle, X, GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore, type TrayTab } from "@/stores/uiStore";
-import { useSelectionStore } from "@/stores/selectionStore";
 import { PortForwardIndicator } from "./PortForwardIndicator";
 
 // Lazy-loaded tab content
@@ -150,7 +149,6 @@ export function BottomTray() {
   const setBottomTrayHeight = useUIStore((s) => s.setBottomTrayHeight);
   const setBottomTrayTab = useUIStore((s) => s.setBottomTrayTab);
   const setBottomTrayOpen = useUIStore((s) => s.setBottomTrayOpen);
-  const selectedResource = useSelectionStore((s) => s.selectedResource);
 
   const clampHeight = useCallback(
     (h: number) => {
@@ -195,10 +193,8 @@ export function BottomTray() {
       />
       <div className="flex-1 overflow-hidden min-h-0 font-mono text-xs text-text-secondary relative">
         <Suspense fallback={<TabFallback />}>
-          {bottomTrayTab === "logs" && <LogsTab resource={selectedResource} />}
-          {bottomTrayTab === "terminal" && (
-            <TerminalTab resource={selectedResource} />
-          )}
+          {bottomTrayTab === "logs" && <LogsTab />}
+          {bottomTrayTab === "terminal" && <TerminalTab />}
           {bottomTrayTab === "events" && <EventsTab />}
         </Suspense>
         {/* AI tab stays mounted to preserve session across tab switches */}
