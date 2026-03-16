@@ -20,6 +20,8 @@ import { PodPicker, type PodPickerValue } from "../PodPicker";
 interface TerminalSession {
   id: string;
   name: string;
+  podName: string;
+  namespace: string;
   container: string;
   sessionId: string;
   xterm: import("@xterm/xterm").Terminal | null;
@@ -99,7 +101,38 @@ export default function TerminalTab() {
   // Get active session
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
 
-  // Clean up all sessions when picked pod changes or unmounts
+  // Track previous pod to detect changes
+  const prevPodRef = useRef<{ podName: string; namespace: string }>({ podName: "", namespace: "" });
+
+  // Auto-create a session for the current pod if none exists for it
+  useEffect(() => {
+    if (!isPod || containers.length === 0) return;
+
+    const podChanged =
+      prevPodRef.current.podName !== podName ||
+      prevPodRef.current.namespace !== namespace;
+    prevPodRef.current = { podName, namespace };
+
+    // Check if there's already a session for this pod
+    const hasSessionForPod = sessions.some(
+      (s) => s.podName === podName && s.namespace === namespace,
+    );
+
+    if (!hasSessionForPod) {
+      createNewSession();
+    } else if (podChanged) {
+      // Switch to an existing session for the new pod
+      const existingSession = sessions.find(
+        (s) => s.podName === podName && s.namespace === namespace,
+      );
+      if (existingSession) {
+        setActiveSessionId(existingSession.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPod, podName, namespace, containers.length]);
+
+  // Clean up all sessions on unmount
   useEffect(() => {
     return () => {
       setSessions((prev) => {
@@ -110,15 +143,7 @@ export default function TerminalTab() {
       });
       setActiveSessionId("");
     };
-  }, [podName, namespace]);
-
-  // Auto-create first session when pod is selected and there are no sessions
-  useEffect(() => {
-    if (isPod && sessions.length === 0 && containers.length > 0) {
-      createNewSession();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPod, podName, namespace, containers.length, sessions.length]);
+  }, []);
 
   // Handle Ctrl+F to open search
   useEffect(() => {
@@ -229,6 +254,8 @@ export default function TerminalTab() {
     const newSession: TerminalSession = {
       id: sessionLocalId,
       name: sessionName,
+      podName,
+      namespace,
       container,
       sessionId: "",
       xterm: null,
@@ -330,7 +357,7 @@ export default function TerminalTab() {
 
         // Send initial terminal size so the remote shell knows the real dimensions
         fitAddon.fit();
-        if (term.cols && term.rows) {
+        if (term.cols != null && term.rows != null) {
           ResizeExec(backendSessionId, term.cols, term.rows).catch(() => {});
         }
 
@@ -420,6 +447,12 @@ export default function TerminalTab() {
     [commitTabRename, cancelTabRename]
   );
 
+  // Check if sessions span multiple pods for disambiguation in tab labels
+  const hasMultiplePods = useMemo(() => {
+    const podKeys = new Set(sessions.map((s) => `${s.namespace}/${s.podName}`));
+    return podKeys.size > 1;
+  }, [sessions]);
+
   if (!isPod) {
     return (
       <div className="flex flex-col h-full">
@@ -478,23 +511,21 @@ export default function TerminalTab() {
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <span className="truncate max-w-[100px]" title={session.name}>
-                  {session.name}
+                <span className="truncate max-w-[120px]" title={hasMultiplePods ? `${session.name} (${session.podName})` : session.name}>
+                  {session.name}{hasMultiplePods ? ` (${session.podName})` : ""}
                 </span>
               )}
-              {sessions.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeSession(session.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
-                  title="Close session"
-                  aria-label={`Close session ${session.name}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeSession(session.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
+                title="Close session"
+                aria-label={`Close session ${session.name}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ))}
           <button

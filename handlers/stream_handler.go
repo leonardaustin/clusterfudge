@@ -210,7 +210,7 @@ func (h *StreamHandler) ResizeExec(sessionID string, cols, rows int) error {
 	if !ok {
 		return fmt.Errorf("exec session not found: %s", sessionID)
 	}
-	session.Resize(uint16(cols), uint16(rows))
+	session.Resize(uint16(cols), uint16(rows)) //nolint:gosec // G115 - cols/rows are terminal dimensions, always small positive ints
 	return nil
 }
 

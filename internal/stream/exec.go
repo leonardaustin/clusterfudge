@@ -44,15 +44,15 @@ func (q *termSizeQueue) Next() *remotecommand.TerminalSize {
 // Send enqueues a resize event. If a previous event is still pending it is
 // drained and replaced so the remote side always sees the latest size.
 func (q *termSizeQueue) Send(cols, rows uint16) {
+	// Drain any stale value.
+	select {
+	case <-q.ch:
+	default:
+	}
+	// Send the new value, but don't block if the channel is full.
 	select {
 	case q.ch <- &remotecommand.TerminalSize{Width: cols, Height: rows}:
 	default:
-		// Drain the stale size and resend.
-		select {
-		case <-q.ch:
-		default:
-		}
-		q.ch <- &remotecommand.TerminalSize{Width: cols, Height: rows}
 	}
 }
 
