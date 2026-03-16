@@ -89,7 +89,10 @@ export function LogLineRow({
   return (
     <div className="flex gap-2 hover:bg-bg-hover px-1">
       {displayTs && (
-        <span className="text-text-tertiary shrink-0 select-none tabular-nums text-2xs w-20">
+        <span className={cn(
+          "text-text-tertiary shrink-0 select-none tabular-nums text-2xs",
+          timestampMode === "relative" ? "w-8" : "w-40"
+        )}>
           {displayTs}
         </span>
       )}

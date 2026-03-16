@@ -109,6 +109,16 @@ func TestStreamHandler_WriteExec_NotFound(t *testing.T) {
 	}
 }
 
+func TestStreamHandler_ResizeExec_NotFound(t *testing.T) {
+	mgr := cluster.NewManager()
+	h := NewStreamHandler(mgr)
+
+	err := h.ResizeExec("nonexistent", 120, 40)
+	if err == nil {
+		t.Fatal("expected error for nonexistent session")
+	}
+}
+
 func TestStreamHandler_CloseExec_NotFound(t *testing.T) {
 	mgr := cluster.NewManager()
 	h := NewStreamHandler(mgr)

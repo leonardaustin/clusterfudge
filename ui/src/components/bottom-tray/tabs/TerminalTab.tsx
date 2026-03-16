@@ -10,6 +10,7 @@ import {
   StartExec,
   WriteExec,
   CloseExec,
+  ResizeExec,
 } from "@/wailsjs/go/handlers/StreamHandler";
 import { EventsOn } from "@/wailsjs/runtime/runtime";
 import { PodPicker, type PodPickerValue } from "../PodPicker";
@@ -283,7 +284,7 @@ export default function TerminalTab() {
       try {
         const command = termShell
           ? termShell.split(/\s+/)
-          : ["/bin/sh", "-c", "bash || sh"];
+          : [];
 
         backendSessionId = await StartExec({
           namespace,
@@ -326,6 +327,20 @@ export default function TerminalTab() {
           }
         );
         cleanup.push(exitCleanup);
+
+        // Send initial terminal size so the remote shell knows the real dimensions
+        fitAddon.fit();
+        if (term.cols && term.rows) {
+          ResizeExec(backendSessionId, term.cols, term.rows).catch(() => {});
+        }
+
+        // Forward subsequent resize events to the backend
+        const resizeDisposable = term.onResize(({ cols, rows }) => {
+          if (backendSessionId) {
+            ResizeExec(backendSessionId, cols, rows).catch(() => {});
+          }
+        });
+        cleanup.push(() => resizeDisposable.dispose());
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         term.write(`\x1b[31mFailed to start exec session: ${msg}\x1b[0m\r\n`);

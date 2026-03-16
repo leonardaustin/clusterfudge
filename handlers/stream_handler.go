@@ -202,6 +202,18 @@ func (h *StreamHandler) WriteExec(sessionID string, data string) error {
 	return session.Write([]byte(data))
 }
 
+// ResizeExec sends a terminal size update to an exec session.
+func (h *StreamHandler) ResizeExec(sessionID string, cols, rows int) error {
+	h.mu.RLock()
+	session, ok := h.execSessions[sessionID]
+	h.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("exec session not found: %s", sessionID)
+	}
+	session.Resize(uint16(cols), uint16(rows))
+	return nil
+}
+
 // CloseExec terminates an exec session.
 func (h *StreamHandler) CloseExec(sessionID string) {
 	h.mu.Lock()

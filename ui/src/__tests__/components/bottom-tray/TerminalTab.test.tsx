@@ -6,6 +6,8 @@ import userEvent from "@testing-library/user-event";
 vi.mock("@xterm/xterm", () => {
   const noop = () => {};
   class Terminal {
+    cols = 80;
+    rows = 24;
     loadAddon = vi.fn();
     open = vi.fn();
     write = vi.fn();
@@ -48,6 +50,7 @@ vi.mock("@/wailsjs/go/handlers/StreamHandler", () => ({
   StartExec: vi.fn().mockResolvedValue("session-123"),
   WriteExec: vi.fn(),
   CloseExec: vi.fn(),
+  ResizeExec: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/wailsjs/runtime/runtime", () => ({

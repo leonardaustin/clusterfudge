@@ -25,9 +25,41 @@ func GenerateID() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
+// termSizeQueue implements remotecommand.TerminalSizeQueue so the SPDY
+// connection can be notified of terminal resize events.
+type termSizeQueue struct {
+	ch chan *remotecommand.TerminalSize
+}
+
+func newTermSizeQueue() *termSizeQueue {
+	return &termSizeQueue{ch: make(chan *remotecommand.TerminalSize, 1)}
+}
+
+// Next blocks until the next terminal size is available (required by
+// remotecommand.TerminalSizeQueue).
+func (q *termSizeQueue) Next() *remotecommand.TerminalSize {
+	return <-q.ch
+}
+
+// Send enqueues a resize event. If a previous event is still pending it is
+// drained and replaced so the remote side always sees the latest size.
+func (q *termSizeQueue) Send(cols, rows uint16) {
+	select {
+	case q.ch <- &remotecommand.TerminalSize{Width: cols, Height: rows}:
+	default:
+		// Drain the stale size and resend.
+		select {
+		case <-q.ch:
+		default:
+		}
+		q.ch <- &remotecommand.TerminalSize{Width: cols, Height: rows}
+	}
+}
+
 // ExecSession represents an active exec session to a container.
 type ExecSession struct {
 	stdinWriter io.WriteCloser
+	sizeQueue   *termSizeQueue
 	mu          sync.Mutex
 	closed      bool
 }
@@ -50,6 +82,13 @@ func (s *ExecSession) Close() {
 	if !s.closed {
 		s.closed = true
 		s.stdinWriter.Close()
+	}
+}
+
+// Resize sends a terminal size update to the remote SPDY connection.
+func (s *ExecSession) Resize(cols, rows uint16) {
+	if s.sizeQueue != nil {
+		s.sizeQueue.Send(cols, rows)
 	}
 }
 
@@ -97,12 +136,21 @@ func StartExec(
 	}
 
 	stdinReader, stdinWriter := io.Pipe()
-	session := &ExecSession{stdinWriter: stdinWriter}
+
+	var sizeQueue *termSizeQueue
+	if opts.TTY {
+		sizeQueue = newTermSizeQueue()
+	}
+
+	session := &ExecSession{stdinWriter: stdinWriter, sizeQueue: sizeQueue}
 
 	streamOpts := remotecommand.StreamOptions{
 		Stdin:  stdinReader,
 		Stdout: &callbackWriter{fn: onStdout},
 		Tty:    opts.TTY,
+	}
+	if opts.TTY && sizeQueue != nil {
+		streamOpts.TerminalSizeQueue = sizeQueue
 	}
 	if !opts.TTY {
 		streamOpts.Stderr = &callbackWriter{fn: onStderr}

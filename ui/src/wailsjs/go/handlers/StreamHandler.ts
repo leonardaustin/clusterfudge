@@ -69,6 +69,10 @@ export function CloseExec(sessionID: string): Promise<void> {
   return wailsCall(H, 'CloseExec', sessionID)
 }
 
+export function ResizeExec(sessionID: string, cols: number, rows: number): Promise<void> {
+  return wailsCall(H, 'ResizeExec', sessionID, cols, rows)
+}
+
 export function StartPortForward(opts: PortForwardOptions): Promise<PortForwardResult> {
   return wailsCall(H, 'StartPortForward', opts)
 }

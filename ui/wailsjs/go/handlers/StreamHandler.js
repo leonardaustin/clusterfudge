@@ -14,6 +14,10 @@ export function ListPortForwards() {
   return window['go']['handlers']['StreamHandler']['ListPortForwards']();
 }
 
+export function ResizeExec(arg1, arg2, arg3) {
+  return window['go']['handlers']['StreamHandler']['ResizeExec'](arg1, arg2, arg3);
+}
+
 export function SetEmitter(arg1) {
   return window['go']['handlers']['StreamHandler']['SetEmitter'](arg1);
 }

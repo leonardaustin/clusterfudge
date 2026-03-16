@@ -193,16 +193,16 @@ export function BottomTray() {
       />
       <div className="flex-1 overflow-hidden min-h-0 font-mono text-xs text-text-secondary relative">
         <Suspense fallback={<TabFallback />}>
-          {bottomTrayTab === "logs" && <LogsTab />}
-          {bottomTrayTab === "terminal" && <TerminalTab />}
-          {bottomTrayTab === "events" && <EventsTab />}
-        </Suspense>
-        {/* AI tab stays mounted to preserve session across tab switches */}
-        <Suspense fallback={<TabFallback />}>
-          <div
-            className="absolute inset-0"
-            style={{ display: bottomTrayTab === "ai" ? undefined : "none" }}
-          >
+          <div className="absolute inset-0" style={{ display: bottomTrayTab === "logs" ? undefined : "none" }}>
+            <LogsTab />
+          </div>
+          <div className="absolute inset-0" style={{ display: bottomTrayTab === "terminal" ? undefined : "none" }}>
+            <TerminalTab />
+          </div>
+          <div className="absolute inset-0" style={{ display: bottomTrayTab === "events" ? undefined : "none" }}>
+            <EventsTab />
+          </div>
+          <div className="absolute inset-0" style={{ display: bottomTrayTab === "ai" ? undefined : "none" }}>
             <AITab />
           </div>
         </Suspense>

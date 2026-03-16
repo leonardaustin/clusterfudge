@@ -5,7 +5,6 @@ import { ContainerCard } from '../components/detail/ContainerCard'
 import { DetailPanel } from '../components/detail/DetailPanel'
 import { DetailTabs } from '../components/detail/DetailTabs'
 import { ResourceEvents } from '../components/detail/ResourceEvents'
-import { MultiContainerLogViewer } from '../components/logs/MultiContainerLogViewer'
 import { LabelEditor } from '../components/shared/LabelEditor'
 import { SearchInput } from '../components/shared/SearchInput'
 import { Sparkline } from '../components/shared/Sparkline'
@@ -27,7 +26,7 @@ import { GetAIProviderName } from '../wailsjs/go/handlers/AIHandler'
 import { GetResource } from '../wailsjs/go/handlers/ResourceHandler'
 import type { ResourceItem } from '../wailsjs/go/handlers/ResourceHandler'
 
-const DETAIL_TABS = ['Overview', 'Logs', 'YAML', 'Events']
+const DETAIL_TABS = ['Overview', 'YAML', 'Events']
 
 const columns: Column[] = [
   { key: 'status', label: 'Status', className: 'col-status' },
@@ -632,16 +631,6 @@ export function PodList() {
                       </div>
 
                     </>
-                  )}
-
-                  {activeTab === 'Logs' && (
-                    <div style={{ height: '400px' }}>
-                      <MultiContainerLogViewer
-                        namespace={detail.namespace}
-                        podName={detail.name}
-                        containers={detail.containers.map((c) => c.name)}
-                      />
-                    </div>
                   )}
 
                   {activeTab === 'Events' && (
