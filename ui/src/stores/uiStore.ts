@@ -5,6 +5,12 @@ import { persist } from "zustand/middleware";
 export type Theme = "dark" | "light";
 export type TrayTab = "logs" | "terminal" | "events" | "ai";
 
+export interface AISessionInfo {
+  id: string;
+  namespace: string;
+  name: string;
+}
+
 interface UIState {
   // Sidebar
   sidebarCollapsed: boolean;
@@ -24,8 +30,9 @@ interface UIState {
   // Sidebar sections
   collapsedSections: Record<string, boolean>;
 
-  // AI target for bottom tray AI tab
-  aiTarget: { namespace: string; name: string } | null;
+  // AI sessions for bottom tray AI tab
+  aiSessions: AISessionInfo[];
+  activeAISessionId: string | null;
 
   // Shortcuts
   shortcutsEnabled: boolean;
@@ -46,6 +53,9 @@ interface UIState {
   setBottomTrayTab: (tab: TrayTab) => void;
   openOrToggleTrayTab: (tab: TrayTab) => void;
 
+  addAISession: (namespace: string, name: string) => string;
+  removeAISession: (id: string) => void;
+  setActiveAISession: (id: string) => void;
   setAITarget: (target: { namespace: string; name: string } | null) => void;
 
   setEventsResourceFilter: (filter: { kind: string; name: string; namespace: string } | null) => void;
@@ -57,6 +67,8 @@ interface UIState {
   isSectionOpen: (id: string) => boolean;
 }
 
+let aiSessionSeq = 0;
+
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => ({
@@ -66,7 +78,8 @@ export const useUIStore = create<UIState>()(
       bottomTrayOpen: false,
       bottomTrayHeight: 250,
       bottomTrayTab: "logs" as TrayTab,
-      aiTarget: null,
+      aiSessions: [],
+      activeAISessionId: null,
       theme: "dark" as Theme,
       collapsedSections: {},
       shortcutsEnabled: true,
@@ -99,7 +112,31 @@ export const useUIStore = create<UIState>()(
           return { bottomTrayTab: tab, bottomTrayOpen: true };
         }),
 
-      setAITarget: (target) => set({ aiTarget: target }),
+      addAISession: (namespace, name) => {
+        const id = `ai-${Date.now()}-${++aiSessionSeq}`;
+        set((s) => ({
+          aiSessions: [...s.aiSessions, { id, namespace, name }],
+          activeAISessionId: id,
+          bottomTrayOpen: true,
+          bottomTrayTab: "ai" as TrayTab,
+        }));
+        return id;
+      },
+      removeAISession: (id) =>
+        set((s) => {
+          const remaining = s.aiSessions.filter((sess) => sess.id !== id);
+          let nextActive = s.activeAISessionId;
+          if (s.activeAISessionId === id) {
+            nextActive = remaining.length > 0 ? remaining[remaining.length - 1].id : null;
+          }
+          return { aiSessions: remaining, activeAISessionId: nextActive };
+        }),
+      setActiveAISession: (id) => set({ activeAISessionId: id }),
+      setAITarget: (target) => {
+        if (target) {
+          get().addAISession(target.namespace, target.name);
+        }
+      },
 
       setEventsResourceFilter: (filter) => set({ eventsResourceFilter: filter }),
 
@@ -122,7 +159,7 @@ export const useUIStore = create<UIState>()(
       name: "kubeviewer-ui",
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { eventsResourceFilter, ...persisted } = state;
+        const { eventsResourceFilter, aiSessions, activeAISessionId, ...persisted } = state;
         return persisted;
       },
     }

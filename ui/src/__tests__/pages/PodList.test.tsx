@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { PodList } from '@/pages/PodList'
 
@@ -126,5 +126,68 @@ describe('PodList', () => {
     expect(screen.getByText('1/1')).toBeDefined()
     expect(screen.getByText('2')).toBeDefined()
     expect(screen.getByText('node-1')).toBeDefined()
+  })
+
+  it('wraps pod rows with a context menu trigger', () => {
+    mockUseKubeResources
+      .mockReturnValueOnce({
+        data: [
+          {
+            name: 'ctx-pod',
+            namespace: 'default',
+            labels: null,
+            spec: null,
+            status: null,
+            raw: {
+              metadata: {
+                creationTimestamp: '2025-01-01T00:00:00Z',
+                ownerReferences: [],
+              },
+              spec: {
+                nodeName: 'node-1',
+                containers: [{ name: 'nginx', image: 'nginx:latest', resources: {} }],
+              },
+              status: {
+                phase: 'Running',
+                containerStatuses: [
+                  { name: 'nginx', ready: true, restartCount: 0, state: {} },
+                ],
+              },
+            },
+          },
+        ],
+        isLoading: false,
+        error: null,
+      })
+      .mockReturnValueOnce({
+        data: [],
+        isLoading: false,
+        error: null,
+      })
+
+    render(
+      <MemoryRouter>
+        <PodList />
+      </MemoryRouter>
+    )
+
+    const podRow = screen.getByText('ctx-pod').closest('tr')
+    expect(podRow).toBeDefined()
+
+    // The tr should be inside a Radix ContextMenu trigger (data attribute)
+    const trigger = podRow?.closest('[data-radix-collection-item]') ?? podRow?.parentElement
+    expect(trigger).toBeDefined()
+
+    // Right-click on the row to open the context menu
+    fireEvent.contextMenu(podRow!)
+
+    // Radix portals the menu content; check it appears in the document
+    // The context menu header should show the pod kind and name
+    expect(screen.getByText('Pod')).toBeDefined()
+    // 'ctx-pod' appears in both the table cell and the context menu header
+    expect(screen.getAllByText('ctx-pod').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByText('View Logs')).toBeDefined()
+    expect(screen.getByText('Exec Shell')).toBeDefined()
+    expect(screen.getByText('Debug with AI')).toBeDefined()
   })
 })

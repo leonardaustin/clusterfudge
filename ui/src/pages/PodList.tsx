@@ -1,5 +1,6 @@
 import { Bot } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { ResourceContextMenu } from '../components/dialogs/ResourceContextMenu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ContainerCard } from '../components/detail/ContainerCard'
 import { DetailPanel } from '../components/detail/DetailPanel'
@@ -358,51 +359,84 @@ export function PodList() {
             const isSelected = pod.name === selectedName && pod.namespace === selectedNamespace
 
             return (
-              <tr
+              <ResourceContextMenu
                 key={`${pod.namespace}/${pod.name}`}
-                className={isSelected ? 'selected' : undefined}
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`)}
+                kind="Pod"
+                name={pod.name}
+                isRunning={pod.status === 'Running'}
+                actions={{
+                  onViewDetails: () => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`),
+                  onViewLogs: () => {
+                    setSelectedResource({
+                      kind: 'Pod',
+                      name: pod.name,
+                      namespace: pod.namespace,
+                      path: `/pods/${pod.name}`,
+                      raw: {},
+                    });
+                    setBottomTrayTab('logs');
+                  },
+                  onExecShell: () => {
+                    setSelectedResource({
+                      kind: 'Pod',
+                      name: pod.name,
+                      namespace: pod.namespace,
+                      path: `/pods/${pod.name}`,
+                      raw: {},
+                    });
+                    setBottomTrayTab('terminal');
+                  },
+                  onAIDiagnose: () => {
+                    setAITarget({ namespace: pod.namespace, name: pod.name });
+                    setBottomTrayTab('ai');
+                  },
+                }}
               >
-                <td className="col-status">
-                  <StatusDot status={pod.status} />
-                </td>
-                <td className="name-cell">{pod.name}</td>
-                <td className={nsProps.className} style={nsProps.style}>
-                  {pod.namespace}
-                </td>
-                <td>
-                  {owner ? (
-                    owner.route ? (
-                      <Link
-                        to={`${owner.route}/${pod.namespace}/${owner.name}`}
-                        style={{ color: 'var(--accent)' }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {owner.kind}/{owner.name}
-                      </Link>
+                <tr
+                  className={isSelected ? 'selected' : undefined}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`)}
+                >
+                  <td className="col-status">
+                    <StatusDot status={pod.status} />
+                  </td>
+                  <td className="name-cell">{pod.name}</td>
+                  <td className={nsProps.className} style={nsProps.style}>
+                    {pod.namespace}
+                  </td>
+                  <td>
+                    {owner ? (
+                      owner.route ? (
+                        <Link
+                          to={`${owner.route}/${pod.namespace}/${owner.name}`}
+                          style={{ color: 'var(--accent)' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {owner.kind}/{owner.name}
+                        </Link>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>{owner.kind}/{owner.name}</span>
+                      )
                     ) : (
-                      <span style={{ color: 'var(--text-tertiary)' }}>{owner.kind}/{owner.name}</span>
-                    )
-                  ) : (
-                    <span style={{ color: 'var(--text-disabled)' }}>-</span>
-                  )}
-                </td>
-                <td className="tabular">{pod.ready}</td>
-                <td className={`tabular${pod.restarts > 0 ? ' restarts-warn' : ''}`}>
-                  {pod.restarts}
-                </td>
-                <td>
-                  <InlineMetricBar usage={pod.cpuUsage} limit={pod.cpuLimit} label="cpu" />
-                </td>
-                <td>
-                  <InlineMetricBar usage={pod.memoryUsage} limit={pod.memLimit} label="memory" />
-                </td>
-                <td style={isDisabledNode ? { color: 'var(--text-disabled)' } : undefined}>
-                  {pod.node}
-                </td>
-                <td>{pod.age}</td>
-              </tr>
+                      <span style={{ color: 'var(--text-disabled)' }}>-</span>
+                    )}
+                  </td>
+                  <td className="tabular">{pod.ready}</td>
+                  <td className={`tabular${pod.restarts > 0 ? ' restarts-warn' : ''}`}>
+                    {pod.restarts}
+                  </td>
+                  <td>
+                    <InlineMetricBar usage={pod.cpuUsage} limit={pod.cpuLimit} label="cpu" />
+                  </td>
+                  <td>
+                    <InlineMetricBar usage={pod.memoryUsage} limit={pod.memLimit} label="memory" />
+                  </td>
+                  <td style={isDisabledNode ? { color: 'var(--text-disabled)' } : undefined}>
+                    {pod.node}
+                  </td>
+                  <td>{pod.age}</td>
+                </tr>
+              </ResourceContextMenu>
             )
           }} />
 

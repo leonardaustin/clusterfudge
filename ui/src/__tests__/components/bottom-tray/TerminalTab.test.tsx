@@ -447,4 +447,58 @@ describe("TerminalTab", () => {
     // Original name should still be shown
     expect(screen.getByText("main")).toBeInTheDocument();
   });
+
+  // ── Pod-scoped session persistence tests ──
+
+  it("shows close button on each session tab", async () => {
+    setSelection({
+      kind: "Pod",
+      name: "close-btn-pod",
+      namespace: "default",
+      path: "/pods/close-btn-pod",
+      raw: {
+        spec: {
+          containers: [{ name: "main" }],
+        },
+      },
+    });
+    render(<TerminalTab />);
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Even with a single session, close button should exist
+    expect(screen.getByLabelText("Close session main")).toBeInTheDocument();
+  });
+
+  it("closes a session when X button is clicked", async () => {
+    const user = userEvent.setup();
+    setSelection({
+      kind: "Pod",
+      name: "close-session-pod",
+      namespace: "default",
+      path: "/pods/close-session-pod",
+      raw: {
+        spec: {
+          containers: [{ name: "app" }],
+        },
+      },
+    });
+    render(<TerminalTab />);
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Create a second session
+    await user.click(screen.getByLabelText("New terminal session"));
+    await new Promise((r) => setTimeout(r, 50));
+
+    const tabs = screen.getByTestId("session-tabs");
+    const tabCountBefore = tabs.querySelectorAll('[role="tab"]').length;
+    expect(tabCountBefore).toBe(2);
+
+    // Close the first session
+    const closeButtons = screen.getAllByTitle("Close session");
+    await user.click(closeButtons[0]);
+    await new Promise((r) => setTimeout(r, 50));
+
+    const tabCountAfter = tabs.querySelectorAll('[role="tab"]').length;
+    expect(tabCountAfter).toBe(1);
+  });
 });

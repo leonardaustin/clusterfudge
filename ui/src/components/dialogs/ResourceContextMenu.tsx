@@ -1,6 +1,7 @@
 import * as ContextMenu from '@radix-ui/react-context-menu'
 import {
   ArrowUpDown,
+  Bot,
   Eye,
   FileText,
   Lock,
@@ -18,6 +19,7 @@ export interface ResourceContextAction {
   onViewDetails?: () => void
   onViewLogs?: () => void
   onExecShell?: () => void
+  onAIDiagnose?: () => void
   onEditYAML?: () => void
   onScale?: () => void
   onRestart?: () => void
@@ -133,11 +135,19 @@ export function ResourceContextMenu({
                 onClick={actions.onExecShell}
               />
               <MenuItem
-                icon={Workflow}
-                label="Port Forward"
+                icon={Bot}
+                label="Debug with AI"
                 disabled={!isRunning}
-                onClick={actions.onPortForward}
+                onClick={actions.onAIDiagnose}
               />
+              {actions.onPortForward && (
+                <MenuItem
+                  icon={Workflow}
+                  label="Port Forward"
+                  disabled={!isRunning}
+                  onClick={actions.onPortForward}
+                />
+              )}
             </>
           )}
 
@@ -187,29 +197,36 @@ export function ResourceContextMenu({
             </>
           )}
 
-          <ContextMenu.Separator
-            className="h-px my-1"
-            style={{ background: 'var(--border)' }}
-          />
+          {(actions.onEditYAML || actions.onDelete) && (
+            <ContextMenu.Separator
+              className="h-px my-1"
+              style={{ background: 'var(--border)' }}
+            />
+          )}
 
-          <MenuItem
-            icon={FileText}
-            label="Edit YAML"
-            onClick={actions.onEditYAML}
-          />
+          {actions.onEditYAML && (
+            <MenuItem
+              icon={FileText}
+              label="Edit YAML"
+              onClick={actions.onEditYAML}
+            />
+          )}
 
-          <ContextMenu.Separator
-            className="h-px my-1"
-            style={{ background: 'var(--border)' }}
-          />
-
-          <MenuItem
-            icon={Trash2}
-            label="Delete"
-            shortcut="Del"
-            danger
-            onClick={actions.onDelete}
-          />
+          {actions.onDelete && (
+            <>
+              <ContextMenu.Separator
+                className="h-px my-1"
+                style={{ background: 'var(--border)' }}
+              />
+              <MenuItem
+                icon={Trash2}
+                label="Delete"
+                shortcut="Del"
+                danger
+                onClick={actions.onDelete}
+              />
+            </>
+          )}
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>

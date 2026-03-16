@@ -319,7 +319,7 @@ export default function EventsTab() {
           filteredEvents.map((event, i) => (
             <div
               key={`${event.objectKind}-${event.objectName}-${event.reason}-${i}`}
-              className="flex items-start gap-3 px-3 py-2 hover:bg-bg-hover border-b border-border/50 text-xs"
+              className="flex items-start gap-3 px-3 py-2 hover:bg-bg-hover border-b border-white/[0.03] text-xs"
             >
               {/* Type indicator */}
               <span
@@ -367,7 +367,7 @@ export default function EventsTab() {
           /* Grouped / Correlation view */
           <div data-testid="correlation-view">
             {groupedEvents.map((group) => (
-              <div key={group.key} className="border-b border-border">
+              <div key={group.key} className="border-b border-border/15">
                 {/* Group header */}
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-secondary sticky top-0">
                   <span className="text-xs font-medium text-text-primary">

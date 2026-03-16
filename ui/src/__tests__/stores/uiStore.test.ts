@@ -88,4 +88,74 @@ describe('uiStore', () => {
     expect(useUIStore.getState().collapsedSections).toEqual({})
     expect(useUIStore.getState().isSectionOpen('workloads')).toBe(true)
   })
+
+  // ── AI session tests ──
+
+  it('has empty aiSessions and null activeAISessionId initially', () => {
+    const s = useUIStore.getState()
+    expect(s.aiSessions).toEqual([])
+    expect(s.activeAISessionId).toBeNull()
+  })
+
+  it('addAISession creates a session, sets it active, and opens tray to ai tab', () => {
+    const id = useUIStore.getState().addAISession('default', 'nginx-pod')
+    const s = useUIStore.getState()
+    expect(id).toMatch(/^ai-/)
+    expect(s.aiSessions).toHaveLength(1)
+    expect(s.aiSessions[0]).toEqual({ id, namespace: 'default', name: 'nginx-pod' })
+    expect(s.activeAISessionId).toBe(id)
+    expect(s.bottomTrayOpen).toBe(true)
+    expect(s.bottomTrayTab).toBe('ai')
+  })
+
+  it('addAISession can add multiple sessions', () => {
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
+    const id2 = useUIStore.getState().addAISession('kube-system', 'pod-b')
+    const s = useUIStore.getState()
+    expect(s.aiSessions).toHaveLength(2)
+    expect(s.activeAISessionId).toBe(id2)
+    expect(s.aiSessions[0].id).toBe(id1)
+    expect(s.aiSessions[1].id).toBe(id2)
+  })
+
+  it('removeAISession removes a session and selects next active', () => {
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
+    const id2 = useUIStore.getState().addAISession('default', 'pod-b')
+
+    useUIStore.getState().removeAISession(id2)
+    const s = useUIStore.getState()
+    expect(s.aiSessions).toHaveLength(1)
+    expect(s.aiSessions[0].id).toBe(id1)
+    expect(s.activeAISessionId).toBe(id1)
+  })
+
+  it('removeAISession sets null when last session removed', () => {
+    const id = useUIStore.getState().addAISession('default', 'pod-a')
+    useUIStore.getState().removeAISession(id)
+    const s = useUIStore.getState()
+    expect(s.aiSessions).toHaveLength(0)
+    expect(s.activeAISessionId).toBeNull()
+  })
+
+  it('setActiveAISession switches active session', () => {
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
+    useUIStore.getState().addAISession('default', 'pod-b')
+    useUIStore.getState().setActiveAISession(id1)
+    expect(useUIStore.getState().activeAISessionId).toBe(id1)
+  })
+
+  it('setAITarget creates a new session (backward compat)', () => {
+    useUIStore.getState().setAITarget({ namespace: 'prod', name: 'web-pod' })
+    const s = useUIStore.getState()
+    expect(s.aiSessions).toHaveLength(1)
+    expect(s.aiSessions[0].namespace).toBe('prod')
+    expect(s.aiSessions[0].name).toBe('web-pod')
+    expect(s.activeAISessionId).toBe(s.aiSessions[0].id)
+  })
+
+  it('setAITarget with null does nothing', () => {
+    useUIStore.getState().addAISession('default', 'pod-a')
+    useUIStore.getState().setAITarget(null)
+    expect(useUIStore.getState().aiSessions).toHaveLength(1)
+  })
 })
