@@ -371,7 +371,7 @@ function KubeconfigSection({
         <button
           className="settings-btn"
           onClick={onReload}
-          style={{ background: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+          style={{ background: '#059669', color: '#fff', borderColor: '#059669' }}
         >
           <RefreshCw className="w-3 h-3 mr-1.5 inline" />
           Save Path and Reload Clusters
