@@ -219,6 +219,9 @@ function IssueCard({ issue }: { issue: TroubleshootingIssue }) {
   )
 }
 
+const authIssues = issues.filter((i) => ['reauth', 'ip-whitelist', 'tls', 'exec-plugin'].includes(i.id))
+const connectIssues = issues.filter((i) => ['timeout', 'local-cluster', 'stale-kubeconfig'].includes(i.id))
+
 export function TroubleshootingGuide() {
   return (
     <div style={{ maxWidth: 640 }}>
@@ -226,10 +229,29 @@ export function TroubleshootingGuide() {
       <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
         Common connection issues and how to resolve them. Click an issue to see symptoms and fixes.
       </p>
-      <div className="space-y-2">
-        {issues.map((issue) => (
-          <IssueCard key={issue.id} issue={issue} />
-        ))}
+
+      <div className="space-y-4">
+        <div>
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-tertiary mb-2">
+            Authentication &amp; Access
+          </p>
+          <div className="space-y-2">
+            {authIssues.map((issue) => (
+              <IssueCard key={issue.id} issue={issue} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-tertiary mb-2">
+            Connectivity &amp; Configuration
+          </p>
+          <div className="space-y-2">
+            {connectIssues.map((issue) => (
+              <IssueCard key={issue.id} issue={issue} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
