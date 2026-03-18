@@ -93,19 +93,22 @@ function ProviderRow({
   // Validate on mount and when path changes
   useEffect(() => {
     setValidated(false)
+    setDetectNotFound(false)
     const timer = setTimeout(() => validatePath(path), 300)
     return () => clearTimeout(timer)
   }, [path, validatePath])
 
+  const [detectNotFound, setDetectNotFound] = useState(false)
+
   const handleAutoDetect = async () => {
     setSearching(true)
+    setDetectNotFound(false)
     try {
       const found = await FindAIPath(provider.id)
       if (found) {
         update(provider.pathKey, found)
       } else {
-        setValidationError('Not found on this system')
-        setValidated(true)
+        setDetectNotFound(true)
       }
     } catch {
       setValidationError('Search failed')
@@ -191,6 +194,11 @@ function ProviderRow({
         {isInvalid && enabled && (
           <div style={{ marginTop: '4px', fontSize: 'var(--text-xs)', color: 'var(--red, #ef4444)' }}>
             {validationError}
+          </div>
+        )}
+        {detectNotFound && (
+          <div style={{ marginTop: '4px', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+            Not found on this system — install the tool or enter the path manually
           </div>
         )}
       </div>
