@@ -11,6 +11,7 @@ import type { ClusterInfo } from '@/stores/clusterStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useToastStore } from '@/stores/toastStore'
 import { ListContextDetails, PreflightCheck, type PreflightResult } from '@/wailsjs/go/handlers/ClusterHandler'
+import { ValidateFilePath } from '@/wailsjs/go/handlers/ConfigHandler'
 import { EventsOn } from '@/wailsjs/runtime/runtime'
 import { SetupGuides } from '@/components/welcome/SetupGuides'
 import { AuthErrorHelp } from '@/components/welcome/AuthErrorHelp'
@@ -256,6 +257,84 @@ function ClustersSection({
 // Kubeconfig section
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Kubeconfig path input with validation
+// ---------------------------------------------------------------------------
+
+function KubeconfigPathInput({
+  value,
+  onChange,
+  onRemove,
+}: {
+  value: string
+  onChange: (val: string) => void
+  onRemove: () => void
+}) {
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [validating, setValidating] = useState(false)
+  const [validated, setValidated] = useState(false)
+
+  useEffect(() => {
+    setValidated(false)
+    if (!value) {
+      setValidationError('Path is empty')
+      setValidated(true)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setValidating(true)
+      try {
+        const err = await ValidateFilePath(value)
+        setValidationError(err || null)
+        setValidated(true)
+      } catch {
+        setValidationError('Validation failed')
+        setValidated(true)
+      } finally {
+        setValidating(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [value])
+
+  const isValid = validated && !validationError
+  const isInvalid = validated && !!validationError
+
+  return (
+    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+      <div style={{ position: 'relative', flex: 1 }}>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="~/.kube/config"
+          className="settings-input"
+          style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', paddingRight: '28px' }}
+        />
+        <div style={{
+          position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+          display: 'flex', alignItems: 'center',
+        }}>
+          {validating ? (
+            <Loader2 className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)', animation: 'spin 1s linear infinite' }} />
+          ) : isValid ? (
+            <span title="File found">
+              <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--green, #22c55e)' }} />
+            </span>
+          ) : isInvalid && value ? (
+            <span title={validationError ?? 'Invalid path'}>
+              <XCircle className="w-3.5 h-3.5" style={{ color: 'var(--red, #ef4444)' }} />
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <button className="settings-btn-icon" aria-label="Remove path" onClick={onRemove}>
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  )
+}
+
 interface KubeconfigSectionProps {
   paths: string[]
   autoReload: boolean
@@ -285,19 +364,12 @@ function KubeconfigSection({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
         {paths.map((p: string, i: number) => (
-          <div key={i} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-            <input
-              type="text"
-              value={p}
-              onChange={(e) => onUpdatePath(i, e.target.value)}
-              placeholder="~/.kube/config"
-              className="settings-input"
-              style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}
-            />
-            <button className="settings-btn-icon" aria-label="Remove path" onClick={() => onRemovePath(i)}>
-              <X className="w-3 h-3" />
-            </button>
-          </div>
+          <KubeconfigPathInput
+            key={i}
+            value={p}
+            onChange={(val) => onUpdatePath(i, val)}
+            onRemove={() => onRemovePath(i)}
+          />
         ))}
       </div>
 
