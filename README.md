@@ -30,7 +30,7 @@ A native desktop Kubernetes management tool.
 ### Homebrew (macOS / Linux)
 
 ```bash
-brew install leonardaustin/tap/clusterfudge
+brew install --cask leonardaustin/tap/clusterfudge
 ```
 
 ### Download
