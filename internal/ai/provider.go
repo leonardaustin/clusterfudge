@@ -90,7 +90,7 @@ func ResolveProviderByID(cfg config.AppConfig, providerID string) (Provider, err
 	switch providerID {
 	case "claude":
 		if !cfg.AIClaudeCodeEnabled {
-			return nil, fmt.Errorf("Claude Code is not enabled — check Settings > AI")
+			return nil, fmt.Errorf("claude Code is not enabled — check Settings > AI")
 		}
 		p := &ClaudeCode{path: cfg.AIClaudeCodePath}
 		if err := validatePath(p.path, p.Name()); err != nil {
@@ -99,7 +99,7 @@ func ResolveProviderByID(cfg config.AppConfig, providerID string) (Provider, err
 		return p, nil
 	case "gemini":
 		if !cfg.AIGeminiCLIEnabled {
-			return nil, fmt.Errorf("Gemini CLI is not enabled — check Settings > AI")
+			return nil, fmt.Errorf("gemini CLI is not enabled — check Settings > AI")
 		}
 		p := &GeminiCLI{path: cfg.AIGeminiCLIPath}
 		if err := validatePath(p.path, p.Name()); err != nil {
@@ -108,7 +108,7 @@ func ResolveProviderByID(cfg config.AppConfig, providerID string) (Provider, err
 		return p, nil
 	case "codex":
 		if !cfg.AIChatGPTCodexEnabled {
-			return nil, fmt.Errorf("ChatGPT Codex is not enabled — check Settings > AI")
+			return nil, fmt.Errorf("chatGPT Codex is not enabled — check Settings > AI")
 		}
 		p := &ChatGPTCodex{path: cfg.AIChatGPTCodexPath}
 		if err := validatePath(p.path, p.Name()); err != nil {
