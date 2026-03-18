@@ -17,7 +17,7 @@ const iconColors: Record<ToastType, string> = {
 
 function ToastItem({ toast }: { toast: Toast }) {
   const removeToast = useToastStore((s) => s.removeToast)
-  const duration = toast.duration ?? 4000
+  const duration = toast.duration ?? 20000
   const [progress, setProgress] = useState(1)
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts)
 
   return (
-    <div aria-live="polite" aria-atomic="false" className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+    <div aria-live="polite" aria-atomic="false" className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} />
