@@ -50,6 +50,12 @@ func (h *ClusterHandler) ListContexts() ([]string, error) {
 	return names, nil
 }
 
+// SetKubeconfigPaths replaces the loader's kubeconfig file paths so that
+// subsequent ListContextDetails calls read from the new locations.
+func (h *ClusterHandler) SetKubeconfigPaths(paths []string) {
+	h.manager.Loader().SetPaths(paths)
+}
+
 // ListContextDetails returns detailed context info from the kubeconfig.
 func (h *ClusterHandler) ListContextDetails() ([]cluster.ContextInfo, error) {
 	return h.manager.Loader().ListContexts()

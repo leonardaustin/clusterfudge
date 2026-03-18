@@ -60,6 +60,11 @@ func (l *KubeconfigLoader) ResolvedPath() string {
 	return strings.Join(expanded, string(filepath.ListSeparator))
 }
 
+// SetPaths replaces the loader's kubeconfig file paths.
+func (l *KubeconfigLoader) SetPaths(paths []string) {
+	l.paths = paths
+}
+
 // AddPath appends a kubeconfig file path if not already present.
 func (l *KubeconfigLoader) AddPath(path string) {
 	for _, existing := range l.paths {

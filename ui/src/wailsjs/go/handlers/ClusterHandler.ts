@@ -36,6 +36,10 @@ export function ListContexts(): Promise<string[]> {
   return wailsCall('ClusterHandler', 'ListContexts')
 }
 
+export function SetKubeconfigPaths(paths: string[]): Promise<void> {
+  return wailsCall('ClusterHandler', 'SetKubeconfigPaths', paths)
+}
+
 export function ListContextDetails(): Promise<ContextInfo[]> {
   return wailsCall('ClusterHandler', 'ListContextDetails')
 }

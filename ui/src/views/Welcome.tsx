@@ -10,7 +10,7 @@ import { useClusterStore, colorForName } from '@/stores/clusterStore'
 import type { ClusterInfo } from '@/stores/clusterStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useToastStore } from '@/stores/toastStore'
-import { ListContextDetails, PreflightCheck, type PreflightResult } from '@/wailsjs/go/handlers/ClusterHandler'
+import { ListContextDetails, PreflightCheck, SetKubeconfigPaths, type PreflightResult } from '@/wailsjs/go/handlers/ClusterHandler'
 import { ValidateFilePath } from '@/wailsjs/go/handlers/ConfigHandler'
 import { EventsOn } from '@/wailsjs/runtime/runtime'
 import { SetupGuides } from '@/components/welcome/SetupGuides'
@@ -470,8 +470,13 @@ export function Welcome() {
     setPreflightRunning(false)
   }, [])
 
-  const loadClusters = useCallback(() => {
-    ListContextDetails().then((contexts) => {
+  const loadClusters = useCallback(async () => {
+    try {
+      // Sync kubeconfig paths to the Go backend before listing contexts
+      const paths = useSettingsStore.getState().kubeconfigPaths
+      await SetKubeconfigPaths(paths)
+
+      const contexts = await ListContextDetails()
       if (!contexts || contexts.length === 0) {
         setClusters([])
         return
@@ -486,10 +491,10 @@ export function Welcome() {
       }))
       setClusters(clusterInfos)
       runPreflight(contexts.map((c) => c.name))
-    }).catch((err) => {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       useToastStore.getState().addToast({ type: 'error', title: 'Failed to load kubeconfig', description: msg })
-    })
+    }
   }, [setClusters, runPreflight])
 
   useEffect(() => {
