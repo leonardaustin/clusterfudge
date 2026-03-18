@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Server, ArrowRight, AlertTriangle, X, CheckCircle2, XCircle,
-  Loader2, Star, RefreshCw, Bot, FileKey, BookOpen,
+  Loader2, Star, RefreshCw, Bot, FileKey, BookOpen, Newspaper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClusterStore, colorForName } from '@/stores/clusterStore'
@@ -27,12 +27,12 @@ import { useOS } from '@/hooks/useOS'
 // Tabs
 // ---------------------------------------------------------------------------
 
-type WelcomeTab = 'clusters' | 'ai' | 'kubeconfig' | 'help'
+type WelcomeTab = 'clusters' | 'ai' | 'news' | 'help'
 
 const TABS: { id: WelcomeTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'clusters', label: 'Clusters', icon: Server },
   { id: 'ai', label: 'AI Assistants', icon: Bot },
-  { id: 'kubeconfig', label: 'Kubeconfig', icon: FileKey },
+  { id: 'news', label: 'News', icon: Newspaper },
   { id: 'help', label: 'Help', icon: BookOpen },
 ]
 
@@ -559,24 +559,30 @@ export function Welcome() {
                       loadClusters()
                     }
                   }}
-                  onGoToKubeconfig={() => switchTab('kubeconfig')}
+                  onGoToKubeconfig={() => {/* kubeconfig is in the right column */}}
                 />
-                <NewsFeed />
+                <KubeconfigSection
+                  paths={kubeconfigPaths}
+                  autoReload={autoReloadKubeconfig}
+                  onAddPath={addPath}
+                  onRemovePath={removePath}
+                  onUpdatePath={updatePath}
+                  onToggleAutoReload={(v) => updateSetting('autoReloadKubeconfig', v)}
+                  onReload={loadClusters}
+                />
               </div>
             )}
 
-            {tab === 'ai' && <AIProvidersSection />}
+            {tab === 'ai' && (
+              <div className="welcome-narrow">
+                <AIProvidersSection />
+              </div>
+            )}
 
-            {tab === 'kubeconfig' && (
-              <KubeconfigSection
-                paths={kubeconfigPaths}
-                autoReload={autoReloadKubeconfig}
-                onAddPath={addPath}
-                onRemovePath={removePath}
-                onUpdatePath={updatePath}
-                onToggleAutoReload={(v) => updateSetting('autoReloadKubeconfig', v)}
-                onReload={loadClusters}
-              />
+            {tab === 'news' && (
+              <div className="welcome-narrow">
+                <NewsFeed />
+              </div>
             )}
 
             {tab === 'help' && (

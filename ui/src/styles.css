@@ -2034,6 +2034,7 @@ a {
 
 .welcome-tabs-bar {
   display: flex;
+  justify-content: center;
   gap: 2px;
   padding: 0 var(--space-6);
   border-bottom: 1px solid var(--border);
@@ -2117,6 +2118,10 @@ a {
   max-width: 960px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.welcome-tab-panel > .welcome-narrow {
+  max-width: 480px;
 }
 
 .welcome-columns {
