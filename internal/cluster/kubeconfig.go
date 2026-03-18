@@ -61,8 +61,9 @@ func (l *KubeconfigLoader) ResolvedPath() string {
 }
 
 // SetPaths replaces the loader's kubeconfig file paths.
+// Tilde prefixes are expanded to the user's home directory.
 func (l *KubeconfigLoader) SetPaths(paths []string) {
-	l.paths = paths
+	l.paths = expandPaths(paths)
 }
 
 // AddPath appends a kubeconfig file path if not already present.
@@ -97,16 +98,30 @@ func kubeconfigPaths() []string {
 	return []string{filepath.Join(home, ".kube", "config")}
 }
 
+// expandPaths resolves tilde prefixes to the user's home directory.
+func expandPaths(paths []string) []string {
+	home, _ := os.UserHomeDir()
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		if home != "" && strings.HasPrefix(p, "~/") {
+			p = filepath.Join(home, p[2:])
+		}
+		out[i] = p
+	}
+	return out
+}
+
 // Load reads and merges kubeconfigs from all paths. Returns an error if any
 // path cannot be read or parsed.
 func (l *KubeconfigLoader) Load() (*clientcmdapi.Config, error) {
-	for _, p := range l.paths {
+	resolved := expandPaths(l.paths)
+	for _, p := range resolved {
 		if _, err := os.Stat(p); err != nil {
 			return nil, fmt.Errorf("kubeconfig path %q: %w", p, err)
 		}
 	}
 
-	rules := &clientcmd.ClientConfigLoadingRules{Precedence: l.paths}
+	rules := &clientcmd.ClientConfigLoadingRules{Precedence: resolved}
 	cfg, err := rules.Load()
 	if err != nil {
 		return nil, fmt.Errorf("load kubeconfig: %w", err)

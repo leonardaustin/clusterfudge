@@ -492,6 +492,8 @@ export function Welcome() {
       setClusters(clusterInfos)
       runPreflight(contexts.map((c) => c.name))
     } catch (err) {
+      setClusters([])
+      setPreflightResults({})
       const msg = err instanceof Error ? err.message : String(err)
       useToastStore.getState().addToast({ type: 'error', title: 'Failed to load kubeconfig', description: msg })
     }
