@@ -285,7 +285,7 @@ function KubeconfigSection({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
         {paths.map((p: string, i: number) => (
-          <div key={`${i}-${p}`} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <div key={i} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
             <input
               type="text"
               value={p}
