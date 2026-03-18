@@ -16,7 +16,7 @@ interface ToastState {
   removeToast: (id: string) => void
 }
 
-const DEFAULT_TOAST_DURATION_MS = 4000
+const DEFAULT_TOAST_DURATION_MS = 20000
 
 let nextId = 0
 const timerMap = new Map<string, ReturnType<typeof setTimeout>>()

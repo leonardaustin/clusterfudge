@@ -17,7 +17,7 @@ const iconColors: Record<ToastType, string> = {
 
 function ToastItem({ toast }: { toast: Toast }) {
   const removeToast = useToastStore((s) => s.removeToast)
-  const duration = toast.duration ?? 20000
+  const duration = toast.duration ?? 20000 // must match DEFAULT_TOAST_DURATION_MS in toastStore
   const [progress, setProgress] = useState(1)
 
   useEffect(() => {
