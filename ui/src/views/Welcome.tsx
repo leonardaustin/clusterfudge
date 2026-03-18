@@ -368,9 +368,13 @@ function KubeconfigSection({
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
         <button className="settings-btn" onClick={onAddPath}>+ Add path</button>
-        <button className="settings-btn" onClick={onReload}>
+        <button
+          className="settings-btn"
+          onClick={onReload}
+          style={{ background: 'var(--green)', color: '#fff', borderColor: 'var(--green)' }}
+        >
           <RefreshCw className="w-3 h-3 mr-1.5 inline" />
-          Reload clusters
+          Save Path and Reload Clusters
         </button>
       </div>
 
