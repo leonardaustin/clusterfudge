@@ -41,6 +41,23 @@ vi.mock('@xterm/addon-search', () => {
 // The CSS import in TerminalTab triggers an error in jsdom.
 vi.mock('@xterm/xterm/css/xterm.css', () => ({}))
 
+// jsdom does not provide window.matchMedia; stub it so xterm and other libs don't throw.
+if (typeof window.matchMedia === 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
 // jsdom does not provide ResizeObserver; stub it so components using it don't throw.
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
