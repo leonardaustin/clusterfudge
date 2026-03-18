@@ -137,10 +137,15 @@ function ClustersSection({
       </AnimatePresence>
 
       <div className="welcome-section-header">
-        <h2 className="welcome-section-title">
-          <Server className="w-4 h-4" />
-          Available Clusters
-        </h2>
+        <div>
+          <h2 className="welcome-section-title">
+            <Server className="w-4 h-4" />
+            Available Clusters
+          </h2>
+          <p className="settings-description" style={{ marginTop: 2 }}>
+            Discovered from your kubeconfig. Click a cluster to connect.
+          </p>
+        </div>
         <button
           className="settings-btn"
           onClick={onRefresh}
