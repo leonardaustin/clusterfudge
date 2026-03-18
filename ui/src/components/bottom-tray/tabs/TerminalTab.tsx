@@ -35,6 +35,130 @@ interface TerminalSession {
   termDiv: HTMLDivElement | null;
 }
 
+// ── Backend adapters for shared terminal init ─────────────────────────────
+
+interface SessionBackend {
+  start: () => Promise<string>;
+  write: (sessionID: string, data: string) => Promise<void>;
+  resize: (sessionID: string, rows: number, cols: number) => Promise<void>;
+  stdoutEvent: (sessionID: string) => string;
+  stderrEvent?: (sessionID: string) => string;
+  exitEvent: (sessionID: string) => string;
+  errorLabel: string;
+}
+
+// ── Shared terminal initializer ───────────────────────────────────────────
+
+interface TermSettings {
+  fontSize: number;
+  cursorStyle: string;
+  cursorBlink: boolean;
+  copyOnSelect: boolean;
+  theme: TerminalThemeName;
+}
+
+async function initTerminal(
+  termDiv: HTMLDivElement,
+  settings: TermSettings,
+  backend: SessionBackend,
+): Promise<{
+  xterm: import("@xterm/xterm").Terminal;
+  searchAddon: SearchAddonType;
+  backendSessionId: string;
+  cleanup: Array<() => void>;
+}> {
+  const { Terminal } = await import("@xterm/xterm");
+  const { FitAddon } = await import("@xterm/addon-fit");
+  const { SearchAddon } = await import("@xterm/addon-search");
+  await import("@xterm/xterm/css/xterm.css");
+
+  const resolvedTheme = TERMINAL_THEMES[settings.theme] ?? TERMINAL_THEMES.dark;
+
+  const term = new Terminal({
+    theme: resolvedTheme,
+    fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
+    fontSize: settings.fontSize,
+    lineHeight: 1.4,
+    cursorBlink: settings.cursorBlink,
+    cursorStyle: settings.cursorStyle as "block" | "bar" | "underline",
+  });
+
+  const fitAddon = new FitAddon();
+  term.loadAddon(fitAddon);
+
+  const searchAddon = new SearchAddon();
+  term.loadAddon(searchAddon);
+
+  term.open(termDiv);
+  fitAddon.fit();
+
+  const cleanup: Array<() => void> = [];
+
+  // Copy on select
+  if (settings.copyOnSelect) {
+    const selDisposable = term.onSelectionChange(() => {
+      const sel = term.getSelection();
+      if (sel) {
+        navigator.clipboard.writeText(sel).catch((err) => console.warn('[TerminalTab] clipboard:', err));
+      }
+    });
+    cleanup.push(() => selDisposable.dispose());
+  }
+
+  // Start backend session
+  let backendSessionId = "";
+  try {
+    backendSessionId = await backend.start();
+
+    const dataDisposable = term.onData((data) => {
+      backend.write(backendSessionId, data).catch((err: unknown) => {
+        console.error(`[TerminalTab] write failed:`, err);
+      });
+    });
+    cleanup.push(() => dataDisposable.dispose());
+
+    const stdoutCleanup = EventsOn(backend.stdoutEvent(backendSessionId), (data: unknown) => {
+      term.write(data as string);
+    });
+    cleanup.push(stdoutCleanup);
+
+    if (backend.stderrEvent) {
+      const stderrCleanup = EventsOn(backend.stderrEvent(backendSessionId), (data: unknown) => {
+        term.write(data as string);
+      });
+      cleanup.push(stderrCleanup);
+    }
+
+    const exitCleanup = EventsOn(backend.exitEvent(backendSessionId), (msg: unknown) => {
+      const message = msg as string;
+      term.write(`\r\n\x1b[90m[Session ended${message ? `: ${message}` : ""}]\x1b[0m\r\n`);
+    });
+    cleanup.push(exitCleanup);
+
+    fitAddon.fit();
+    if (term.cols != null && term.rows != null) {
+      backend.resize(backendSessionId, term.rows, term.cols).catch(() => {});
+    }
+
+    const resizeDisposable = term.onResize(({ cols, rows }) => {
+      if (backendSessionId) {
+        backend.resize(backendSessionId, rows, cols).catch(() => {});
+      }
+    });
+    cleanup.push(() => resizeDisposable.dispose());
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    term.write(`\x1b[31m${backend.errorLabel}: ${msg}\x1b[0m\r\n`);
+  }
+
+  // Container resize observer
+  const resizeObserver = new ResizeObserver(() => { fitAddon.fit(); });
+  resizeObserver.observe(termDiv);
+  cleanup.push(() => resizeObserver.disconnect());
+
+  return { xterm: term, searchAddon, backendSessionId, cleanup };
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 let nextSessionSeq = 1;
@@ -56,6 +180,14 @@ export default function TerminalTab() {
   const termCopyOnSelect = useSettingsStore((s) => s.terminalCopyOnSelect);
   const termTheme = useSettingsStore((s) => s.terminalTheme) as TerminalThemeName;
   const updateSetting = useSettingsStore((s) => s.update);
+
+  const termSettings: TermSettings = useMemo(() => ({
+    fontSize: termFontSize,
+    cursorStyle: termCursorStyle,
+    cursorBlink: termCursorBlink,
+    copyOnSelect: termCopyOnSelect,
+    theme: termTheme,
+  }), [termFontSize, termCursorStyle, termCursorBlink, termCopyOnSelect, termTheme]);
 
   // Pod picker state
   const [picked, setPicked] = useState<PodPickerValue | null>(null);
@@ -153,7 +285,7 @@ export default function TerminalTab() {
   // Handle Ctrl+F to open search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "f" && isPod && activeSession?.xterm) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f" && activeSession?.xterm) {
         e.preventDefault();
         setSearchOpen(true);
       }
@@ -168,7 +300,7 @@ export default function TerminalTab() {
         el.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [isPod, activeSession]);
+  }, [activeSession]);
 
   // Focus the search input when the bar opens
   useEffect(() => {
@@ -248,14 +380,17 @@ export default function TerminalTab() {
     }
   }
 
-  const createNewSession = useCallback(async () => {
-    if (!isPod || !namespace || !termContainerRef.current) return;
+  // Shared logic: create a session record, init the terminal, and wire up the backend
+  const startSession = useCallback(async (
+    sessionName: string,
+    isLocal: boolean,
+    backend: SessionBackend,
+    meta: { podName: string; namespace: string; container: string },
+  ) => {
+    if (!termContainerRef.current) return;
 
-    const container = selectedContainer || containers[0] || "";
     const sessionLocalId = `session-${nextSessionSeq++}`;
-    const sessionName = container || `Shell ${nextSessionSeq - 1}`;
 
-    // Create a div for the terminal
     const termDiv = document.createElement("div");
     termDiv.className = "absolute inset-0";
     termContainerRef.current.appendChild(termDiv);
@@ -263,11 +398,9 @@ export default function TerminalTab() {
     const newSession: TerminalSession = {
       id: sessionLocalId,
       name: sessionName,
-      podName,
-      namespace,
-      container,
+      ...meta,
       sessionId: "",
-      isLocal: false,
+      isLocal,
       xterm: null,
       searchAddon: null,
       cleanup: [],
@@ -278,123 +411,11 @@ export default function TerminalTab() {
     setActiveSessionId(sessionLocalId);
 
     try {
-      // Dynamic imports
-      const { Terminal } = await import("@xterm/xterm");
-      const { FitAddon } = await import("@xterm/addon-fit");
-      const { SearchAddon } = await import("@xterm/addon-search");
-      await import("@xterm/xterm/css/xterm.css");
-
-      const resolvedTheme = TERMINAL_THEMES[termTheme] ?? TERMINAL_THEMES.dark;
-
-      const term = new Terminal({
-        theme: resolvedTheme,
-        fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
-        fontSize: termFontSize,
-        lineHeight: 1.4,
-        cursorBlink: termCursorBlink,
-        cursorStyle: termCursorStyle as "block" | "bar" | "underline",
-      });
-
-      const fitAddon = new FitAddon();
-      term.loadAddon(fitAddon);
-
-      const searchAddon = new SearchAddon();
-      term.loadAddon(searchAddon);
-
-      term.open(termDiv);
-      fitAddon.fit();
-
-      const cleanup: Array<() => void> = [];
-
-      // Copy on select
-      if (termCopyOnSelect) {
-        const selDisposable = term.onSelectionChange(() => {
-          const sel = term.getSelection();
-          if (sel) {
-            navigator.clipboard.writeText(sel).catch((err) => console.warn('[TerminalTab] Failed to copy to clipboard:', err));
-          }
-        });
-        cleanup.push(() => selDisposable.dispose());
-      }
-
-      let backendSessionId = "";
-      try {
-        const command = termShell
-          ? termShell.split(/\s+/)
-          : [];
-
-        backendSessionId = await StartExec({
-          namespace,
-          podName,
-          containerName: container,
-          command,
-          tty: true,
-        });
-
-        const dataDisposable = term.onData((data) => {
-          WriteExec(backendSessionId, data).catch((err: unknown) => {
-            console.error("[TerminalTab] WriteExec failed:", err);
-          });
-        });
-        cleanup.push(() => dataDisposable.dispose());
-
-        const stdoutCleanup = EventsOn(
-          `exec:stdout:${backendSessionId}`,
-          (data: unknown) => {
-            term.write(data as string);
-          }
-        );
-        cleanup.push(stdoutCleanup);
-
-        const stderrCleanup = EventsOn(
-          `exec:stderr:${backendSessionId}`,
-          (data: unknown) => {
-            term.write(data as string);
-          }
-        );
-        cleanup.push(stderrCleanup);
-
-        const exitCleanup = EventsOn(
-          `exec:exit:${backendSessionId}`,
-          (msg: unknown) => {
-            const message = msg as string;
-            term.write(
-              `\r\n\x1b[90m[Session ended${message ? `: ${message}` : ""}]\x1b[0m\r\n`
-            );
-          }
-        );
-        cleanup.push(exitCleanup);
-
-        // Send initial terminal size so the remote shell knows the real dimensions
-        fitAddon.fit();
-        if (term.cols != null && term.rows != null) {
-          ResizeExec(backendSessionId, term.cols, term.rows).catch(() => {});
-        }
-
-        // Forward subsequent resize events to the backend
-        const resizeDisposable = term.onResize(({ cols, rows }) => {
-          if (backendSessionId) {
-            ResizeExec(backendSessionId, cols, rows).catch(() => {});
-          }
-        });
-        cleanup.push(() => resizeDisposable.dispose());
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        term.write(`\x1b[31mFailed to start exec session: ${msg}\x1b[0m\r\n`);
-      }
-
-      // Handle resize
-      const resizeObserver = new ResizeObserver(() => {
-        fitAddon.fit();
-      });
-      resizeObserver.observe(termDiv);
-      cleanup.push(() => resizeObserver.disconnect());
-
-      // Update session with xterm instance
+      const result = await initTerminal(termDiv, termSettings, backend);
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionLocalId
-            ? { ...s, xterm: term, searchAddon, sessionId: backendSessionId, cleanup }
+            ? { ...s, xterm: result.xterm, searchAddon: result.searchAddon, sessionId: result.backendSessionId, cleanup: result.cleanup }
             : s
         )
       );
@@ -402,137 +423,34 @@ export default function TerminalTab() {
       console.error('[TerminalTab] Failed to initialize terminal:', err);
       useToastStore.getState().addToast({ type: 'error', title: 'Failed to initialize terminal', description: err instanceof Error ? err.message : String(err) });
     }
-  }, [isPod, namespace, podName, selectedContainer, containers, termFontSize, termCursorStyle, termCursorBlink, termShell, termCopyOnSelect, termTheme]);
+  }, [termSettings]);
 
-  const createLocalSession = useCallback(async () => {
-    if (!termContainerRef.current) return;
+  const createNewSession = useCallback(() => {
+    const container = selectedContainer || containers[0] || "";
+    const sessionName = container || `Shell ${nextSessionSeq}`;
+    const command = termShell ? termShell.split(/\s+/) : [];
 
-    const sessionLocalId = `session-${nextSessionSeq++}`;
-    const sessionName = "Local";
+    startSession(sessionName, false, {
+      start: () => StartExec({ namespace, podName, containerName: container, command, tty: true }),
+      write: WriteExec,
+      resize: (sid, rows, cols) => ResizeExec(sid, cols, rows),
+      stdoutEvent: (sid) => `exec:stdout:${sid}`,
+      stderrEvent: (sid) => `exec:stderr:${sid}`,
+      exitEvent: (sid) => `exec:exit:${sid}`,
+      errorLabel: "Failed to start exec session",
+    }, { podName, namespace, container });
+  }, [namespace, podName, selectedContainer, containers, termShell, startSession]);
 
-    const termDiv = document.createElement("div");
-    termDiv.className = "absolute inset-0";
-    termContainerRef.current.appendChild(termDiv);
-
-    const newSession: TerminalSession = {
-      id: sessionLocalId,
-      name: sessionName,
-      podName: "",
-      namespace: "",
-      container: "",
-      sessionId: "",
-      isLocal: true,
-      xterm: null,
-      searchAddon: null,
-      cleanup: [],
-      termDiv,
-    };
-
-    setSessions((prev) => [...prev, newSession]);
-    setActiveSessionId(sessionLocalId);
-
-    try {
-      const { Terminal } = await import("@xterm/xterm");
-      const { FitAddon } = await import("@xterm/addon-fit");
-      const { SearchAddon } = await import("@xterm/addon-search");
-      await import("@xterm/xterm/css/xterm.css");
-
-      const resolvedTheme = TERMINAL_THEMES[termTheme] ?? TERMINAL_THEMES.dark;
-
-      const term = new Terminal({
-        theme: resolvedTheme,
-        fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
-        fontSize: termFontSize,
-        lineHeight: 1.4,
-        cursorBlink: termCursorBlink,
-        cursorStyle: termCursorStyle as "block" | "bar" | "underline",
-      });
-
-      const fitAddon = new FitAddon();
-      term.loadAddon(fitAddon);
-
-      const searchAddon = new SearchAddon();
-      term.loadAddon(searchAddon);
-
-      term.open(termDiv);
-      fitAddon.fit();
-
-      const cleanup: Array<() => void> = [];
-
-      if (termCopyOnSelect) {
-        const selDisposable = term.onSelectionChange(() => {
-          const sel = term.getSelection();
-          if (sel) {
-            navigator.clipboard.writeText(sel).catch((err) => console.warn('[TerminalTab] Failed to copy to clipboard:', err));
-          }
-        });
-        cleanup.push(() => selDisposable.dispose());
-      }
-
-      let backendSessionId = "";
-      try {
-        backendSessionId = await StartLocalTerminal();
-
-        const dataDisposable = term.onData((data) => {
-          WriteLocalTerminal(backendSessionId, data).catch((err: unknown) => {
-            console.error("[TerminalTab] WriteLocalTerminal failed:", err);
-          });
-        });
-        cleanup.push(() => dataDisposable.dispose());
-
-        const stdoutCleanup = EventsOn(
-          `localterm:stdout:${backendSessionId}`,
-          (data: unknown) => {
-            term.write(data as string);
-          }
-        );
-        cleanup.push(stdoutCleanup);
-
-        const exitCleanup = EventsOn(
-          `localterm:exit:${backendSessionId}`,
-          (msg: unknown) => {
-            const message = msg as string;
-            term.write(
-              `\r\n\x1b[90m[Session ended${message ? `: ${message}` : ""}]\x1b[0m\r\n`
-            );
-          }
-        );
-        cleanup.push(exitCleanup);
-
-        fitAddon.fit();
-        if (term.cols != null && term.rows != null) {
-          ResizeLocalTerminal(backendSessionId, term.rows, term.cols).catch(() => {});
-        }
-
-        const resizeDisposable = term.onResize(({ cols, rows }) => {
-          if (backendSessionId) {
-            ResizeLocalTerminal(backendSessionId, rows, cols).catch(() => {});
-          }
-        });
-        cleanup.push(() => resizeDisposable.dispose());
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        term.write(`\x1b[31mFailed to start local terminal: ${msg}\x1b[0m\r\n`);
-      }
-
-      const resizeObserver = new ResizeObserver(() => {
-        fitAddon.fit();
-      });
-      resizeObserver.observe(termDiv);
-      cleanup.push(() => resizeObserver.disconnect());
-
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionLocalId
-            ? { ...s, xterm: term, searchAddon, sessionId: backendSessionId, cleanup }
-            : s
-        )
-      );
-    } catch (err) {
-      console.error('[TerminalTab] Failed to initialize local terminal:', err);
-      useToastStore.getState().addToast({ type: 'error', title: 'Failed to initialize local terminal', description: err instanceof Error ? err.message : String(err) });
-    }
-  }, [termFontSize, termCursorStyle, termCursorBlink, termCopyOnSelect, termTheme]);
+  const createLocalSession = useCallback(() => {
+    startSession("Local", true, {
+      start: StartLocalTerminal,
+      write: WriteLocalTerminal,
+      resize: ResizeLocalTerminal,
+      stdoutEvent: (sid) => `localterm:stdout:${sid}`,
+      exitEvent: (sid) => `localterm:exit:${sid}`,
+      errorLabel: "Failed to start local terminal",
+    }, { podName: "", namespace: "", container: "" });
+  }, [startSession]);
 
   const closeSession = useCallback((sessionId: string) => {
     setSessions((prev) => {
@@ -589,11 +507,14 @@ export default function TerminalTab() {
 
   // Check if sessions span multiple pods for disambiguation in tab labels
   const hasMultiplePods = useMemo(() => {
-    const podKeys = new Set(sessions.map((s) => `${s.namespace}/${s.podName}`));
+    const podKeys = new Set(sessions.filter((s) => !s.isLocal).map((s) => `${s.namespace}/${s.podName}`));
     return podKeys.size > 1;
   }, [sessions]);
 
-  if (!isPod && sessions.length === 0) {
+  const hasSessions = sessions.length > 0;
+
+  // ── Empty state: no pod selected and no sessions ──
+  if (!isPod && !hasSessions) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
@@ -621,125 +542,11 @@ export default function TerminalTab() {
     );
   }
 
-  if (!isPod && sessions.length > 0) {
-    // Show local terminal sessions without pod picker requirement
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
-          <PodPicker value={picked} onSelect={setPicked} />
-
-          {/* Session tabs */}
-          <div className="flex items-center gap-0.5 overflow-x-auto max-w-[30%]" data-testid="session-tabs">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                role="tab"
-                tabIndex={0}
-                aria-selected={session.id === activeSessionId}
-                className={cn(
-                  "flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors group min-w-0",
-                  session.id === activeSessionId
-                    ? "bg-accent text-white"
-                    : "bg-bg-tertiary text-text-secondary hover:text-text-primary"
-                )}
-                onClick={() => setActiveSessionId(session.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setActiveSessionId(session.id);
-                  }
-                }}
-                data-testid={`session-tab-${session.id}`}
-              >
-                <span className="truncate max-w-[120px]" title={session.name}>
-                  {session.name}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeSession(session.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
-                  title="Close session"
-                  aria-label={`Close session ${session.name}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={() => { createLocalSession(); }}
-              title="New local terminal"
-              aria-label="New local terminal"
-              className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="flex-1" />
-
-          {/* Theme selector */}
-          <select
-            value={termTheme}
-            onChange={(e) => updateSetting("terminalTheme", e.target.value)}
-            className="text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary"
-            title="Terminal theme"
-            aria-label="Terminal theme"
-          >
-            {Object.keys(TERMINAL_THEMES).map((name) => (
-              <option key={name} value={name}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </option>
-            ))}
-          </select>
-
-          {/* Search toggle */}
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            title="Search (Ctrl+F)"
-            aria-label="Search terminal"
-            className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"
-          >
-            <Search className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Search bar */}
-        {searchOpen && (
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0"
-            style={{ background: 'var(--bg-secondary, #1a1a1e)' }}
-            data-testid="terminal-search-bar"
-          >
-            <Search className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search..."
-              aria-label="Search terminal"
-              className="flex-1 text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary outline-none focus:border-accent"
-            />
-            <button onClick={handleSearchPrev} disabled={!searchTerm} title="Previous match (Shift+Enter)" aria-label="Previous match" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors disabled:opacity-40"><ChevronUp className="w-3.5 h-3.5" /></button>
-            <button onClick={handleSearchNext} disabled={!searchTerm} title="Next match (Enter)" aria-label="Next match" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors disabled:opacity-40"><ChevronDown className="w-3.5 h-3.5" /></button>
-            <button onClick={handleCloseSearch} title="Close search (Escape)" aria-label="Close search" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"><X className="w-3.5 h-3.5" /></button>
-          </div>
-        )}
-
-        {/* Terminal container */}
-        <div ref={termContainerRef} className="flex-1 min-h-0 relative" />
-      </div>
-    );
-  }
-
+  // ── Main view: has sessions or a pod selected ──
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar: pod picker + session tabs + container selector + theme selector + search */}
+      {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
-        {/* Pod picker */}
         <PodPicker value={picked} onSelect={setPicked} />
 
         {/* Session tabs */}
@@ -779,8 +586,8 @@ export default function TerminalTab() {
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <span className="truncate max-w-[120px]" title={hasMultiplePods ? `${session.name} (${session.podName})` : session.name}>
-                  {session.name}{hasMultiplePods ? ` (${session.podName})` : ""}
+                <span className="truncate max-w-[120px]" title={hasMultiplePods && !session.isLocal ? `${session.name} (${session.podName})` : session.name}>
+                  {session.name}{hasMultiplePods && !session.isLocal ? ` (${session.podName})` : ""}
                 </span>
               )}
               <button
@@ -796,14 +603,16 @@ export default function TerminalTab() {
               </button>
             </div>
           ))}
-          <button
-            onClick={() => { createNewSession(); }}
-            title="New terminal session"
-            aria-label="New terminal session"
-            className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+          {isPod && (
+            <button
+              onClick={() => { createNewSession(); }}
+              title="New terminal session"
+              aria-label="New terminal session"
+              className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         <button
@@ -819,7 +628,7 @@ export default function TerminalTab() {
         <div className="flex-1" />
 
         {/* Container selector */}
-        {containers.length > 1 && (
+        {isPod && containers.length > 1 && (
           <>
             <span className="text-xs text-text-tertiary">Container:</span>
             <select

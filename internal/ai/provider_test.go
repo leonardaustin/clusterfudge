@@ -127,9 +127,9 @@ func TestResolveProvider_NotExecutable(t *testing.T) {
 
 func TestBuildCommand(t *testing.T) {
 	providers := []Provider{
-		&ClaudeCode{path: "/usr/local/bin/claude"},
-		&GeminiCLI{path: "/usr/local/bin/gemini"},
-		&ChatGPTCodex{path: "/usr/local/bin/codex"},
+		&cliProvider{name: "Claude Code", path: "/usr/local/bin/claude"},
+		&cliProvider{name: "Gemini CLI", path: "/usr/local/bin/gemini"},
+		&cliProvider{name: "ChatGPT Codex", path: "/usr/local/bin/codex"},
 	}
 
 	for _, p := range providers {

@@ -16,123 +16,97 @@ type Provider interface {
 	BuildCommand(contextFilePath string) []string
 }
 
-// ClaudeCode implements Provider for the Claude Code CLI.
-type ClaudeCode struct {
-	path string
-}
-
-func (c *ClaudeCode) Name() string     { return "Claude Code" }
-func (c *ClaudeCode) ExecPath() string { return c.path }
-func (c *ClaudeCode) BuildCommand(contextFilePath string) []string {
-	prompt := fmt.Sprintf("Read the file %s for Kubernetes pod debugging context, then help me diagnose and fix the issues described. Start by summarizing what you see.", contextFilePath)
-	return []string{c.path, prompt}
-}
-
-// GeminiCLI implements Provider for the Gemini CLI.
-type GeminiCLI struct {
-	path string
-}
-
-func (g *GeminiCLI) Name() string     { return "Gemini CLI" }
-func (g *GeminiCLI) ExecPath() string { return g.path }
-func (g *GeminiCLI) BuildCommand(contextFilePath string) []string {
-	prompt := fmt.Sprintf("Read the file %s for Kubernetes pod debugging context, then help me diagnose and fix the issues described. Start by summarizing what you see.", contextFilePath)
-	return []string{g.path, prompt}
-}
-
-// ChatGPTCodex implements Provider for the ChatGPT Codex CLI.
-type ChatGPTCodex struct {
-	path string
-}
-
-func (c *ChatGPTCodex) Name() string     { return "ChatGPT Codex" }
-func (c *ChatGPTCodex) ExecPath() string { return c.path }
-func (c *ChatGPTCodex) BuildCommand(contextFilePath string) []string {
-	prompt := fmt.Sprintf("Read the file %s for Kubernetes pod debugging context, then help me diagnose and fix the issues described. Start by summarizing what you see.", contextFilePath)
-	return []string{c.path, prompt}
-}
-
 // ProviderInfo is a lightweight descriptor returned to the frontend.
 type ProviderInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
+// providerDef describes how to look up a provider from config.
+type providerDef struct {
+	id      string
+	name    string
+	enabled func(config.AppConfig) bool
+	path    func(config.AppConfig) string
+	make    func(path string) Provider
+}
+
+// registry lists all known providers in priority order.
+var registry = []providerDef{
+	{
+		id: "claude", name: "Claude Code",
+		enabled: func(c config.AppConfig) bool { return c.AIClaudeCodeEnabled },
+		path:    func(c config.AppConfig) string { return c.AIClaudeCodePath },
+		make:    func(p string) Provider { return &cliProvider{name: "Claude Code", path: p} },
+	},
+	{
+		id: "gemini", name: "Gemini CLI",
+		enabled: func(c config.AppConfig) bool { return c.AIGeminiCLIEnabled },
+		path:    func(c config.AppConfig) string { return c.AIGeminiCLIPath },
+		make:    func(p string) Provider { return &cliProvider{name: "Gemini CLI", path: p} },
+	},
+	{
+		id: "codex", name: "ChatGPT Codex",
+		enabled: func(c config.AppConfig) bool { return c.AIChatGPTCodexEnabled },
+		path:    func(c config.AppConfig) string { return c.AIChatGPTCodexPath },
+		make:    func(p string) Provider { return &cliProvider{name: "ChatGPT Codex", path: p} },
+	},
+}
+
+// cliProvider implements Provider for any AI CLI that accepts a prompt argument.
+type cliProvider struct {
+	name string
+	path string
+}
+
+func (c *cliProvider) Name() string     { return c.name }
+func (c *cliProvider) ExecPath() string { return c.path }
+func (c *cliProvider) BuildCommand(contextFilePath string) []string {
+	prompt := fmt.Sprintf("Read the file %s for Kubernetes pod debugging context, then help me diagnose and fix the issues described. Start by summarizing what you see.", contextFilePath)
+	return []string{c.path, prompt}
+}
+
 // ResolveProvider returns the first enabled AI provider from config.
 // Priority: Claude Code > Gemini CLI > ChatGPT Codex.
 func ResolveProvider(cfg config.AppConfig) (Provider, error) {
-	if cfg.AIClaudeCodeEnabled {
-		p := &ClaudeCode{path: cfg.AIClaudeCodePath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
+	for _, def := range registry {
+		if def.enabled(cfg) {
+			return resolveFromDef(def, cfg)
 		}
-		return p, nil
-	}
-	if cfg.AIGeminiCLIEnabled {
-		p := &GeminiCLI{path: cfg.AIGeminiCLIPath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
-		}
-		return p, nil
-	}
-	if cfg.AIChatGPTCodexEnabled {
-		p := &ChatGPTCodex{path: cfg.AIChatGPTCodexPath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
-		}
-		return p, nil
 	}
 	return nil, fmt.Errorf("no AI provider enabled — configure one in Settings > AI")
 }
 
 // ResolveProviderByID returns the provider for a specific ID.
 func ResolveProviderByID(cfg config.AppConfig, providerID string) (Provider, error) {
-	switch providerID {
-	case "claude":
-		if !cfg.AIClaudeCodeEnabled {
-			return nil, fmt.Errorf("claude Code is not enabled — check Settings > AI")
+	for _, def := range registry {
+		if def.id == providerID {
+			if !def.enabled(cfg) {
+				return nil, fmt.Errorf("%s is not enabled — check Settings > AI", def.name)
+			}
+			return resolveFromDef(def, cfg)
 		}
-		p := &ClaudeCode{path: cfg.AIClaudeCodePath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
-		}
-		return p, nil
-	case "gemini":
-		if !cfg.AIGeminiCLIEnabled {
-			return nil, fmt.Errorf("gemini CLI is not enabled — check Settings > AI")
-		}
-		p := &GeminiCLI{path: cfg.AIGeminiCLIPath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
-		}
-		return p, nil
-	case "codex":
-		if !cfg.AIChatGPTCodexEnabled {
-			return nil, fmt.Errorf("chatGPT Codex is not enabled — check Settings > AI")
-		}
-		p := &ChatGPTCodex{path: cfg.AIChatGPTCodexPath}
-		if err := validatePath(p.path, p.Name()); err != nil {
-			return nil, err
-		}
-		return p, nil
-	default:
-		return nil, fmt.Errorf("unknown AI provider: %s", providerID)
 	}
+	return nil, fmt.Errorf("unknown AI provider: %s", providerID)
 }
 
 // ListEnabledProviders returns info for all enabled and valid AI providers.
 func ListEnabledProviders(cfg config.AppConfig) []ProviderInfo {
 	var providers []ProviderInfo
-	if cfg.AIClaudeCodeEnabled && validatePath(cfg.AIClaudeCodePath, "Claude Code") == nil {
-		providers = append(providers, ProviderInfo{ID: "claude", Name: "Claude Code"})
-	}
-	if cfg.AIGeminiCLIEnabled && validatePath(cfg.AIGeminiCLIPath, "Gemini CLI") == nil {
-		providers = append(providers, ProviderInfo{ID: "gemini", Name: "Gemini CLI"})
-	}
-	if cfg.AIChatGPTCodexEnabled && validatePath(cfg.AIChatGPTCodexPath, "ChatGPT Codex") == nil {
-		providers = append(providers, ProviderInfo{ID: "codex", Name: "ChatGPT Codex"})
+	for _, def := range registry {
+		if def.enabled(cfg) && validatePath(def.path(cfg), def.name) == nil {
+			providers = append(providers, ProviderInfo{ID: def.id, Name: def.name})
+		}
 	}
 	return providers
+}
+
+func resolveFromDef(def providerDef, cfg config.AppConfig) (Provider, error) {
+	p := def.make(def.path(cfg))
+	if err := validatePath(p.ExecPath(), p.Name()); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 // validatePath checks that the executable exists at the given path.
