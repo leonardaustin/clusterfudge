@@ -127,14 +127,6 @@ export function SetupGuides({ compact = false }: SetupGuidesProps) {
         </div>
       )}
 
-      {!compact && (
-        <div className="text-center mb-2">
-          <p className="text-sm text-text-secondary">
-            Choose your platform to get started
-          </p>
-        </div>
-      )}
-
       <div>
         <p className="text-2xs font-semibold uppercase tracking-wider text-text-tertiary mb-2">
           Cloud Providers
