@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Server, ArrowRight, AlertTriangle, X, CheckCircle2, XCircle, Loader2, Star, RefreshCw } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Server, ArrowRight, AlertTriangle, X, CheckCircle2, XCircle,
+  Loader2, Star, RefreshCw, Bot, FileKey, BookOpen,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClusterStore, colorForName } from '@/stores/clusterStore'
 import type { ClusterInfo } from '@/stores/clusterStore'
@@ -14,18 +18,47 @@ import { TimeoutErrorHelp } from '@/components/welcome/TimeoutErrorHelp'
 import { Toggle } from '@/components/settings'
 import { TroubleshootingGuide } from '@/components/welcome/TroubleshootingGuide'
 import { AIProvidersSection } from '@/components/welcome/AIProvidersSection'
+import { NewsFeed } from '@/components/welcome/NewsFeed'
+import { SponsorButton } from '@/components/welcome/SponsorButton'
 import { TrafficLights } from '@/components/topbar/TrafficLights'
 import { useOS } from '@/hooks/useOS'
 
-type WelcomeSection = 'clusters' | 'kubeconfig' | 'ai' | 'help' | 'troubleshooting'
+// ---------------------------------------------------------------------------
+// Tabs
+// ---------------------------------------------------------------------------
 
-const NAV_ITEMS: { id: WelcomeSection; label: string }[] = [
-  { id: 'clusters', label: 'Clusters' },
-  { id: 'kubeconfig', label: 'Kubeconfig' },
-  { id: 'ai', label: 'AI' },
-  { id: 'help', label: 'Setup Guides' },
-  { id: 'troubleshooting', label: 'Troubleshooting' },
+type WelcomeTab = 'clusters' | 'ai' | 'kubeconfig' | 'help'
+
+const TABS: { id: WelcomeTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'clusters', label: 'Clusters', icon: Server },
+  { id: 'ai', label: 'AI Assistants', icon: Bot },
+  { id: 'kubeconfig', label: 'Kubeconfig', icon: FileKey },
+  { id: 'help', label: 'Help', icon: BookOpen },
 ]
+
+// ---------------------------------------------------------------------------
+// Slide animation
+// ---------------------------------------------------------------------------
+
+const slideVariants = {
+  enter: (dir: number) => ({
+    x: dir > 0 ? 300 : -300,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (dir: number) => ({
+    x: dir > 0 ? -300 : 300,
+    opacity: 0,
+  }),
+}
+
+const slideTransition = {
+  x: { type: 'spring' as const, stiffness: 400, damping: 35 },
+  opacity: { duration: 0.2 },
+}
 
 // ---------------------------------------------------------------------------
 // Clusters section
@@ -62,14 +95,20 @@ function ClustersSection({
 }: ClustersSectionProps) {
   if (clusters.length === 0) {
     return (
-      <div style={{ maxWidth: 640 }}>
-        <div className="py-12 text-center">
-          <Server className="w-12 h-12 text-text-quaternary mx-auto mb-4" />
-          <h2 className="text-lg font-medium text-text-primary mb-2">No clusters found</h2>
-          <p className="text-sm text-text-secondary mb-6">
-            Check your kubeconfig paths or set up a new cluster connection.
-          </p>
+      <div className="py-10 text-center">
+        <img
+          src="/logo.svg"
+          alt=""
+          className="w-20 h-20 mx-auto mb-5"
+          style={{ filter: 'drop-shadow(0 0 32px rgba(50, 108, 229, 0.3)) grayscale(0.3) opacity(0.6)' }}
+        />
+        <h2 className="text-lg font-semibold text-text-primary mb-2">No clusters found</h2>
+        <p className="text-sm text-text-secondary mb-6 max-w-xs mx-auto leading-relaxed">
+          Configure your kubeconfig paths to discover clusters, or follow a setup guide for your platform.
+        </p>
+        <div className="flex items-center justify-center gap-3">
           <button className="settings-btn" onClick={onGoToKubeconfig}>
+            <FileKey className="w-3.5 h-3.5 mr-1.5 inline" />
             Configure Kubeconfig
           </button>
         </div>
@@ -78,20 +117,28 @@ function ClustersSection({
   }
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div>
       {/* Connection error banner */}
-      {connectionError && (
-        <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-lg border border-status-error/30 bg-status-error/10 text-status-error text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span className="flex-1">{connectionError}</span>
-          <button onClick={onDismissError} className="shrink-0 hover:opacity-70">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {connectionError && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 px-4 py-3 mb-4 rounded-lg border border-status-error/30 bg-status-error/10 text-status-error text-sm"
+          >
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="flex-1">{connectionError}</span>
+            <button onClick={onDismissError} className="shrink-0 hover:opacity-70">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="settings-section-title" style={{ marginBottom: 0 }}>
+      <div className="welcome-section-header">
+        <h2 className="welcome-section-title">
+          <Server className="w-4 h-4" />
           Available Clusters
         </h2>
         <button
@@ -110,7 +157,7 @@ function ClustersSection({
         </p>
       )}
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {clusters.map((cluster, index) => {
           const pf = preflightResults[cluster.name]
           const isFav = favSet.has(cluster.name)
@@ -124,16 +171,15 @@ function ClustersSection({
                 </p>
               )}
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => onConnect(cluster.name)}
                   disabled={connecting !== null}
                   className={cn(
-                    'flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border border-border',
-                    'hover:border-border-strong hover:bg-bg-hover transition-all',
-                    'text-left group',
-                    connecting === cluster.name && 'opacity-70 cursor-wait'
+                    'welcome-cluster-card group',
+                    connecting === cluster.name && 'connecting'
                   )}
+                  style={{ borderLeftColor: cluster.color }}
                 >
                   <div
                     className="w-8 h-8 rounded-md shrink-0 flex items-center justify-center text-white text-sm font-bold"
@@ -281,7 +327,17 @@ export function Welcome() {
   const [connecting, setConnecting] = useState<string | null>(null)
   const [preflightResults, setPreflightResults] = useState<Record<string, PreflightResult>>({})
   const [preflightRunning, setPreflightRunning] = useState(false)
-  const [section, setSection] = useState<WelcomeSection>('clusters')
+
+  // Tab state
+  const [tab, setTab] = useState<WelcomeTab>('clusters')
+  const dirRef = useRef(0)
+
+  const switchTab = (newTab: WelcomeTab) => {
+    const oldIdx = TABS.findIndex((t) => t.id === tab)
+    const newIdx = TABS.findIndex((t) => t.id === newTab)
+    dirRef.current = newIdx > oldIdx ? 1 : -1
+    setTab(newTab)
+  }
 
   // Cluster favorites
   const clusterFavorites = useSettingsStore((s) => s.clusterFavorites)
@@ -300,7 +356,6 @@ export function Welcome() {
     updateSetting('clusterFavorites', next)
   }, [updateSetting])
 
-  // Sort clusters: favorites first, then alphabetical
   const sortedClusters = useMemo(() => {
     const favSet = new Set(clusterFavorites)
     return [...clusters].sort((a, b) => {
@@ -398,7 +453,7 @@ export function Welcome() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-bg-primary">
-      {/* macOS title bar drag region with traffic lights */}
+      {/* macOS title bar drag region */}
       {isMac && (
         <div
           className="h-7 w-full bg-bg-secondary border-b border-border flex-shrink-0 flex items-center"
@@ -408,88 +463,138 @@ export function Welcome() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="resource-header">
-        <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Clusterfudge" className="w-8 h-8" />
-          <div>
-            <h1>Clusterfudge</h1>
-            <div className="subtitle">
-              {sortedClusters.length > 0
-                ? `${sortedClusters.length} cluster${sortedClusters.length === 1 ? '' : 's'} discovered from kubeconfig`
-                : 'Connect to a Kubernetes cluster to get started'}
-            </div>
-          </div>
-        </div>
+      {/* ── Hero ────────────────────────────────────────────── */}
+      <motion.div
+        className="welcome-hero"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.img
+          src="/logo.svg"
+          alt="Clusterfudge"
+          className="welcome-logo"
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        />
+        <motion.h1
+          className="welcome-title"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <span>Clusterfudge</span>
+        </motion.h1>
+        <motion.p
+          className="welcome-subtitle"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          {sortedClusters.length > 0
+            ? `${sortedClusters.length} cluster${sortedClusters.length === 1 ? '' : 's'} discovered — select one to connect`
+            : 'Connect to a Kubernetes cluster to get started'}
+        </motion.p>
+        <motion.div
+          className="mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <SponsorButton />
+        </motion.div>
+      </motion.div>
+
+      {/* ── Horizontal tabs ─────────────────────────────────── */}
+      <div className="welcome-tabs-bar">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={cn('welcome-tab', tab === t.id && 'active')}
+            onClick={() => switchTab(t.id)}
+          >
+            <t.icon className="w-3.5 h-3.5" />
+            {t.label}
+            {t.id === 'clusters' && sortedClusters.length > 0 && (
+              <span className="welcome-tab-badge">{sortedClusters.length}</span>
+            )}
+            {tab === t.id && (
+              <motion.div className="welcome-tab-indicator" layoutId="tab-indicator" />
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Settings-style layout: sidebar nav + scrollable content */}
-      <div className="settings-layout">
-        <nav className="settings-nav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className={`settings-nav-item${section === item.id ? ' active' : ''}`}
-              onClick={() => setSection(item.id)}
-            >
-              {item.label}
-              {item.id === 'clusters' && sortedClusters.length > 0 && (
-                <span className="ml-1.5 text-text-quaternary">{sortedClusters.length}</span>
-              )}
-            </button>
-          ))}
-        </nav>
+      {/* ── Tab content with slide transition ───────────────── */}
+      <div className="welcome-tab-content">
+        <AnimatePresence mode="wait" custom={dirRef.current}>
+          <motion.div
+            key={tab}
+            custom={dirRef.current}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="welcome-tab-panel"
+          >
+            {tab === 'clusters' && (
+              <div className="welcome-columns">
+                <ClustersSection
+                  clusters={sortedClusters}
+                  favSet={favSet}
+                  favCount={favCount}
+                  preflightResults={preflightResults}
+                  preflightRunning={preflightRunning}
+                  connecting={connecting}
+                  connectionError={connectionError}
+                  onConnect={handleConnect}
+                  onToggleFavorite={toggleFavorite}
+                  onDismissError={() => setConnectionError(null)}
+                  onRefresh={() => {
+                    if (clusters.length > 0) {
+                      runPreflight(clusters.map((c) => c.name))
+                    } else {
+                      loadClusters()
+                    }
+                  }}
+                  onGoToKubeconfig={() => switchTab('kubeconfig')}
+                />
+                <NewsFeed />
+              </div>
+            )}
 
-        <div className="settings-content">
-          {section === 'clusters' && (
-            <ClustersSection
-              clusters={sortedClusters}
-              favSet={favSet}
-              favCount={favCount}
-              preflightResults={preflightResults}
-              preflightRunning={preflightRunning}
-              connecting={connecting}
-              connectionError={connectionError}
-              onConnect={handleConnect}
-              onToggleFavorite={toggleFavorite}
-              onDismissError={() => setConnectionError(null)}
-              onRefresh={() => {
-                if (clusters.length > 0) {
-                  runPreflight(clusters.map(c => c.name))
-                } else {
-                  loadClusters()
-                }
-              }}
-              onGoToKubeconfig={() => setSection('kubeconfig')}
-            />
-          )}
+            {tab === 'ai' && <AIProvidersSection />}
 
-          {section === 'kubeconfig' && (
-            <KubeconfigSection
-              paths={kubeconfigPaths}
-              autoReload={autoReloadKubeconfig}
-              onAddPath={addPath}
-              onRemovePath={removePath}
-              onUpdatePath={updatePath}
-              onToggleAutoReload={(v) => updateSetting('autoReloadKubeconfig', v)}
-              onReload={loadClusters}
-            />
-          )}
+            {tab === 'kubeconfig' && (
+              <KubeconfigSection
+                paths={kubeconfigPaths}
+                autoReload={autoReloadKubeconfig}
+                onAddPath={addPath}
+                onRemovePath={removePath}
+                onUpdatePath={updatePath}
+                onToggleAutoReload={(v) => updateSetting('autoReloadKubeconfig', v)}
+                onReload={loadClusters}
+              />
+            )}
 
-          {section === 'ai' && <AIProvidersSection />}
-
-          {section === 'help' && (
-            <div style={{ maxWidth: 640 }}>
-              <h2 className="settings-section-title">Setup Guides</h2>
-              <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
-                Step-by-step instructions for connecting to common Kubernetes providers.
-              </p>
-              <SetupGuides />
-            </div>
-          )}
-
-          {section === 'troubleshooting' && <TroubleshootingGuide />}
-        </div>
+            {tab === 'help' && (
+              <div className="welcome-columns">
+                <div>
+                  <h2 className="settings-section-title">Setup Guides</h2>
+                  <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
+                    Step-by-step instructions for connecting to common Kubernetes providers.
+                  </p>
+                  <SetupGuides />
+                </div>
+                <div>
+                  <TroubleshootingGuide />
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )
