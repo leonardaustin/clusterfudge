@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Server, ArrowRight, AlertTriangle, X, CheckCircle2, XCircle,
-  Loader2, Star, RefreshCw, Bot, FileKey, BookOpen, Newspaper,
+  Loader2, Star, RefreshCw, Bot, BookOpen, Newspaper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClusterStore, colorForName } from '@/stores/clusterStore'
@@ -22,6 +22,7 @@ import { AIProvidersSection } from '@/components/welcome/AIProvidersSection'
 import { NewsFeed } from '@/components/welcome/NewsFeed'
 import { SponsorButton } from '@/components/welcome/SponsorButton'
 import { TrafficLights } from '@/components/topbar/TrafficLights'
+import { ToastContainer } from '@/components/notifications/ToastContainer'
 import { useOS } from '@/hooks/useOS'
 
 // ---------------------------------------------------------------------------
@@ -76,7 +77,6 @@ interface ClustersSectionProps {
   onConnect: (name: string) => void
   onToggleFavorite: (name: string) => void
   onRefresh: () => void
-  onGoToKubeconfig: () => void
   onDismissError: () => void
 }
 
@@ -91,7 +91,6 @@ function ClustersSection({
   onConnect,
   onToggleFavorite,
   onRefresh,
-  onGoToKubeconfig,
   onDismissError,
 }: ClustersSectionProps) {
   if (clusters.length === 0) {
@@ -104,15 +103,9 @@ function ClustersSection({
           style={{ filter: 'drop-shadow(0 0 32px rgba(50, 108, 229, 0.3)) grayscale(0.3) opacity(0.6)' }}
         />
         <h2 className="text-lg font-semibold text-text-primary mb-2">No clusters found</h2>
-        <p className="text-sm text-text-secondary mb-6 max-w-xs mx-auto leading-relaxed">
-          Configure your kubeconfig paths to discover clusters, or follow a setup guide for your platform.
+        <p className="text-sm text-text-secondary max-w-xs mx-auto leading-relaxed">
+          Check your kubeconfig paths in the right panel, or follow a setup guide on the Help tab.
         </p>
-        <div className="flex items-center justify-center gap-3">
-          <button className="settings-btn" onClick={onGoToKubeconfig}>
-            <FileKey className="w-3.5 h-3.5 mr-1.5 inline" />
-            Configure Kubeconfig
-          </button>
-        </div>
       </div>
     )
   }
@@ -642,7 +635,7 @@ export function Welcome() {
                       loadClusters()
                     }
                   }}
-                  onGoToKubeconfig={() => {/* kubeconfig is in the right column */}}
+
                 />
                 <KubeconfigSection
                   paths={kubeconfigPaths}
@@ -685,6 +678,7 @@ export function Welcome() {
           </motion.div>
         </AnimatePresence>
       </div>
+      <ToastContainer />
     </div>
   )
 }
