@@ -1,0 +1,41 @@
+# Go
+cover.out
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output
+build/bin/
+
+# Wails generated (handler .js kept for CI binding-arg checks)
+ui/wailsjs/runtime/
+ui/wailsjs/go/main/
+ui/wailsjs/go/models.ts
+ui/wailsjs/go/handlers/*.d.ts
+ui/package.json.md5
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+ui/dist/
+
+# Coverage
+ui/coverage/
+
+# Environment / secrets
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
