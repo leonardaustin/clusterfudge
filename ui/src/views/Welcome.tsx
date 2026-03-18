@@ -138,9 +138,10 @@ function ClustersSection({
 
       <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
         <div>
-          <h2 className="settings-section-title" style={{ marginBottom: 0 }}>Available Clusters</h2>
+          <h2 className="settings-section-title">Available Clusters</h2>
           <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
-            Discovered from your kubeconfig. Click a cluster to connect.
+            Clusters discovered from your kubeconfig files.
+            Click a cluster to run preflight checks and connect.
           </p>
         </div>
         <button
