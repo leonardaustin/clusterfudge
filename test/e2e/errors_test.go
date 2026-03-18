@@ -13,8 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/resource"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/resource"
 )
 
 // TC-ERR-002: Resource not found — 404 error

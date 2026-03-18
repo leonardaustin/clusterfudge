@@ -139,8 +139,8 @@ export function YAMLEditor({ value, readOnly = false, onChange, onApply, onPrevi
       editorRef.current = editor
       monacoRef.current = monaco
 
-      monaco.editor.defineTheme('kubeviewer-dark', monacoTheme)
-      monaco.editor.setTheme('kubeviewer-dark')
+      monaco.editor.defineTheme('clusterfudge-dark', monacoTheme)
+      monaco.editor.setTheme('clusterfudge-dark')
 
       // Cmd/Ctrl+S to apply
       if (!readOnly && onApply) {

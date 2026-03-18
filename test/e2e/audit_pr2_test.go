@@ -13,9 +13,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kubeviewer/handlers"
-	"kubeviewer/internal/config"
-	"kubeviewer/internal/resource"
+	"clusterfudge/handlers"
+	"clusterfudge/internal/config"
+	"clusterfudge/internal/resource"
 )
 
 // ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 
-	"kubeviewer/internal/templates"
+	"clusterfudge/internal/templates"
 )
 
 // TemplateHandler exposes template operations to the frontend.

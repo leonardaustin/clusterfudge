@@ -13,7 +13,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"kubeviewer/internal/stream"
+	"clusterfudge/internal/stream"
 )
 
 // TC-PF-001: Port forward to nginx pod and verify HTTP response

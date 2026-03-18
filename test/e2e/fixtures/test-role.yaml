@@ -2,9 +2,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: e2e-pod-reader
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 rules:
   - apiGroups: [""]
     resources: ["pods"]

@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/k8s"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/k8s"
 )
 
 // Connection holds information about the active cluster connection.

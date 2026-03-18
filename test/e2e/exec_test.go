@@ -14,8 +14,8 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/stream"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/stream"
 )
 
 // TC-EXEC-001 & TC-EXEC-002: Open exec session and send command

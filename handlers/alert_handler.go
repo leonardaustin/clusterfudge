@@ -1,6 +1,6 @@
 package handlers
 
-import "kubeviewer/internal/alerts"
+import "clusterfudge/internal/alerts"
 
 // AlertHandler exposes alert operations to the Wails frontend.
 type AlertHandler struct {

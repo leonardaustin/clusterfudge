@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/clientcmd"
 
-	kvresource "kubeviewer/internal/resource"
+	kvresource "clusterfudge/internal/resource"
 )
 
 // ---------------------------------------------------------------------------
@@ -414,7 +414,7 @@ func namespaceFixture(name string) *corev1.Namespace {
 	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
-			Labels: map[string]string{"managed-by": "kubeviewer-e2e"},
+			Labels: map[string]string{"managed-by": "clusterfudge-e2e"},
 		},
 	}
 }

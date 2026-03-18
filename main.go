@@ -9,14 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"kubeviewer/handlers"
-	"kubeviewer/internal/alerts"
-	"kubeviewer/internal/audit"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/config"
-	"kubeviewer/internal/resource"
-	"kubeviewer/internal/troubleshoot"
-	"kubeviewer/internal/updater"
+	"clusterfudge/handlers"
+	"clusterfudge/internal/alerts"
+	"clusterfudge/internal/audit"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/config"
+	"clusterfudge/internal/resource"
+	"clusterfudge/internal/troubleshoot"
+	"clusterfudge/internal/updater"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -64,7 +64,7 @@ func main() {
 	svc := resource.NewService()
 
 	// Initialise updater
-	u := updater.NewUpdater("leonardaustin", "kubeviewer", Version)
+	u := updater.NewUpdater("leonardaustin", "clusterfudge", Version)
 	scheduler := updater.NewScheduler(u, 4*time.Hour, 30*time.Second, func(info updater.UpdateInfo) {
 		slog.Info("update available", "version", info.Version)
 	})
@@ -76,7 +76,7 @@ func main() {
 	// Use file-backed audit logger so entries survive restarts (L2).
 	auditLogPath := ""
 	if configDir, err := os.UserConfigDir(); err == nil {
-		auditLogPath = filepath.Join(configDir, "kubeviewer", "audit.jsonl")
+		auditLogPath = filepath.Join(configDir, "clusterfudge", "audit.jsonl")
 	}
 	var auditLogger *audit.Logger
 	if auditLogPath != "" {
@@ -157,7 +157,7 @@ func main() {
 	defer aiHandler.CloseAll()
 
 	err = wails.Run(&options.App{
-		Title:                    "KubeViewer",
+		Title:                    "Clusterfudge",
 		Width:                    1280,
 		Height:                   800,
 		MinWidth:                 900,

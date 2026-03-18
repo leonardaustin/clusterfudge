@@ -306,7 +306,7 @@ Each `Load()` reads and parses `~/.kube/config` from disk. This should be refact
 - [x] `GetReleaseValues` returns current user-supplied values (via GetRelease config)
 
 ### YAML Editor
-- [x] YAML editor renders with KubeViewer dark theme
+- [x] YAML editor renders with Clusterfudge dark theme
 - [x] YAML editor shows "Unsaved changes" indicator when modified
 - [x] Cmd+S in editor triggers apply
 - [x] Apply success shows toast notification
@@ -406,9 +406,9 @@ Each `Load()` reads and parses `~/.kube/config` from disk. This should be refact
 - [x] Frontend bundle: initial load < 3 MB gzipped (run `make analyze-bundle`)
 
 **macOS Distribution:**
-- [ ] App signed: `codesign --verify --verbose build/bin/KubeViewer.app`
-- [ ] Notarized: `spctl --assess --verbose build/bin/KubeViewer.app`
-- [ ] Stapled: `xcrun stapler validate build/bin/KubeViewer.app`
+- [ ] App signed: `codesign --verify --verbose build/bin/Clusterfudge.app`
+- [ ] Notarized: `spctl --assess --verbose build/bin/Clusterfudge.app`
+- [ ] Stapled: `xcrun stapler validate build/bin/Clusterfudge.app`
 - [ ] DMG mounts and shows correct window layout
 - [ ] Drag to Applications works
 - [ ] App launches without Gatekeeper warning on clean macOS VM
@@ -472,7 +472,7 @@ Each `Load()` reads and parses `~/.kube/config` from disk. This should be refact
 **Post-Release:**
 - [ ] GitHub Release created with all platform artifacts
 - [ ] Checksums file (`checksums.txt`) attached to release
-- [ ] Homebrew tap updated: `brew upgrade kubeviewer` works
+- [ ] Homebrew tap updated: `brew upgrade clusterfudge` works
 - [ ] Winget manifest submitted (if applicable)
 - [ ] Release tagged as pre-release if semver has `-` suffix (e.g. `v0.2.0-rc1`)
 - [ ] Verify download links in release description are valid

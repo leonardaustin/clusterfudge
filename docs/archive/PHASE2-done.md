@@ -66,11 +66,11 @@ Run these commands from the directory *above* where you want the project to live
 
 ```bash
 # Scaffold with React + TypeScript template
-wails init -n kubeviewer -t react-ts
+wails init -n clusterfudge -t react-ts
 # Expected output:
-# Project 'kubeviewer' created successfully.
+# Project 'clusterfudge' created successfully.
 
-cd kubeviewer
+cd clusterfudge
 ```
 
 ### Initialize the Go module
@@ -80,11 +80,11 @@ canonical import path:
 
 ```bash
 # Replace the default module path
-go mod edit -module github.com/leonardaustin/kubeviewer
+go mod edit -module github.com/leonardaustin/clusterfudge
 
 # Verify
 head -1 go.mod
-# Expected: module github.com/leonardaustin/kubeviewer
+# Expected: module github.com/leonardaustin/clusterfudge
 ```
 
 ### Switch the frontend to pnpm
@@ -207,8 +207,8 @@ Located at the project root. Every field explained:
 ```json
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "KubeViewer",
-  "outputfilename": "kubeviewer",
+  "name": "Clusterfudge",
+  "outputfilename": "clusterfudge",
   "frontend:install": "pnpm install",
   "frontend:build": "pnpm run build",
   "frontend:dev:watcher": "pnpm run dev",
@@ -219,9 +219,9 @@ Located at the project root. Every field explained:
   "debounceMS": 100,
   "version": "2",
   "info": {
-    "productName": "KubeViewer",
+    "productName": "Clusterfudge",
     "productVersion": "0.1.0",
-    "productIdentifier": "com.leonardaustin.kubeviewer",
+    "productIdentifier": "com.leonardaustin.clusterfudge",
     "copyright": "© 2024 Leonard Austin",
     "comments": "Kubernetes cluster viewer"
   },
@@ -637,7 +637,7 @@ No-scroll body, font preloading, correct meta tags:
       type="font/woff2"
       crossorigin="anonymous"
     />
-    <title>KubeViewer</title>
+    <title>Clusterfudge</title>
   </head>
   <body>
     <div id="root"></div>
@@ -955,10 +955,10 @@ import Topbar from './Topbar'
 import BottomTray, { type TrayTab } from './BottomTray'
 
 // ── Constants ───────────────────────────────────────────────────────────────
-const SIDEBAR_COLLAPSED_KEY = 'kubeviewer:sidebar:collapsed'
-const TRAY_HEIGHT_KEY = 'kubeviewer:tray:height'
-const TRAY_OPEN_KEY = 'kubeviewer:tray:open'
-const TRAY_TAB_KEY = 'kubeviewer:tray:tab'
+const SIDEBAR_COLLAPSED_KEY = 'clusterfudge:sidebar:collapsed'
+const TRAY_HEIGHT_KEY = 'clusterfudge:tray:height'
+const TRAY_OPEN_KEY = 'clusterfudge:tray:open'
+const TRAY_TAB_KEY = 'clusterfudge:tray:tab'
 
 const SIDEBAR_WIDTH = 220
 const SIDEBAR_COLLAPSED_WIDTH = 48
@@ -1373,7 +1373,7 @@ function SectionGroup({
   activePath: string
   onNavigate: (path: string) => void
 }) {
-  const storageKey = `kubeviewer:nav:section:${section.id}`
+  const storageKey = `clusterfudge:nav:section:${section.id}`
   const [open, setOpen] = useState<boolean>(() => {
     const saved = localStorage.getItem(storageKey)
     return saved !== null ? saved === 'true' : true // default open
@@ -1726,7 +1726,7 @@ function Breadcrumb() {
 
   return (
     <div className="flex items-center gap-1.5 text-sm min-w-0">
-      <span className="text-text-tertiary flex-shrink-0">KubeViewer</span>
+      <span className="text-text-tertiary flex-shrink-0">Clusterfudge</span>
       <ChevronRight className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
       <span className="text-text-primary font-medium truncate">{label}</span>
     </div>
@@ -1986,7 +1986,7 @@ export default function ClusterOverview() {
 After running `go mod tidy` this should look like (actual hash versions will differ):
 
 ```
-module github.com/leonardaustin/kubeviewer
+module github.com/leonardaustin/clusterfudge
 
 go 1.22
 
@@ -2010,12 +2010,12 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/leonardaustin/kubeviewer/handlers"
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
-	"github.com/leonardaustin/kubeviewer/internal/config"
-	"github.com/leonardaustin/kubeviewer/internal/helm"
-	"github.com/leonardaustin/kubeviewer/internal/resource"
-	"github.com/leonardaustin/kubeviewer/internal/stream"
+	"github.com/leonardaustin/clusterfudge/handlers"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/config"
+	"github.com/leonardaustin/clusterfudge/internal/helm"
+	"github.com/leonardaustin/clusterfudge/internal/resource"
+	"github.com/leonardaustin/clusterfudge/internal/stream"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -2044,7 +2044,7 @@ func main() {
 
 	// ── Wails app options ─────────────────────────────────────────────────────
 	err := wails.Run(&options.App{
-		Title:            "KubeViewer",
+		Title:            "Clusterfudge",
 		Width:            1280,
 		Height:           800,
 		MinWidth:         900,
@@ -2093,7 +2093,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -2114,7 +2114,7 @@ func NewApp(clusterMgr *cluster.Manager) *App {
 // hold onto it to call runtime.* functions later.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	log.Println("KubeViewer starting up")
+	log.Println("Clusterfudge starting up")
 
 	// Load persisted cluster configurations
 	if err := a.clusterMgr.LoadFromKubeconfig(); err != nil {
@@ -2134,7 +2134,7 @@ func (a *App) domReady(ctx context.Context) {
 
 // shutdown is called when the application is closing.
 func (a *App) shutdown(_ context.Context) {
-	log.Println("KubeViewer shutting down")
+	log.Println("Clusterfudge shutting down")
 	// Close any open watch streams, log streams, exec sessions
 	a.clusterMgr.DisconnectAll()
 }
@@ -2224,8 +2224,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/leonardaustin/kubeviewer/internal/config"
-	"github.com/leonardaustin/kubeviewer/internal/k8s"
+	"github.com/leonardaustin/clusterfudge/internal/config"
+	"github.com/leonardaustin/clusterfudge/internal/k8s"
 )
 
 // Info represents a connectable Kubernetes cluster entry.
@@ -2441,7 +2441,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -2521,7 +2521,7 @@ import (
 	"sync"
 )
 
-// AppConfig is the full persisted configuration for KubeViewer.
+// AppConfig is the full persisted configuration for Clusterfudge.
 type AppConfig struct {
 	FavoriteClusters []string          `json:"favoriteClusters"`
 	ClusterColors    map[string]string `json:"clusterColors"`
@@ -2539,7 +2539,7 @@ type Store struct {
 // NewStore creates a Store backed by the platform config directory.
 func NewStore() *Store {
 	dir, _ := os.UserConfigDir()
-	path := filepath.Join(dir, "kubeviewer", "config.json")
+	path := filepath.Join(dir, "clusterfudge", "config.json")
 	s := &Store{path: path}
 	_ = s.load() // best-effort; defaults used if file doesn't exist
 	return s
@@ -2589,7 +2589,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -2664,7 +2664,7 @@ func (s *Service) Ping(ctx context.Context) error {
 package helm
 
 import (
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
 )
 
 // Release represents a deployed Helm release.
@@ -2703,7 +2703,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/leonardaustin/kubeviewer/internal/cluster"
+	"github.com/leonardaustin/clusterfudge/internal/cluster"
 )
 
 // ClusterHandler exposes cluster management operations to the Wails frontend.
@@ -2748,7 +2748,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/leonardaustin/kubeviewer/internal/resource"
+	"github.com/leonardaustin/clusterfudge/internal/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -2804,7 +2804,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/leonardaustin/kubeviewer/internal/stream"
+	"github.com/leonardaustin/clusterfudge/internal/stream"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -2862,7 +2862,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/leonardaustin/kubeviewer/internal/helm"
+	"github.com/leonardaustin/clusterfudge/internal/helm"
 )
 
 // HelmHandler exposes Helm operations to the frontend.
@@ -2895,7 +2895,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/leonardaustin/kubeviewer/internal/config"
+	"github.com/leonardaustin/clusterfudge/internal/config"
 )
 
 // ConfigHandler exposes app configuration persistence to the frontend.
@@ -3004,7 +3004,7 @@ console.log(result.items)
 ### Build for distribution
 
 ```bash
-# Build for current platform (produces build/bin/kubeviewer)
+# Build for current platform (produces build/bin/clusterfudge)
 wails build
 
 # Build with optimizations and version metadata

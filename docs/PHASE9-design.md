@@ -2,7 +2,7 @@
 
 ## Goal
 
-Close the remaining feature gaps identified from the leading Kubernetes GUI tools (Komodor, Rancher, Lens, Headlamp, Cyclops, K9s, Portainer). This phase adds guided troubleshooting, form-based deployment wizards, GitOps integration, alerting, security scanning, custom dashboards, a plugin system, backup/restore, graph visualizations for RBAC and network policies, audit trails, and an application catalog — plus a responsive/mobile-first design that ensures KubeViewer works on tablets and phones.
+Close the remaining feature gaps identified from the leading Kubernetes GUI tools (Komodor, Rancher, Lens, Headlamp, Cyclops, K9s, Portainer). This phase adds guided troubleshooting, form-based deployment wizards, GitOps integration, alerting, security scanning, custom dashboards, a plugin system, backup/restore, graph visualizations for RBAC and network policies, audit trails, and an application catalog — plus a responsive/mobile-first design that ensures Clusterfudge works on tablets and phones.
 
 Target audience: mid-level engineer. All sections describe the feature, its architecture, and its implementation approach.
 
@@ -48,7 +48,7 @@ Mobile access is a goal **across the board** at every phase, not just Phase 9. T
 
 ### Overview
 
-KubeViewer must be usable on tablets and phones. This covers two delivery modes:
+Clusterfudge must be usable on tablets and phones. This covers two delivery modes:
 
 1. **Progressive Web App (PWA):** The React frontend is built as a standalone SPA with a service worker for offline caching. Deployed behind any HTTP server or as a container image. Users access it via a mobile browser and can "Add to Home Screen."
 2. **Responsive Desktop:** The existing Wails desktop app adapts to narrow window sizes (e.g., side-by-side with a terminal).
@@ -118,8 +118,8 @@ type WebServer struct {
 
 ```json
 {
-    "name": "KubeViewer",
-    "short_name": "KubeViewer",
+    "name": "Clusterfudge",
+    "short_name": "Clusterfudge",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0a0a0b",
@@ -137,7 +137,7 @@ type WebServer struct {
 
 ### Overview
 
-The single biggest competitive gap versus Komodor. When a pod crashes, a deployment stalls, or a node goes NotReady, users today must manually correlate events, logs, and config changes across multiple resources. KubeViewer should automate this.
+The single biggest competitive gap versus Komodor. When a pod crashes, a deployment stalls, or a node goes NotReady, users today must manually correlate events, logs, and config changes across multiple resources. Clusterfudge should automate this.
 
 ### Feature Design
 
@@ -271,7 +271,7 @@ type Suggestion struct {
 
 ### Overview
 
-Tools like Kubernetes Dashboard and Cyclops offer visual forms for creating resources without writing YAML. KubeViewer should offer form-based creation for the most common resource types.
+Tools like Kubernetes Dashboard and Cyclops offer visual forms for creating resources without writing YAML. Clusterfudge should offer form-based creation for the most common resource types.
 
 ### Supported Resource Wizards
 
@@ -369,12 +369,12 @@ Inspired by Cyclops's YAML templates with variables and Portainer's template lib
 
 2. **Template Library:** A built-in library of common templates (web server, database, queue, cron job) plus user-created templates stored locally.
 
-3. **Template Versioning:** Templates stored in `~/.kubeviewer/templates/` with Git-style versioning (each save creates a new version).
+3. **Template Versioning:** Templates stored in `~/.clusterfudge/templates/` with Git-style versioning (each save creates a new version).
 
 ### Template Format
 
 ```yaml
-# kubeviewer-template: v1
+# clusterfudge-template: v1
 # name: Web Application
 # description: Nginx-based web application with service
 # variables:
@@ -476,7 +476,7 @@ Extends the Phase 7 Helm chart browser (Artifact Hub) into a full application ca
 1. **Catalog Sources:**
    - Artifact Hub API (default, community charts)
    - User-configured Helm repositories
-   - Curated "Featured" list maintained by KubeViewer (top 50 charts with verified descriptions and icons)
+   - Curated "Featured" list maintained by Clusterfudge (top 50 charts with verified descriptions and icons)
 
 2. **Catalog UI:**
    - Grid/list view with chart icons, names, descriptions, and star counts
@@ -518,11 +518,11 @@ Extends the Phase 7 Helm chart browser (Artifact Hub) into a full application ca
 
 ### Overview
 
-Rancher has Fleet, Portainer has Git-based stacks, and OpenShift integrates ArgoCD. KubeViewer should detect and surface GitOps tool state.
+Rancher has Fleet, Portainer has Git-based stacks, and OpenShift integrates ArgoCD. Clusterfudge should detect and surface GitOps tool state.
 
 ### Feature Design
 
-KubeViewer does **not** ship its own GitOps engine. Instead, it detects ArgoCD and Flux installations in the cluster and provides a native UI for browsing their custom resources.
+Clusterfudge does **not** ship its own GitOps engine. Instead, it detects ArgoCD and Flux installations in the cluster and provides a native UI for browsing their custom resources.
 
 1. **Auto-Detection:** On cluster connect, check for:
    - ArgoCD: `argoproj.io/v1alpha1` API group (`Application`, `AppProject`)
@@ -583,7 +583,7 @@ type DetectedProvider struct {
 
 ### Overview
 
-Lens has extensions, Headlamp has plugins, K9s has custom plugins. KubeViewer Phase 1 deferred this as "Future." Phase 9 defines and ships it.
+Lens has extensions, Headlamp has plugins, K9s has custom plugins. Clusterfudge Phase 1 deferred this as "Future." Phase 9 defines and ships it.
 
 ### Architecture
 
@@ -591,7 +591,7 @@ Plugins are **iframe-sandboxed web apps** that communicate with the host via a v
 
 ```
 ┌──────────────────────────────────────────┐
-│  KubeViewer Host                         │
+│  Clusterfudge Host                         │
 │  ┌────────────────────────────────────┐  │
 │  │ Plugin Manager                     │  │
 │  │ - Discovers plugins                │  │
@@ -614,7 +614,7 @@ Plugins are **iframe-sandboxed web apps** that communicate with the host via a v
 
 ```json
 {
-    "name": "my-kubeviewer-plugin",
+    "name": "my-clusterfudge-plugin",
     "version": "1.0.0",
     "displayName": "Cost Dashboard",
     "description": "Visualizes resource costs using OpenCost data",
@@ -638,7 +638,7 @@ Plugins are **iframe-sandboxed web apps** that communicate with the host via a v
 
 ```typescript
 // Plugin SDK types
-interface KubeViewerPluginAPI {
+interface ClusterfudgePluginAPI {
     // Resource access (scoped to declared permissions)
     listResources(gvr: GroupVersionResource, namespace?: string): Promise<ResourceList>;
     getResource(gvr: GroupVersionResource, namespace: string, name: string): Promise<Resource>;
@@ -657,10 +657,10 @@ interface KubeViewerPluginAPI {
 
 ### Plugin Storage
 
-Plugins are installed to `~/.kubeviewer/plugins/<name>/`. Each plugin is a directory containing the manifest and static assets. Plugins can be installed from:
+Plugins are installed to `~/.clusterfudge/plugins/<name>/`. Each plugin is a directory containing the manifest and static assets. Plugins can be installed from:
 - Local directory
 - Git repository URL
-- Future: KubeViewer plugin registry
+- Future: Clusterfudge plugin registry
 
 ---
 
@@ -668,11 +668,11 @@ Plugins are installed to `~/.kubeviewer/plugins/<name>/`. Each plugin is a direc
 
 ### Overview
 
-Rancher includes built-in alerting. Komodor provides automated anomaly alerts. KubeViewer should let users define alert rules and receive notifications.
+Rancher includes built-in alerting. Komodor provides automated anomaly alerts. Clusterfudge should let users define alert rules and receive notifications.
 
 ### Feature Design
 
-1. **Alert Rules:** User-defined rules evaluated against the informer cache and metrics. Rules are stored locally in `~/.kubeviewer/alerts.yaml`.
+1. **Alert Rules:** User-defined rules evaluated against the informer cache and metrics. Rules are stored locally in `~/.clusterfudge/alerts.yaml`.
 
 2. **Built-in Alert Rules (defaults, user can disable):**
    - Pod in `CrashLoopBackOff` for > 5 minutes
@@ -692,7 +692,7 @@ Rancher includes built-in alerting. Komodor provides automated anomaly alerts. K
 ### Alert Rule Format
 
 ```yaml
-# ~/.kubeviewer/alerts.yaml
+# ~/.clusterfudge/alerts.yaml
 rules:
   - name: pod-crashloop
     description: Pod in CrashLoopBackOff
@@ -773,7 +773,7 @@ type Alert struct {
 
 ### Overview
 
-Rancher offers backup/restore for cluster state. KubeViewer integrates with Velero (the de facto standard) and also provides lightweight resource export/import.
+Rancher offers backup/restore for cluster state. Clusterfudge integrates with Velero (the de facto standard) and also provides lightweight resource export/import.
 
 ### Feature Design
 
@@ -843,7 +843,7 @@ type ImportResult struct {
 
 ### Overview
 
-Enterprise tools like OpenShift include security features. KubeViewer integrates with Trivy (the most widely used open-source scanner) for image vulnerability scanning.
+Enterprise tools like OpenShift include security features. Clusterfudge integrates with Trivy (the most widely used open-source scanner) for image vulnerability scanning.
 
 ### Feature Design
 
@@ -917,14 +917,14 @@ type SecurityIssue struct {
 
 ### Overview
 
-The Komodor article recommends customizing dashboards for different user roles. KubeViewer should let users create and save custom dashboard layouts.
+The Komodor article recommends customizing dashboards for different user roles. Clusterfudge should let users create and save custom dashboard layouts.
 
 ### Feature Design
 
 1. **Dashboard Builder:**
    - Drag-and-drop grid layout (CSS Grid based)
    - Widget library: metric card, resource table, chart, event feed, status summary, markdown note
-   - Save/load dashboard configurations to `~/.kubeviewer/dashboards/`
+   - Save/load dashboard configurations to `~/.clusterfudge/dashboards/`
    - Share dashboards as JSON files
 
 2. **Built-in Dashboards:**
@@ -985,11 +985,11 @@ The Komodor article recommends customizing dashboards for different user roles. 
 
 ### Overview
 
-Komodor provides audit trails showing who changed what and when. KubeViewer records all user-initiated actions locally.
+Komodor provides audit trails showing who changed what and when. Clusterfudge records all user-initiated actions locally.
 
 ### Feature Design
 
-This is a **local audit trail** — it records actions taken through KubeViewer, not all cluster activity (which requires K8s API server audit logging).
+This is a **local audit trail** — it records actions taken through Clusterfudge, not all cluster activity (which requires K8s API server audit logging).
 
 1. **Recorded Actions:**
    - Resource create/update/delete
@@ -1000,7 +1000,7 @@ This is a **local audit trail** — it records actions taken through KubeViewer,
    - Template apply
    - Backup/restore operations
 
-2. **Audit Log Storage:** `audit_log` table in the shared SQLite database at `~/.kubeviewer/kubeviewer.db` (see Phase 8.1 — SQLite Persistence Layer). Retention: 90 days (configurable). Sharing the database with resource snapshots and search indexing avoids multiple SQLite files and enables cross-table queries (e.g., correlating audit actions with resource history trends).
+2. **Audit Log Storage:** `audit_log` table in the shared SQLite database at `~/.clusterfudge/clusterfudge.db` (see Phase 8.1 — SQLite Persistence Layer). Retention: 90 days (configurable). Sharing the database with resource snapshots and search indexing avoids multiple SQLite files and enables cross-table queries (e.g., correlating audit actions with resource history trends).
 
 3. **Audit Log UI:** Searchable, filterable table showing:
    - Timestamp

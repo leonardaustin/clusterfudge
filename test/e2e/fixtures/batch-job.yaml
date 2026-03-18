@@ -2,9 +2,9 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: e2e-batch-job
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   template:
     metadata:

@@ -17,7 +17,7 @@ const troubleshootSteps: TroubleshootStep[] = [
   {
     label: 'Check if the cluster is reachable',
     command: 'kubectl cluster-info',
-    note: 'If this also times out, the issue is not specific to KubeViewer',
+    note: 'If this also times out, the issue is not specific to Clusterfudge',
   },
   {
     label: 'Verify your VPN is connected (if required)',

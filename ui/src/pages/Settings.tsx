@@ -120,7 +120,7 @@ function GeneralSection({ version }: { version: string }) {
       <SettingRow label="Beta features" description="Show experimental pages in the sidebar (security, operations, wizards, etc.)">
         <Toggle checked={useSettingsStore((s) => s.betaFeatures)} onChange={(v) => update('betaFeatures', v)} />
       </SettingRow>
-      <SettingRow label="Current version" description={`KubeViewer ${version}`}>
+      <SettingRow label="Current version" description={`Clusterfudge ${version}`}>
         <button className="settings-btn" onClick={handleCheckUpdate} disabled={checking}>
           {checking ? 'Checking…' : 'Check now'}
         </button>
@@ -456,7 +456,7 @@ function AdvancedSection() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'kubeviewer-settings.json'
+    a.download = 'clusterfudge-settings.json'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -673,7 +673,7 @@ function AboutSection({ version }: { version: string }) {
           <polyline points="22 8.5 12 15.5 2 8.5" />
         </svg>
         <div>
-          <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-primary)' }}>KubeViewer</div>
+          <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--text-primary)' }}>Clusterfudge</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>{version}</div>
         </div>
       </div>

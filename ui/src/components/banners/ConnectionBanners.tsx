@@ -144,7 +144,7 @@ function UpdateBanner({ version, onInstall }: { version: string; onInstall: () =
     <Banner
       variant="info"
       icon={<ArrowUp className="w-3.5 h-3.5" />}
-      message={`KubeViewer ${version} is available.`}
+      message={`Clusterfudge ${version} is available.`}
       action={
         <button
           onClick={onInstall}

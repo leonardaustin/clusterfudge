@@ -239,7 +239,7 @@
 ### L2 — Template directory inconsistent with config directory
 **File**: `internal/templates/engine.go:51`
 **Category**: bug
-**Description**: User templates stored in `~/.kubeviewer/templates/` (hardcoded) while config uses `os.UserConfigDir()` (macOS: `~/Library/Application Support/`, Linux: `~/.config/`). Different conventions for related data.
+**Description**: User templates stored in `~/.clusterfudge/templates/` (hardcoded) while config uses `os.UserConfigDir()` (macOS: `~/Library/Application Support/`, Linux: `~/.config/`). Different conventions for related data.
 **Suggested fix**: Use `os.UserConfigDir()` consistently.
 
 ### L3 — UpdateBanner uses @ts-expect-error to access Wails runtime

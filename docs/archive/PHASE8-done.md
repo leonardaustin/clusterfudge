@@ -2,7 +2,7 @@
 
 ## Goal
 
-Production-ready application: performance optimised, cross-platform builds, auto-update mechanism, app signing, installer generation, and the final design polish that makes KubeViewer feel like a premium native app.
+Production-ready application: performance optimised, cross-platform builds, auto-update mechanism, app signing, installer generation, and the final design polish that makes Clusterfudge feel like a premium native app.
 
 Target audience: mid-level engineer. All code and config is complete and copy-pasteable.
 
@@ -378,7 +378,7 @@ func (s *ResourceService) ListPods(ctx context.Context, namespace string) ([]cor
 
 SQLite provides durable storage for resource snapshots, search indexing, historical trends, and audit logs. This eliminates the cold-start blank screen and enables offline cluster browsing.
 
-**Database location:** `~/.kubeviewer/kubeviewer.db`
+**Database location:** `~/.clusterfudge/clusterfudge.db`
 
 **Driver:** `modernc.org/sqlite` (pure Go, no CGo required — simplifies cross-compilation).
 
@@ -398,7 +398,7 @@ import (
     _ "modernc.org/sqlite"
 )
 
-// DB wraps the SQLite database with KubeViewer-specific operations.
+// DB wraps the SQLite database with Clusterfudge-specific operations.
 type DB struct {
     db       *sql.DB
     mu       sync.Mutex
@@ -417,13 +417,13 @@ type ResourceSnapshot struct {
     UpdatedAt       time.Time `json:"updatedAt"`
 }
 
-// Open creates or opens the KubeViewer database with WAL mode enabled.
+// Open creates or opens the Clusterfudge database with WAL mode enabled.
 func Open() (*DB, error) {
-    dir := filepath.Join(os.Getenv("HOME"), ".kubeviewer")
+    dir := filepath.Join(os.Getenv("HOME"), ".clusterfudge")
     if err := os.MkdirAll(dir, 0700); err != nil {
         return nil, err
     }
-    dbPath := filepath.Join(dir, "kubeviewer.db")
+    dbPath := filepath.Join(dir, "clusterfudge.db")
 
     db, err := sql.Open("sqlite", dbPath)
     if err != nil {
@@ -1168,10 +1168,10 @@ func (m *Manager) Stats() map[string]int {
 ## 8.2 — Complete Makefile
 
 ```makefile
-# Makefile for KubeViewer development
+# Makefile for Clusterfudge development
 # Usage: make help
 
-BINARY      := kubeviewer
+BINARY      := clusterfudge
 VERSION     := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_DIR   := build/bin
 GO          := go
@@ -1500,20 +1500,20 @@ jobs:
           - name: macOS (Universal)
             os: macos-14
             platform: darwin/universal
-            artifact_name: KubeViewer-macos-universal
-            binary: build/bin/KubeViewer.app
+            artifact_name: Clusterfudge-macos-universal
+            binary: build/bin/Clusterfudge.app
 
           - name: Windows (amd64)
             os: windows-latest
             platform: windows/amd64
-            artifact_name: KubeViewer-windows-amd64
-            binary: build/bin/KubeViewer.exe
+            artifact_name: Clusterfudge-windows-amd64
+            binary: build/bin/Clusterfudge.exe
 
           - name: Linux (amd64)
             os: ubuntu-latest
             platform: linux/amd64
-            artifact_name: KubeViewer-linux-amd64
-            binary: build/bin/kubeviewer
+            artifact_name: Clusterfudge-linux-amd64
+            binary: build/bin/clusterfudge
 
     steps:
       - uses: actions/checkout@v4
@@ -1588,8 +1588,8 @@ jobs:
           codesign --force --deep --options runtime \
             --sign "$MACOS_SIGNING_IDENTITY" \
             --entitlements build/darwin/entitlements.plist \
-            build/bin/KubeViewer.app
-          codesign --verify --verbose build/bin/KubeViewer.app
+            build/bin/Clusterfudge.app
+          codesign --verify --verbose build/bin/Clusterfudge.app
 
       - name: Notarize macOS app
         if: runner.os == 'macOS'
@@ -1598,29 +1598,29 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          ditto -c -k --keepParent build/bin/KubeViewer.app KubeViewer.zip
-          xcrun notarytool submit KubeViewer.zip \
+          ditto -c -k --keepParent build/bin/Clusterfudge.app Clusterfudge.zip
+          xcrun notarytool submit Clusterfudge.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
-          xcrun stapler staple build/bin/KubeViewer.app
+          xcrun stapler staple build/bin/Clusterfudge.app
 
       - name: Create DMG
         if: runner.os == 'macOS'
         run: |
           create-dmg \
-            --volname "KubeViewer ${{ github.ref_name }}" \
+            --volname "Clusterfudge ${{ github.ref_name }}" \
             --volicon "build/darwin/icon.icns" \
             --background "build/darwin/dmg-background.png" \
             --window-pos 200 120 \
             --window-size 660 400 \
             --icon-size 160 \
-            --icon "KubeViewer.app" 180 185 \
-            --hide-extension "KubeViewer.app" \
+            --icon "Clusterfudge.app" 180 185 \
+            --hide-extension "Clusterfudge.app" \
             --app-drop-link 480 185 \
-            "KubeViewer-${{ github.ref_name }}-macos-universal.dmg" \
-            "build/bin/KubeViewer.app"
+            "Clusterfudge-${{ github.ref_name }}-macos-universal.dmg" \
+            "build/bin/Clusterfudge.app"
 
       # ── Windows: Build → NSIS Installer → Sign ─────────────────────────────
       - name: Build (Windows)
@@ -1641,7 +1641,7 @@ jobs:
             /p "$env:WINDOWS_CERTIFICATE_PWD" `
             /tr http://timestamp.digicert.com `
             /td sha256 /fd sha256 `
-            build/bin/KubeViewer-amd64-installer.exe
+            build/bin/Clusterfudge-amd64-installer.exe
           Remove-Item certificate.pfx
 
       # ── Linux: Build → AppImage + tar.gz ───────────────────────────────────
@@ -1658,8 +1658,8 @@ jobs:
       - name: Create tar.gz (Linux)
         if: runner.os == 'Linux'
         run: |
-          tar -czf KubeViewer-${{ github.ref_name }}-linux-amd64.tar.gz \
-            -C build/bin kubeviewer
+          tar -czf Clusterfudge-${{ github.ref_name }}-linux-amd64.tar.gz \
+            -C build/bin clusterfudge
 
       # ── Upload artifacts ────────────────────────────────────────────────────
       - name: Upload artifacts
@@ -1714,7 +1714,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: KubeViewer ${{ github.ref_name }}
+          name: Clusterfudge ${{ github.ref_name }}
           body: |
             ## What's Changed
 
@@ -1724,10 +1724,10 @@ jobs:
 
             | Platform | File |
             |----------|------|
-            | macOS (Universal) | `KubeViewer-${{ github.ref_name }}-macos-universal.dmg` |
-            | Windows (amd64) | `KubeViewer-amd64-installer.exe` |
-            | Linux (amd64) | `KubeViewer-${{ github.ref_name }}-linux-amd64.AppImage` |
-            | Linux (tar.gz) | `KubeViewer-${{ github.ref_name }}-linux-amd64.tar.gz` |
+            | macOS (Universal) | `Clusterfudge-${{ github.ref_name }}-macos-universal.dmg` |
+            | Windows (amd64) | `Clusterfudge-amd64-installer.exe` |
+            | Linux (amd64) | `Clusterfudge-${{ github.ref_name }}-linux-amd64.AppImage` |
+            | Linux (tar.gz) | `Clusterfudge-${{ github.ref_name }}-linux-amd64.tar.gz` |
 
             ## Checksums (SHA256)
 
@@ -1742,18 +1742,18 @@ jobs:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           VERSION="${{ github.ref_name }}"
-          DMG_FILE="dist/KubeViewer-${VERSION}-macos-universal.dmg"
+          DMG_FILE="dist/Clusterfudge-${VERSION}-macos-universal.dmg"
           SHA256=$(sha256sum "$DMG_FILE" | cut -d' ' -f1)
 
           # Clone tap repo, update cask formula, push
           git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/leonardaustin/homebrew-tap.git tap
           cd tap
-          sed -i "s/version \".*\"/version \"${VERSION#v}\"/" Casks/kubeviewer.rb
-          sed -i "s/sha256 \".*\"/sha256 \"${SHA256}\"/" Casks/kubeviewer.rb
+          sed -i "s/version \".*\"/version \"${VERSION#v}\"/" Casks/clusterfudge.rb
+          sed -i "s/sha256 \".*\"/sha256 \"${SHA256}\"/" Casks/clusterfudge.rb
           git config user.email "leonardaustin@users.noreply.github.com"
           git config user.name "Leonard Austin"
-          git add Casks/kubeviewer.rb
-          git commit -m "Update KubeViewer to ${VERSION}"
+          git add Casks/clusterfudge.rb
+          git commit -m "Update Clusterfudge to ${VERSION}"
           git push
 ```
 
@@ -1955,12 +1955,12 @@ Store these GitHub Secrets:
 # Environment variables must be set before running.
 set -euo pipefail
 
-APP_PATH="${APP_PATH:-build/bin/KubeViewer.app}"
+APP_PATH="${APP_PATH:-build/bin/Clusterfudge.app}"
 SIGNING_IDENTITY="${MACOS_SIGNING_IDENTITY:?Need MACOS_SIGNING_IDENTITY}"
 APPLE_ID="${APPLE_ID:?Need APPLE_ID}"
 APP_PASSWORD="${APPLE_APP_PASSWORD:?Need APPLE_APP_PASSWORD}"
 TEAM_ID="${APPLE_TEAM_ID:?Need APPLE_TEAM_ID}"
-BUNDLE_ID="com.kubeviewer.app"
+BUNDLE_ID="com.clusterfudge.app"
 
 echo "==> Signing $APP_PATH"
 codesign \
@@ -1977,10 +1977,10 @@ codesign --verify --verbose=4 "$APP_PATH"
 spctl --assess --verbose "$APP_PATH" || true  # may fail before notarization
 
 echo "==> Creating ZIP for notarization"
-ditto -c -k --keepParent "$APP_PATH" "KubeViewer-notarize.zip"
+ditto -c -k --keepParent "$APP_PATH" "Clusterfudge-notarize.zip"
 
 echo "==> Submitting for notarization (this may take 1-5 minutes)"
-xcrun notarytool submit "KubeViewer-notarize.zip" \
+xcrun notarytool submit "Clusterfudge-notarize.zip" \
   --apple-id "$APPLE_ID" \
   --password "$APP_PASSWORD" \
   --team-id "$TEAM_ID" \
@@ -1994,7 +1994,7 @@ echo "==> Final verification"
 spctl --assess --verbose "$APP_PATH"
 echo "Done! App is signed and notarized."
 
-rm -f "KubeViewer-notarize.zip"
+rm -f "Clusterfudge-notarize.zip"
 ```
 
 ### Step 5: DMG Creation with Custom Background
@@ -2005,22 +2005,22 @@ rm -f "KubeViewer-notarize.zip"
 set -euo pipefail
 
 VERSION="${1:-dev}"
-APP_PATH="build/bin/KubeViewer.app"
-DMG_NAME="KubeViewer-${VERSION}-macos-universal.dmg"
+APP_PATH="build/bin/Clusterfudge.app"
+DMG_NAME="Clusterfudge-${VERSION}-macos-universal.dmg"
 
 # Background image: 660x400px PNG at build/darwin/dmg-background.png
-# Design: dark gradient with KubeViewer logo centered
+# Design: dark gradient with Clusterfudge logo centered
 # Arrow pointing from app icon to Applications alias
 
 create-dmg \
-  --volname "KubeViewer ${VERSION}" \
+  --volname "Clusterfudge ${VERSION}" \
   --volicon "build/darwin/icon.icns" \
   --background "build/darwin/dmg-background.png" \
   --window-pos 200 120 \
   --window-size 660 400 \
   --icon-size 160 \
-  --icon "KubeViewer.app" 180 185 \
-  --hide-extension "KubeViewer.app" \
+  --icon "Clusterfudge.app" 180 185 \
+  --hide-extension "Clusterfudge.app" \
   --app-drop-link 480 185 \
   --no-internet-enable \
   "$DMG_NAME" \
@@ -2036,7 +2036,7 @@ shasum -a 256 "$DMG_NAME"
 |-------|-------|-----|
 | `errSecInternalComponent` | Keychain not unlocked | `security unlock-keychain build.keychain` |
 | `The specified item could not be found in the keychain` | Identity string mismatch | Use exact string from `security find-identity -p codesigning` |
-| `resource fork, Finder information, or similar detritus` | Extended attributes on files | `xattr -cr build/bin/KubeViewer.app` then re-sign |
+| `resource fork, Finder information, or similar detritus` | Extended attributes on files | `xattr -cr build/bin/Clusterfudge.app` then re-sign |
 | `notarytool: error: The app is not signed` | Deep flag not used | Use `--deep` or sign all nested binaries individually |
 | `Unable to process the application` | Hardened runtime missing | Add `--options runtime` to codesign |
 | `The signature of the binary is invalid` | Signing identity expired | Renew certificate in developer portal |
@@ -2059,7 +2059,7 @@ For CI, an OV or EV certificate from DigiCert, Sectigo, or GlobalSign is recomme
 
 ```powershell
 # Export as PFX (PKCS#12) from Windows Certificate Store:
-$cert = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*KubeViewer*" }
+$cert = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*Clusterfudge*" }
 Export-PfxCertificate -Cert $cert -FilePath certificate.pfx -Password (Read-Host -AsSecureString)
 
 # Base64 encode for GitHub secret:
@@ -2077,7 +2077,7 @@ Store these GitHub Secrets:
 ```powershell
 # scripts/sign-windows.ps1
 param(
-    [string]$Target = "build\bin\KubeViewer-amd64-installer.exe"
+    [string]$Target = "build\bin\Clusterfudge-amd64-installer.exe"
 )
 
 $SIGNTOOL = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
@@ -2119,10 +2119,10 @@ Unicode True
 !include "FileFunc.nsh"
 
 ; ── Application metadata ────────────────────────────────────────────────────
-Name        "KubeViewer"
-OutFile     "..\..\bin\KubeViewer-amd64-installer.exe"
-InstallDir  "$PROGRAMFILES64\KubeViewer"
-InstallDirRegKey HKLM "Software\KubeViewer" "InstallDir"
+Name        "Clusterfudge"
+OutFile     "..\..\bin\Clusterfudge-amd64-installer.exe"
+InstallDir  "$PROGRAMFILES64\Clusterfudge"
+InstallDirRegKey HKLM "Software\Clusterfudge" "InstallDir"
 RequestExecutionLevel admin
 
 ; ── Installer UI ─────────────────────────────────────────────────────────────
@@ -2135,8 +2135,8 @@ RequestExecutionLevel admin
 !insertmacro MUI_PAGE_LICENSE "..\..\..\LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\KubeViewer.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "Launch KubeViewer"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\Clusterfudge.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Launch Clusterfudge"
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -2145,49 +2145,49 @@ RequestExecutionLevel admin
 !insertmacro MUI_LANGUAGE "English"
 
 ; ── Sections ─────────────────────────────────────────────────────────────────
-Section "KubeViewer" SecMain
+Section "Clusterfudge" SecMain
     SetOutPath "$INSTDIR"
-    File "..\..\bin\KubeViewer.exe"
+    File "..\..\bin\Clusterfudge.exe"
     File "..\..\bin\WebView2Loader.dll"
 
     ; Start menu shortcut
-    CreateDirectory "$SMPROGRAMS\KubeViewer"
-    CreateShortCut "$SMPROGRAMS\KubeViewer\KubeViewer.lnk" "$INSTDIR\KubeViewer.exe"
-    CreateShortCut "$SMPROGRAMS\KubeViewer\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+    CreateDirectory "$SMPROGRAMS\Clusterfudge"
+    CreateShortCut "$SMPROGRAMS\Clusterfudge\Clusterfudge.lnk" "$INSTDIR\Clusterfudge.exe"
+    CreateShortCut "$SMPROGRAMS\Clusterfudge\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
 
     ; Desktop shortcut (optional, user can decline)
-    CreateShortCut "$DESKTOP\KubeViewer.lnk" "$INSTDIR\KubeViewer.exe"
+    CreateShortCut "$DESKTOP\Clusterfudge.lnk" "$INSTDIR\Clusterfudge.exe"
 
     ; Registry: uninstall entry
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "DisplayName"      "KubeViewer"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "DisplayIcon"      "$INSTDIR\KubeViewer.exe"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "DisplayVersion"   "${VERSION}"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "Publisher"        "Leonard Austin"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "UninstallString"  '"$INSTDIR\Uninstall.exe"'
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "NoModify"         1
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "NoRepair"         1
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "DisplayName"      "Clusterfudge"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "DisplayIcon"      "$INSTDIR\Clusterfudge.exe"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "DisplayVersion"   "${VERSION}"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "Publisher"        "Leonard Austin"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "UninstallString"  '"$INSTDIR\Uninstall.exe"'
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "NoModify"         1
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "NoRepair"         1
 
     ; Estimate install size
     ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
     IntFmt $0 "0x%08X" $0
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer" "EstimatedSize" "$0"
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge" "EstimatedSize" "$0"
 
     WriteUninstaller "$INSTDIR\Uninstall.exe"
 SectionEnd
 
 Section "Uninstall"
-    Delete "$INSTDIR\KubeViewer.exe"
+    Delete "$INSTDIR\Clusterfudge.exe"
     Delete "$INSTDIR\WebView2Loader.dll"
     Delete "$INSTDIR\Uninstall.exe"
     RMDir  "$INSTDIR"
 
-    Delete "$SMPROGRAMS\KubeViewer\KubeViewer.lnk"
-    Delete "$SMPROGRAMS\KubeViewer\Uninstall.lnk"
-    RMDir  "$SMPROGRAMS\KubeViewer"
-    Delete "$DESKTOP\KubeViewer.lnk"
+    Delete "$SMPROGRAMS\Clusterfudge\Clusterfudge.lnk"
+    Delete "$SMPROGRAMS\Clusterfudge\Uninstall.lnk"
+    RMDir  "$SMPROGRAMS\Clusterfudge"
+    Delete "$DESKTOP\Clusterfudge.lnk"
 
-    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\KubeViewer"
-    DeleteRegKey HKLM "Software\KubeViewer"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Clusterfudge"
+    DeleteRegKey HKLM "Software\Clusterfudge"
 SectionEnd
 ```
 
@@ -2203,9 +2203,9 @@ SectionEnd
 set -euo pipefail
 
 VERSION="${1:-dev}"
-BINARY="build/bin/kubeviewer"
-APPDIR="KubeViewer.AppDir"
-OUTPUT="KubeViewer-${VERSION}-linux-amd64.AppImage"
+BINARY="build/bin/clusterfudge"
+APPDIR="Clusterfudge.AppDir"
+OUTPUT="Clusterfudge-${VERSION}-linux-amd64.AppImage"
 
 # Requires: appimagetool (https://github.com/AppImage/AppImageKit)
 # Download: wget -O /usr/local/bin/appimagetool https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage && chmod +x /usr/local/bin/appimagetool
@@ -2214,31 +2214,31 @@ rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/icons/hicolor/512x512/apps"
 
 # Copy binary
-cp "$BINARY" "$APPDIR/usr/bin/kubeviewer"
-chmod +x "$APPDIR/usr/bin/kubeviewer"
+cp "$BINARY" "$APPDIR/usr/bin/clusterfudge"
+chmod +x "$APPDIR/usr/bin/clusterfudge"
 
 # Desktop entry
-cat > "$APPDIR/kubeviewer.desktop" << EOF
+cat > "$APPDIR/clusterfudge.desktop" << EOF
 [Desktop Entry]
-Name=KubeViewer
-Exec=kubeviewer
-Icon=kubeviewer
+Name=Clusterfudge
+Exec=clusterfudge
+Icon=clusterfudge
 Type=Application
 Categories=Development;Network;
 Comment=Fast, beautiful Kubernetes desktop client
-StartupWMClass=kubeviewer
+StartupWMClass=clusterfudge
 Keywords=kubernetes;k8s;devops;containers;
 EOF
 
 # Icon (512x512 PNG)
-cp build/appicon.png "$APPDIR/usr/share/icons/hicolor/512x512/apps/kubeviewer.png"
-cp build/appicon.png "$APPDIR/kubeviewer.png"
+cp build/appicon.png "$APPDIR/usr/share/icons/hicolor/512x512/apps/clusterfudge.png"
+cp build/appicon.png "$APPDIR/clusterfudge.png"
 
 # AppRun entrypoint
 cat > "$APPDIR/AppRun" << 'EOF'
 #!/usr/bin/env bash
 SELF_DIR=$(dirname "$(readlink -f "$0")")
-exec "$SELF_DIR/usr/bin/kubeviewer" "$@"
+exec "$SELF_DIR/usr/bin/clusterfudge" "$@"
 EOF
 chmod +x "$APPDIR/AppRun"
 
@@ -2257,25 +2257,25 @@ set -euo pipefail
 
 VERSION="${1:-0.1.0}"
 ARCH="amd64"
-PKG="kubeviewer_${VERSION}_${ARCH}"
-BINARY="build/bin/kubeviewer"
+PKG="clusterfudge_${VERSION}_${ARCH}"
+BINARY="build/bin/clusterfudge"
 
 mkdir -p "${PKG}/DEBIAN"
 mkdir -p "${PKG}/usr/bin"
 mkdir -p "${PKG}/usr/share/applications"
 mkdir -p "${PKG}/usr/share/icons/hicolor/512x512/apps"
 
-cp "$BINARY" "${PKG}/usr/bin/kubeviewer"
-chmod 0755 "${PKG}/usr/bin/kubeviewer"
-cp build/appicon.png "${PKG}/usr/share/icons/hicolor/512x512/apps/kubeviewer.png"
+cp "$BINARY" "${PKG}/usr/bin/clusterfudge"
+chmod 0755 "${PKG}/usr/bin/clusterfudge"
+cp build/appicon.png "${PKG}/usr/share/icons/hicolor/512x512/apps/clusterfudge.png"
 
-cat > "${PKG}/usr/share/applications/kubeviewer.desktop" << EOF
+cat > "${PKG}/usr/share/applications/clusterfudge.desktop" << EOF
 [Desktop Entry]
 Version=1.0
-Name=KubeViewer
+Name=Clusterfudge
 Comment=Fast, beautiful Kubernetes desktop client
-Exec=/usr/bin/kubeviewer
-Icon=kubeviewer
+Exec=/usr/bin/clusterfudge
+Icon=clusterfudge
 Terminal=false
 Type=Application
 Categories=Development;Network;
@@ -2286,7 +2286,7 @@ EOF
 INSTALLED_SIZE=$(du -sk "${PKG}/usr" | cut -f1)
 
 cat > "${PKG}/DEBIAN/control" << EOF
-Package: kubeviewer
+Package: clusterfudge
 Version: ${VERSION}
 Section: utils
 Priority: optional
@@ -2294,9 +2294,9 @@ Architecture: ${ARCH}
 Installed-Size: ${INSTALLED_SIZE}
 Depends: libgtk-3-0, libwebkit2gtk-4.1-0
 Maintainer: Leonard Austin <leonardaustin@users.noreply.github.com>
-Homepage: https://github.com/leonardaustin/kubeviewer
+Homepage: https://github.com/leonardaustin/clusterfudge
 Description: Fast, beautiful Kubernetes desktop client
- KubeViewer is a native desktop app for browsing and managing
+ Clusterfudge is a native desktop app for browsing and managing
  Kubernetes clusters. Built with Go and React.
 EOF
 
@@ -2321,25 +2321,25 @@ dpkg-deb -I "${PKG}.deb"
 set -euo pipefail
 
 VERSION="${1:-0.1.0}"
-BINARY="build/bin/kubeviewer"
+BINARY="build/bin/clusterfudge"
 RPM_ROOT="$HOME/rpmbuild"
 
 mkdir -p "${RPM_ROOT}"/{SPECS,SOURCES,BUILD,RPMS,SRPMS}
-cp "$BINARY" "${RPM_ROOT}/SOURCES/kubeviewer"
-cp build/appicon.png "${RPM_ROOT}/SOURCES/kubeviewer.png"
+cp "$BINARY" "${RPM_ROOT}/SOURCES/clusterfudge"
+cp build/appicon.png "${RPM_ROOT}/SOURCES/clusterfudge.png"
 
-cat > "${RPM_ROOT}/SPECS/kubeviewer.spec" << EOF
-Name:           kubeviewer
+cat > "${RPM_ROOT}/SPECS/clusterfudge.spec" << EOF
+Name:           clusterfudge
 Version:        ${VERSION}
 Release:        1%{?dist}
 Summary:        Fast, beautiful Kubernetes desktop client
 License:        MIT
-URL:            https://github.com/leonardaustin/kubeviewer
+URL:            https://github.com/leonardaustin/clusterfudge
 BuildArch:      x86_64
 Requires:       gtk3, webkit2gtk4.1
 
 %description
-KubeViewer is a native desktop app for browsing and managing
+Clusterfudge is a native desktop app for browsing and managing
 Kubernetes clusters. Built with Go and React.
 
 %install
@@ -2347,28 +2347,28 @@ mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/share/applications
 mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
-install -m 0755 %{_sourcedir}/kubeviewer %{buildroot}/usr/bin/kubeviewer
-install -m 0644 %{_sourcedir}/kubeviewer.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/kubeviewer.png
+install -m 0755 %{_sourcedir}/clusterfudge %{buildroot}/usr/bin/clusterfudge
+install -m 0644 %{_sourcedir}/clusterfudge.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/clusterfudge.png
 
-cat > %{buildroot}/usr/share/applications/kubeviewer.desktop << DESKTOP
+cat > %{buildroot}/usr/share/applications/clusterfudge.desktop << DESKTOP
 [Desktop Entry]
-Name=KubeViewer
-Exec=/usr/bin/kubeviewer
-Icon=kubeviewer
+Name=Clusterfudge
+Exec=/usr/bin/clusterfudge
+Icon=clusterfudge
 Type=Application
 Categories=Development;Network;
 DESKTOP
 
 %files
-/usr/bin/kubeviewer
-/usr/share/applications/kubeviewer.desktop
-/usr/share/icons/hicolor/512x512/apps/kubeviewer.png
+/usr/bin/clusterfudge
+/usr/share/applications/clusterfudge.desktop
+/usr/share/icons/hicolor/512x512/apps/clusterfudge.png
 
 %post
 update-desktop-database /usr/share/applications &>/dev/null || :
 EOF
 
-rpmbuild -bb "${RPM_ROOT}/SPECS/kubeviewer.spec"
+rpmbuild -bb "${RPM_ROOT}/SPECS/clusterfudge.spec"
 echo "RPM created in ${RPM_ROOT}/RPMS/"
 ```
 
@@ -2441,7 +2441,7 @@ func (u *Updater) CheckForUpdate(ctx context.Context) (*UpdateInfo, error) {
         return nil, err
     }
     req.Header.Set("Accept", "application/vnd.github.v3+json")
-    req.Header.Set("User-Agent", "KubeViewer/"+u.CurrentVersion)
+    req.Header.Set("User-Agent", "Clusterfudge/"+u.CurrentVersion)
 
     resp, err := u.client.Do(req)
     if err != nil {
@@ -2545,7 +2545,7 @@ func (u *Updater) DownloadUpdate(ctx context.Context, info *UpdateInfo, progress
     defer resp.Body.Close()
 
     // Create temp file in same dir as binary for atomic rename
-    tmpFile, err := os.CreateTemp("", "kubeviewer-update-*"+filepath.Ext(info.DownloadURL))
+    tmpFile, err := os.CreateTemp("", "clusterfudge-update-*"+filepath.Ext(info.DownloadURL))
     if err != nil {
         return "", err
     }
@@ -2841,7 +2841,7 @@ export function UpdateBanner() {
       className="flex items-center gap-3 px-4 py-2 bg-[var(--color-accent-muted)] border-b border-[var(--color-accent)]/20 text-sm"
     >
       <span className="font-medium text-[var(--color-text-primary)]">
-        KubeViewer {update.version} is available
+        Clusterfudge {update.version} is available
       </span>
 
       {!downloaded && !downloading && (
@@ -3130,13 +3130,13 @@ func configFilePath() (string, error) {
         if appdata == "" {
             return "", fmt.Errorf("APPDATA not set")
         }
-        return filepath.Join(appdata, "kubeviewer", "config.json"), nil
+        return filepath.Join(appdata, "clusterfudge", "config.json"), nil
     }
     dir, err := os.UserConfigDir()
     if err != nil {
         return "", err
     }
-    return filepath.Join(dir, "kubeviewer", "config.json"), nil
+    return filepath.Join(dir, "clusterfudge", "config.json"), nil
 }
 ```
 
@@ -3288,7 +3288,7 @@ function GeneralSection({ cfg, update }: { cfg: config.AppConfig; update: (k: st
       <SettingRow label="Check for updates automatically">
         <Toggle checked={cfg.autoCheckUpdates} onChange={v => update("autoCheckUpdates", v)} />
       </SettingRow>
-      <SettingRow label="Current version" description={`KubeViewer ${version}`}>
+      <SettingRow label="Current version" description={`Clusterfudge ${version}`}>
         <button
           onClick={async () => {
             setChecking(true);
@@ -3574,7 +3574,7 @@ function AdvancedSection({ cfg, update }: { cfg: config.AppConfig; update: (k: s
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "kubeviewer-settings.json"; a.click();
+    a.href = url; a.download = "clusterfudge-settings.json"; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -3672,9 +3672,9 @@ function AboutSection() {
     <section>
       <SectionHeader title="About" />
       <div className="flex items-start gap-6 mb-8">
-        <img src="/icon.png" alt="KubeViewer" className="w-20 h-20 rounded-2xl shadow-lg" />
+        <img src="/icon.png" alt="Clusterfudge" className="w-20 h-20 rounded-2xl shadow-lg" />
         <div>
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">KubeViewer</h2>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Clusterfudge</h2>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             Fast, beautiful Kubernetes desktop client
           </p>
@@ -3688,7 +3688,7 @@ function AboutSection() {
       </div>
       <div className="space-y-2 text-sm">
         <div>
-          <a href="https://github.com/leonardaustin/kubeviewer"
+          <a href="https://github.com/leonardaustin/clusterfudge"
             target="_blank" rel="noopener noreferrer"
             className="text-[var(--color-accent)] hover:underline">
             View on GitHub
@@ -3809,7 +3809,7 @@ package main
 import (
     "context"
     "github.com/wailsapp/wails/v2/pkg/runtime"
-    "kubeviewer/internal/config"
+    "clusterfudge/internal/config"
 )
 
 type App struct {
@@ -3907,7 +3907,7 @@ export const useUIStore = create<UIState>()(
       setActiveRoute:    (route) => set({ activeRoute: route }),
     }),
     {
-      name: "kubeviewer-ui",
+      name: "clusterfudge-ui",
       // Only persist layout state, not ephemeral state
       partialize: (state) => ({
         sidebarWidth:      state.sidebarWidth,
@@ -4336,7 +4336,7 @@ test.describe("Connect to cluster", () => {
   test("connect and see overview", async ({ page }) => {
     await page.goto("/");
     // Welcome screen
-    await expect(page.getByText("Welcome to KubeViewer")).toBeVisible();
+    await expect(page.getByText("Welcome to Clusterfudge")).toBeVisible();
     // Click minikube context
     await page.getByRole("button", { name: /minikube/i }).click();
     // Overview loads with node count
@@ -4507,9 +4507,9 @@ func sanitizeForLogging(config *rest.Config) string {
 
 ### macOS-Specific
 
-- [ ] App signed: `codesign --verify --verbose build/bin/KubeViewer.app`
-- [ ] Notarized: `spctl --assess --verbose build/bin/KubeViewer.app`
-- [ ] Stapled: `xcrun stapler validate build/bin/KubeViewer.app`
+- [ ] App signed: `codesign --verify --verbose build/bin/Clusterfudge.app`
+- [ ] Notarized: `spctl --assess --verbose build/bin/Clusterfudge.app`
+- [ ] Stapled: `xcrun stapler validate build/bin/Clusterfudge.app`
 - [ ] DMG mounts and shows correct window layout
 - [ ] Drag to Applications works
 - [ ] App launches without Gatekeeper warning on clean macOS VM
@@ -4579,7 +4579,7 @@ func sanitizeForLogging(config *rest.Config) string {
 
 - [ ] GitHub Release created with all platform artifacts
 - [ ] Checksums file (`checksums.txt`) attached to release
-- [ ] Homebrew tap updated: `brew upgrade kubeviewer` works
+- [ ] Homebrew tap updated: `brew upgrade clusterfudge` works
 - [ ] Winget manifest submitted (if applicable)
 - [ ] Release tagged as pre-release if semver has `-` suffix (e.g. `v0.2.0-rc1`)
 
@@ -4606,15 +4606,15 @@ func sanitizeForLogging(config *rest.Config) string {
 ### Homebrew Cask Formula
 
 ```ruby
-# homebrew-tap/Casks/kubeviewer.rb
-cask "kubeviewer" do
+# homebrew-tap/Casks/clusterfudge.rb
+cask "clusterfudge" do
   version "0.1.0"
   sha256 "REPLACE_WITH_SHA256_OF_DMG"
 
-  url "https://github.com/leonardaustin/kubeviewer/releases/download/v#{version}/KubeViewer-v#{version}-macos-universal.dmg"
-  name "KubeViewer"
+  url "https://github.com/leonardaustin/clusterfudge/releases/download/v#{version}/Clusterfudge-v#{version}-macos-universal.dmg"
+  name "Clusterfudge"
   desc "Fast, beautiful Kubernetes desktop client"
-  homepage "https://github.com/leonardaustin/kubeviewer"
+  homepage "https://github.com/leonardaustin/clusterfudge"
 
   livecheck do
     url :url
@@ -4623,14 +4623,14 @@ cask "kubeviewer" do
 
   depends_on macos: ">= :big_sur"
 
-  app "KubeViewer.app"
+  app "Clusterfudge.app"
 
   zap trash: [
-    "~/Library/Application Support/kubeviewer",
-    "~/.config/kubeviewer",
-    "~/Library/Caches/kubeviewer",
-    "~/Library/Logs/kubeviewer",
-    "~/Library/Preferences/com.kubeviewer.app.plist",
+    "~/Library/Application Support/clusterfudge",
+    "~/.config/clusterfudge",
+    "~/Library/Caches/clusterfudge",
+    "~/Library/Logs/clusterfudge",
+    "~/Library/Preferences/com.clusterfudge.app.plist",
   ]
 end
 ```

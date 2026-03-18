@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/events"
+	"clusterfudge/internal/events"
 )
 
 // writeTestKubeconfig writes a minimal valid kubeconfig to a temp file and returns the path.

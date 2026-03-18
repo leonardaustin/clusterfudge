@@ -3,9 +3,9 @@ package handlers
 import (
 	"testing"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/stream"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/stream"
 )
 
 func TestStreamHandler_StreamLogs_Disconnected(t *testing.T) {

@@ -43,9 +43,9 @@ export function AIProvidersSection() {
     <div className="settings-section">
       <h2 className="settings-section-title">AI Assistants</h2>
       <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
-        KubeViewer can integrate with AI coding assistants installed on your machine.
+        Clusterfudge can integrate with AI coding assistants installed on your machine.
         All processing happens locally through your own CLI tools — no data is sent to
-        KubeViewer infrastructure. You must have the tool installed and authenticated separately.
+        Clusterfudge infrastructure. You must have the tool installed and authenticated separately.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

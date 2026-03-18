@@ -10,8 +10,8 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kubeviewer/handlers"
-	kvresource "kubeviewer/internal/resource"
+	"clusterfudge/handlers"
+	kvresource "clusterfudge/internal/resource"
 )
 
 // TC-BATCH-001: BatchDelete removes multiple ConfigMaps

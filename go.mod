@@ -1,4 +1,4 @@
-module kubeviewer
+module clusterfudge
 
 go 1.25.0
 

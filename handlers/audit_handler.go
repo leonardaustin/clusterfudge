@@ -1,6 +1,6 @@
 package handlers
 
-import "kubeviewer/internal/audit"
+import "clusterfudge/internal/audit"
 
 // AuditHandler exposes audit log operations to the Wails frontend.
 type AuditHandler struct {

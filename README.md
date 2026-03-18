@@ -1,4 +1,4 @@
-# KubeViewer
+# Clusterfudge
 
 A native desktop Kubernetes management tool built with [Wails](https://wails.io/) (Go backend + React/TypeScript frontend).
 

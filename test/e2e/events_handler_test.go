@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/handlers"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/resource"
+	"clusterfudge/handlers"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/resource"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
 )
 
 func TestNewApp(t *testing.T) {

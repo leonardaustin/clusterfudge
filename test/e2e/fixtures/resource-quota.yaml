@@ -2,9 +2,9 @@ apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: e2e-resource-quota
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   hard:
     pods: "50"

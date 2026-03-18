@@ -2,7 +2,7 @@
 
 ## Goal
 
-Helm chart and release management, an integrated YAML editor with apply/diff, resource-level actions (scale, restart, cordon/drain), and enhanced command palette with resource search. This phase turns KubeViewer from a viewer into a full management tool.
+Helm chart and release management, an integrated YAML editor with apply/diff, resource-level actions (scale, restart, cordon/drain), and enhanced command palette with resource search. This phase turns Clusterfudge from a viewer into a full management tool.
 
 ---
 
@@ -216,8 +216,8 @@ export function YAMLEditor({ value, readOnly = false, onChange, onApply }: YAMLE
     // Configure YAML language
     monaco.languages.register({ id: "yaml" });
 
-    // Dark theme matching KubeViewer's palette
-    monaco.editor.defineTheme("kubeviewer-dark", {
+    // Dark theme matching Clusterfudge's palette
+    monaco.editor.defineTheme("clusterfudge-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [
@@ -238,7 +238,7 @@ export function YAMLEditor({ value, readOnly = false, onChange, onApply }: YAMLE
       },
     });
 
-    monaco.editor.setTheme("kubeviewer-dark");
+    monaco.editor.setTheme("clusterfudge-dark");
 
     // Cmd+S to apply
     editor.addCommand(
@@ -652,7 +652,7 @@ function ToastContainer() {
 - [ ] Helm release detail shows values, manifest, history, and notes
 - [ ] Helm uninstall works with confirmation dialog
 - [ ] Helm rollback to a previous revision works
-- [ ] YAML editor renders with KubeViewer dark theme
+- [ ] YAML editor renders with Clusterfudge dark theme
 - [ ] YAML editor shows "Unsaved changes" indicator when modified
 - [ ] Cmd+S in editor triggers apply
 - [ ] Apply success shows toast notification
@@ -1354,7 +1354,7 @@ func (h *ResourceHandler) DiffResource(yaml string) (string, error) {
     // Server-side dry run to get merged form
     dryRunObj, err := client.Dynamic.Resource(gvr).Namespace(ns).Apply(
         h.ctx, obj.GetName(), obj,
-        metav1.ApplyOptions{DryRun: []string{"All"}, FieldManager: "kubeviewer"},
+        metav1.ApplyOptions{DryRun: []string{"All"}, FieldManager: "clusterfudge"},
     )
     if err != nil {
         return "", fmt.Errorf("dry-run apply: %w", err)
@@ -2612,7 +2612,7 @@ func (h *ResourceHandler) GetServiceEndpoints(namespace, name string) ([]Endpoin
 - [ ] `GetReleaseValues` returns current user-supplied values
 
 **YAML Editor**
-- [ ] YAML editor renders with KubeViewer dark theme
+- [ ] YAML editor renders with Clusterfudge dark theme
 - [ ] YAML editor shows "Unsaved changes" indicator when modified
 - [ ] Cmd+S in editor triggers apply
 - [ ] Apply success shows toast notification

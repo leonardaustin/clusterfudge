@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: e2e-crasher
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
     app: e2e-crasher
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   restartPolicy: OnFailure
   containers:

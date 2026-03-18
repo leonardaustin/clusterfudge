@@ -3,8 +3,8 @@ package handlers
 import (
 	"fmt"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/gitops"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/gitops"
 )
 
 // GitOpsHandler exposes GitOps detection to the frontend.

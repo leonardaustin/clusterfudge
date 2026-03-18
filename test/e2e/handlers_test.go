@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/handlers"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/config"
-	"kubeviewer/internal/resource"
+	"clusterfudge/handlers"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/config"
+	"clusterfudge/internal/resource"
 )
 
 // ---------------------------------------------------------------------------

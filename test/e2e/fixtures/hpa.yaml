@@ -2,9 +2,9 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: e2e-hpa
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

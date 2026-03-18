@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/stream"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/stream"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

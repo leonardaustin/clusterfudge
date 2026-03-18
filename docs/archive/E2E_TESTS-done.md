@@ -1,6 +1,6 @@
-# KubeViewer E2E Test Plan
+# Clusterfudge E2E Test Plan
 
-This document provides a comprehensive end-to-end test plan for KubeViewer. Every test spec is detailed enough for a mid-level engineer to implement without additional clarification.
+This document provides a comprehensive end-to-end test plan for Clusterfudge. Every test spec is detailed enough for a mid-level engineer to implement without additional clarification.
 
 ---
 
@@ -37,7 +37,7 @@ This document provides a comprehensive end-to-end test plan for KubeViewer. Ever
 
 ```bash
 podman run -d \
-  --name kubeviewer-k3s \
+  --name clusterfudge-k3s \
   --privileged \
   -p 6443:6443 \
   -p 10250:10250 \
@@ -50,7 +50,7 @@ podman run -d \
 Wait for k3s to be ready (up to 60 seconds):
 
 ```bash
-until podman exec kubeviewer-k3s kubectl get nodes 2>/dev/null | grep -q " Ready"; do
+until podman exec clusterfudge-k3s kubectl get nodes 2>/dev/null | grep -q " Ready"; do
   echo "Waiting for k3s..."; sleep 2
 done
 echo "k3s is ready"
@@ -60,14 +60,14 @@ echo "k3s is ready"
 
 ```bash
 # Get kubeconfig from the container
-podman exec kubeviewer-k3s cat /etc/rancher/k3s/k3s.yaml > /tmp/kubeviewer-e2e.yaml
+podman exec clusterfudge-k3s cat /etc/rancher/k3s/k3s.yaml > /tmp/clusterfudge-e2e.yaml
 
 # Fix the server address (container uses 127.0.0.1 internally)
-HOST_IP=$(podman inspect kubeviewer-k3s --format '{{.NetworkSettings.IPAddress}}' 2>/dev/null || echo "127.0.0.1")
-sed -i "s|127.0.0.1:6443|${HOST_IP}:6443|g" /tmp/kubeviewer-e2e.yaml
-sed -i "s|https://localhost:6443|https://${HOST_IP}:6443|g" /tmp/kubeviewer-e2e.yaml
+HOST_IP=$(podman inspect clusterfudge-k3s --format '{{.NetworkSettings.IPAddress}}' 2>/dev/null || echo "127.0.0.1")
+sed -i "s|127.0.0.1:6443|${HOST_IP}:6443|g" /tmp/clusterfudge-e2e.yaml
+sed -i "s|https://localhost:6443|https://${HOST_IP}:6443|g" /tmp/clusterfudge-e2e.yaml
 
-export KUBECONFIG=/tmp/kubeviewer-e2e.yaml
+export KUBECONFIG=/tmp/clusterfudge-e2e.yaml
 ```
 
 **Verify connectivity:**
@@ -81,9 +81,9 @@ kubectl get nodes
 **Teardown after tests:**
 
 ```bash
-podman stop kubeviewer-k3s
-podman rm kubeviewer-k3s
-rm -f /tmp/kubeviewer-e2e.yaml
+podman stop clusterfudge-k3s
+podman rm clusterfudge-k3s
+rm -f /tmp/clusterfudge-e2e.yaml
 ```
 
 ### 1.2 CI Setup (GitHub Actions)
@@ -109,11 +109,11 @@ sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 Before running tests, create a dedicated namespace and test resources:
 
 ```bash
-kubectl create namespace kubeviewer-e2e
-kubectl create namespace kubeviewer-e2e-b  # second namespace for filtering tests
+kubectl create namespace clusterfudge-e2e
+kubectl create namespace clusterfudge-e2e-b  # second namespace for filtering tests
 ```
 
-All test resources should be created in `kubeviewer-e2e` unless the test specifically targets multi-namespace behavior.
+All test resources should be created in `clusterfudge-e2e` unless the test specifically targets multi-namespace behavior.
 
 **Fixture creation order** (dependencies matter):
 1. Namespaces
@@ -134,11 +134,11 @@ Each test that creates resources must clean them up. Use `t.Cleanup()` to regist
 func TestSomething(t *testing.T) {
     // Register cleanup before creating resources
     t.Cleanup(func() {
-        deleteResource(t, "deployment", "my-deployment", "kubeviewer-e2e")
+        deleteResource(t, "deployment", "my-deployment", "clusterfudge-e2e")
     })
 
     // Now create the resource
-    createDeployment(t, "my-deployment", "kubeviewer-e2e")
+    createDeployment(t, "my-deployment", "clusterfudge-e2e")
 
     // ... test assertions ...
 }
@@ -164,7 +164,7 @@ For test suites that share fixtures, use `TestMain` to create/destroy fixtures o
 **Test file location:** `test/e2e/`
 
 **How they work:**
-- Tests import KubeViewer's internal packages directly (`internal/cluster`, `internal/resource`, `internal/stream`, `internal/helm`)
+- Tests import Clusterfudge's internal packages directly (`internal/cluster`, `internal/resource`, `internal/stream`, `internal/helm`)
 - They connect to the real k3s cluster using the kubeconfig pointed to by `E2E_KUBECONFIG` env var (falls back to `KUBECONFIG`)
 - Tests call the same code that Wails handlers call — this validates the business logic without the Wails layer
 - Some tests also call handler methods directly (simulating what the frontend calls via Wails bindings)
@@ -173,7 +173,7 @@ For test suites that share fixtures, use `TestMain` to create/destroy fixtures o
 
 ```bash
 # Set kubeconfig
-export E2E_KUBECONFIG=/tmp/kubeviewer-e2e.yaml
+export E2E_KUBECONFIG=/tmp/clusterfudge-e2e.yaml
 
 # Run all e2e tests
 go test -v -tags=e2e -timeout=10m ./test/e2e/...
@@ -201,7 +201,7 @@ pnpm exec playwright install chromium
 
 ```bash
 # Terminal 1: Start wails dev (sets E2E_KUBECONFIG in env)
-E2E_KUBECONFIG=/tmp/kubeviewer-e2e.yaml wails dev
+E2E_KUBECONFIG=/tmp/clusterfudge-e2e.yaml wails dev
 
 # Terminal 2: Run Playwright tests
 cd ui && pnpm exec playwright test
@@ -229,8 +229,8 @@ export default defineConfig({
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `E2E_KUBECONFIG` | Yes | `$KUBECONFIG` | Path to kubeconfig for the test cluster |
-| `E2E_NAMESPACE` | No | `kubeviewer-e2e` | Primary test namespace |
-| `E2E_NAMESPACE_B` | No | `kubeviewer-e2e-b` | Secondary namespace for filter tests |
+| `E2E_NAMESPACE` | No | `clusterfudge-e2e` | Primary test namespace |
+| `E2E_NAMESPACE_B` | No | `clusterfudge-e2e-b` | Secondary namespace for filter tests |
 | `E2E_SKIP_HELM` | No | `""` | Set to `"true"` to skip Helm tests |
 | `E2E_SKIP_PERF` | No | `""` | Set to `"true"` to skip performance tests |
 | `E2E_LOG_LEVEL` | No | `"info"` | Log verbosity: `debug`, `info`, `warn` |
@@ -256,10 +256,10 @@ export default defineConfig({
 - **Assert:** Version matches the k3s version string format `v1.28.x+k3s1`.
 
 ### TC-CONN-003: Verify namespace list is populated after connect
-- **Arrange:** Connected cluster. Pre-create `kubeviewer-e2e` namespace.
+- **Arrange:** Connected cluster. Pre-create `clusterfudge-e2e` namespace.
 - **Act:** Call `handler.ListNamespaces()`.
 - **Assert:**
-  - Return value contains at least `"default"`, `"kube-system"`, `"kubeviewer-e2e"`.
+  - Return value contains at least `"default"`, `"kube-system"`, `"clusterfudge-e2e"`.
   - Error is nil.
 
 ### TC-CONN-004: Handle invalid kubeconfig — bad file path
@@ -325,9 +325,9 @@ For each resource type, the pattern is:
 4. Clean up.
 
 ### TC-LIST-001: List pods
-- **Pre-condition:** Create a pod named `e2e-pod-list-<rand>` in `kubeviewer-e2e` running `nginx:latest`.
-- **Act:** Call `service.List(ctx, client, ResourceQuery{Version: "v1", Resource: "pods", Namespace: "kubeviewer-e2e"})`.
-- **Assert:** Response contains an item with `Name == "e2e-pod-list-<rand>"` and `Namespace == "kubeviewer-e2e"`.
+- **Pre-condition:** Create a pod named `e2e-pod-list-<rand>` in `clusterfudge-e2e` running `nginx:latest`.
+- **Act:** Call `service.List(ctx, client, ResourceQuery{Version: "v1", Resource: "pods", Namespace: "clusterfudge-e2e"})`.
+- **Assert:** Response contains an item with `Name == "e2e-pod-list-<rand>"` and `Namespace == "clusterfudge-e2e"`.
 
 ### TC-LIST-002: List deployments with correct replica counts
 - **Pre-condition:** Create a deployment `e2e-dep-list-<rand>` with `replicas: 2`. Wait for 2 pods to be Running.
@@ -375,7 +375,7 @@ For each resource type, the pattern is:
 
 ### TC-LIST-011: List namespaces
 - **Act:** List `namespaces` (cluster-scoped).
-- **Assert:** Response includes `default`, `kube-system`, `kubeviewer-e2e`.
+- **Assert:** Response includes `default`, `kube-system`, `clusterfudge-e2e`.
 
 ### TC-LIST-012: List PVCs and PVs
 - **Pre-condition:** Create a PVC `e2e-pvc-<rand>` requesting 1Gi using k3s's `local-path` StorageClass. Wait up to 30s for it to bind.
@@ -383,16 +383,16 @@ For each resource type, the pattern is:
 - **Assert:** PVC appears with `status["phase"] == "Bound"`. A corresponding PV appears.
 
 ### TC-LIST-013: List service accounts
-- **Act:** List `serviceaccounts` in `kubeviewer-e2e`.
+- **Act:** List `serviceaccounts` in `clusterfudge-e2e`.
 - **Assert:** At least the `default` service account appears.
 
 ### TC-LIST-014: List roles and rolebindings
-- **Pre-condition:** Create a Role `e2e-role-<rand>` and a RoleBinding in `kubeviewer-e2e`.
+- **Pre-condition:** Create a Role `e2e-role-<rand>` and a RoleBinding in `clusterfudge-e2e`.
 - **Act:** List `roles` and `rolebindings`.
 - **Assert:** Both resources appear.
 
 ### TC-LIST-015: List network policies
-- **Pre-condition:** Create a NetworkPolicy `e2e-netpol-<rand>` in `kubeviewer-e2e`.
+- **Pre-condition:** Create a NetworkPolicy `e2e-netpol-<rand>` in `clusterfudge-e2e`.
 - **Act:** List `networkpolicies` (group: `networking.k8s.io`).
 - **Assert:** NetworkPolicy appears.
 
@@ -408,7 +408,7 @@ For each resource type, the pattern is:
 
 ### TC-LIST-018: List events
 - **Pre-condition:** Create a deployment. k3s will emit events for it.
-- **Act:** List `events` in `kubeviewer-e2e`.
+- **Act:** List `events` in `clusterfudge-e2e`.
 - **Assert:** At least one event related to the deployment appears.
 
 ### TC-LIST-019: List CRDs and custom resource instances
@@ -419,8 +419,8 @@ For each resource type, the pattern is:
 - **Assert:** CRD appears in the first list. Custom resource instance appears in the second.
 
 ### TC-LIST-020: Namespace filtering — resources isolated to namespace
-- **Pre-condition:** Create pod `pod-ns-a` in `kubeviewer-e2e` and pod `pod-ns-b` in `kubeviewer-e2e-b`.
-- **Act:** List pods with `Namespace: "kubeviewer-e2e"`. Then list pods with `Namespace: "kubeviewer-e2e-b"`.
+- **Pre-condition:** Create pod `pod-ns-a` in `clusterfudge-e2e` and pod `pod-ns-b` in `clusterfudge-e2e-b`.
+- **Act:** List pods with `Namespace: "clusterfudge-e2e"`. Then list pods with `Namespace: "clusterfudge-e2e-b"`.
 - **Assert:** First list contains `pod-ns-a` but NOT `pod-ns-b`. Second list contains `pod-ns-b` but NOT `pod-ns-a`.
 
 ### TC-LIST-021: Empty namespace returns empty list
@@ -486,7 +486,7 @@ For each resource type, the pattern is:
 - **Assert:** Error is non-nil. Error message indicates the namespace was not found.
 
 ### TC-CRUD-010: Delete non-existent resource — verify 404 error
-- **Arrange:** Query targeting a pod named `does-not-exist-pod-xyz` in `kubeviewer-e2e`.
+- **Arrange:** Query targeting a pod named `does-not-exist-pod-xyz` in `clusterfudge-e2e`.
 - **Act:** Call `service.Delete()`.
 - **Assert:** Error is non-nil. Error contains "not found" or HTTP 404.
 
@@ -574,7 +574,7 @@ For each resource type, the pattern is:
 - **Assert:** The `Stream()` call returns (no hang). After cancellation, no more lines are sent to `onLine` even after waiting 3 seconds.
 
 ### TC-LOG-007: Log stream for non-existent pod — verify error
-- **Arrange:** Query for a pod `does-not-exist-xyz` in `kubeviewer-e2e`.
+- **Arrange:** Query for a pod `does-not-exist-xyz` in `clusterfudge-e2e`.
 - **Act:** Call `streamer.Stream()`.
 - **Assert:** Error is returned immediately. Error contains "not found" or 404.
 
@@ -637,7 +637,7 @@ For each resource type, the pattern is:
 
 ### TC-PF-001: Port forward to nginx pod and verify HTTP response
 - **Arrange:** Create a pod `e2e-nginx-pf-<rand>` running `nginx:latest`. Wait for Running.
-- **Act:** Call `handler.StartPortForward({Namespace: "kubeviewer-e2e", PodName: "e2e-nginx-pf-<rand>", PodPort: 80, LocalPort: 0})`. Use the returned `LocalPort`.
+- **Act:** Call `handler.StartPortForward({Namespace: "clusterfudge-e2e", PodName: "e2e-nginx-pf-<rand>", PodPort: 80, LocalPort: 0})`. Use the returned `LocalPort`.
 - **Assert:**
   - No error from `StartPortForward`.
   - HTTP GET to `http://localhost:<LocalPort>/` returns HTTP 200.
@@ -670,7 +670,7 @@ For each resource type, the pattern is:
 **File:** `test/e2e/watch_test.go`
 
 ### TC-WATCH-001: Watch pods — receive ADDED event on pod creation
-- **Arrange:** Start a watch on `pods` in `kubeviewer-e2e`. Create a buffered channel for events.
+- **Arrange:** Start a watch on `pods` in `clusterfudge-e2e`. Create a buffered channel for events.
 - **Act:** Create a new pod `e2e-watch-add-<rand>`.
 - **Assert:** Within 10 seconds, receive a `WatchEvent{Type: "ADDED", Resource.Name: "e2e-watch-add-<rand>"}`.
 
@@ -690,10 +690,10 @@ For each resource type, the pattern is:
 - **Assert:** The new watch receives events for subsequently created/modified resources. The old channel is closed.
 
 ### TC-WATCH-005: Watch with namespace filter — correct isolation
-- **Arrange:** Start a watch on `pods` in `kubeviewer-e2e` (NOT kubeviewer-e2e-b).
+- **Arrange:** Start a watch on `pods` in `clusterfudge-e2e` (NOT clusterfudge-e2e-b).
 - **Act:**
-  1. Create pod `pod-filtered-a` in `kubeviewer-e2e`.
-  2. Create pod `pod-other-ns` in `kubeviewer-e2e-b`.
+  1. Create pod `pod-filtered-a` in `clusterfudge-e2e`.
+  2. Create pod `pod-other-ns` in `clusterfudge-e2e-b`.
 - **Assert:**
   - Event for `pod-filtered-a` IS received.
   - Event for `pod-other-ns` is NOT received (wait 5s to confirm absence).
@@ -713,19 +713,19 @@ For each resource type, the pattern is:
 
 ### TC-HELM-001: Install a Helm chart
 - **Arrange:** A local Helm chart in `test/e2e/fixtures/test-chart/` (nginx with configurable replicas).
-- **Act:** Call `client.InstallChart("e2e-release-<rand>", "kubeviewer-e2e", chartPath, values)`.
+- **Act:** Call `client.InstallChart("e2e-release-<rand>", "clusterfudge-e2e", chartPath, values)`.
 - **Assert:**
   - No error.
-  - `client.ListReleases("kubeviewer-e2e")` returns a release with the given name and status `"deployed"`.
+  - `client.ListReleases("clusterfudge-e2e")` returns a release with the given name and status `"deployed"`.
 
 ### TC-HELM-002: List releases — verify installed release appears
 - **Arrange:** Installed release from TC-HELM-001.
-- **Act:** Call `client.ListReleases("kubeviewer-e2e")`.
+- **Act:** Call `client.ListReleases("clusterfudge-e2e")`.
 - **Assert:** Release with name `"e2e-release-<rand>"` appears. `Status == "deployed"`, `Revision == 1`.
 
 ### TC-HELM-003: Get release detail
 - **Arrange:** Installed release.
-- **Act:** Call `client.GetRelease("e2e-release-<rand>", "kubeviewer-e2e")`.
+- **Act:** Call `client.GetRelease("e2e-release-<rand>", "clusterfudge-e2e")`.
 - **Assert:**
   - `ReleaseDetail.Values` contains the values passed at install time.
   - `ReleaseDetail.Manifest` is non-empty (contains rendered YAML).
@@ -733,7 +733,7 @@ For each resource type, the pattern is:
 
 ### TC-HELM-004: Get release history
 - **Arrange:** Installed release. Upgrade it once.
-- **Act:** Call `client.GetReleaseHistory("e2e-release-<rand>", "kubeviewer-e2e")`.
+- **Act:** Call `client.GetReleaseHistory("e2e-release-<rand>", "clusterfudge-e2e")`.
 - **Assert:** Returns 2 entries. First entry has `Revision == 1`, second has `Revision == 2`.
 
 ### TC-HELM-005: Upgrade release
@@ -743,12 +743,12 @@ For each resource type, the pattern is:
 
 ### TC-HELM-006: Rollback release to previous revision
 - **Arrange:** Release at revision 2 (from TC-HELM-005).
-- **Act:** Call `client.RollbackRelease("e2e-release-<rand>", "kubeviewer-e2e", 1)`.
+- **Act:** Call `client.RollbackRelease("e2e-release-<rand>", "clusterfudge-e2e", 1)`.
 - **Assert:** `client.GetRelease()` shows `Revision == 3` and `Status == "deployed"`. Deployment has `spec.replicas == 1` (original value).
 
 ### TC-HELM-007: Uninstall release — verify it's gone
 - **Arrange:** Installed release.
-- **Act:** Call `client.UninstallRelease("e2e-release-<rand>", "kubeviewer-e2e")`.
+- **Act:** Call `client.UninstallRelease("e2e-release-<rand>", "clusterfudge-e2e")`.
 - **Assert:**
   - No error.
   - `client.ListReleases()` does NOT contain the release name.
@@ -761,8 +761,8 @@ For each resource type, the pattern is:
 **File:** `test/e2e/resources_test.go` (included in the filter test section)
 
 ### TC-NS-001: Filter to specific namespace
-- **Pre-condition:** Pod `pod-ns-a` in `kubeviewer-e2e`, pod `pod-ns-b` in `kubeviewer-e2e-b`.
-- **Act:** List pods with `Namespace: "kubeviewer-e2e"`.
+- **Pre-condition:** Pod `pod-ns-a` in `clusterfudge-e2e`, pod `pod-ns-b` in `clusterfudge-e2e-b`.
+- **Act:** List pods with `Namespace: "clusterfudge-e2e"`.
 - **Assert:** `pod-ns-a` is present, `pod-ns-b` is absent.
 
 ### TC-NS-002: All namespaces — both pods appear
@@ -770,7 +770,7 @@ For each resource type, the pattern is:
 - **Assert:** Both `pod-ns-a` and `pod-ns-b` appear.
 
 ### TC-NS-003: Switch namespace filter — counts update
-- **Arrange:** 3 pods in `kubeviewer-e2e`, 1 pod in `kubeviewer-e2e-b`.
+- **Arrange:** 3 pods in `clusterfudge-e2e`, 1 pod in `clusterfudge-e2e-b`.
 - **Act:** List with namespace A → count pods. List with namespace B → count pods. List with all → count pods.
 - **Assert:** Counts are 3, 1, and 4 respectively.
 
@@ -787,7 +787,7 @@ For each resource type, the pattern is:
 
 ### TC-ERR-001: RBAC denied — verify 403 returned
 - **Arrange:**
-  1. Create ServiceAccount `e2e-no-perms-sa` in `kubeviewer-e2e` with NO cluster roles.
+  1. Create ServiceAccount `e2e-no-perms-sa` in `clusterfudge-e2e` with NO cluster roles.
   2. Extract the SA's token.
   3. Build a `rest.Config` using that token.
   4. Create a `ClientSet` from that config.
@@ -795,7 +795,7 @@ For each resource type, the pattern is:
 - **Assert:** Error is non-nil. Error contains "forbidden" or HTTP 403.
 
 ### TC-ERR-002: Resource not found — 404 error
-- **Act:** Call `service.Get()` for pod `does-not-exist-xyz` in `kubeviewer-e2e`.
+- **Act:** Call `service.Get()` for pod `does-not-exist-xyz` in `clusterfudge-e2e`.
 - **Assert:** Error is non-nil. `errors.IsNotFound(err)` returns true (from `k8s.io/apimachinery/pkg/api/errors`).
 
 ### TC-ERR-003: Conflict error — 409 on stale resourceVersion
@@ -852,8 +852,8 @@ All YAML fixtures are in `test/e2e/fixtures/`.
 
 ### Namespaces
 
-**`fixtures/namespace-a.yaml`** — `kubeviewer-e2e`
-**`fixtures/namespace-b.yaml`** — `kubeviewer-e2e-b`
+**`fixtures/namespace-a.yaml`** — `clusterfudge-e2e`
+**`fixtures/namespace-b.yaml`** — `clusterfudge-e2e-b`
 
 ### Workloads
 

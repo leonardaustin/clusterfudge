@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-**KubeViewer** is a fast, beautiful desktop application for managing Kubernetes clusters. It combines the operational power of Lens with the design quality and speed of Linear.
+**Clusterfudge** is a fast, beautiful desktop application for managing Kubernetes clusters. It combines the operational power of Lens with the design quality and speed of Linear.
 
 ### Design Principles
 
@@ -16,11 +16,11 @@
 
 ## Lens Feature Parity Map
 
-This table maps every major Lens capability to KubeViewer's planned implementation. The Phase column indicates which release milestone delivers each feature. "Done" means the feature is complete when that phase ships.
+This table maps every major Lens capability to Clusterfudge's planned implementation. The Phase column indicates which release milestone delivers each feature. "Done" means the feature is complete when that phase ships.
 
 ### Multi-Cluster Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Read kubeconfig from `~/.kube/config` | `internal/cluster/kubeconfig.go` parses all contexts using `client-go/tools/clientcmd` | 1 | Honors `KUBECONFIG` env var and merged configs |
 | Multiple kubeconfig files | `KUBECONFIG=a:b:c` environment variable honored; UI allows adding extra kubeconfig files | 2 | Stored in app config, not env |
@@ -34,7 +34,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Resource Browser
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Core workloads: Pods, ReplicaSets, Deployments, StatefulSets, DaemonSets, Jobs, CronJobs | Individual views and detail panels for each; fetched via typed informers | 1 | |
 | Services, Endpoints, Ingresses, IngressClasses | Networking section; full CRUD where applicable | 1 | |
@@ -55,7 +55,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Pod Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Pod list with status, restarts, age, node | TanStack Table; status column uses colored badge component | 1 | |
 | Pod detail panel (labels, annotations, conditions, volumes, init containers, containers) | Multi-tab detail panel rendered from pod spec/status | 1 | |
@@ -73,7 +73,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Deployment Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Deployment list with ready/desired, strategy, age | TanStack Table with rollout progress bar | 1 | |
 | Detail panel with pod template, conditions, rollout history | Multi-tab detail panel | 1 | |
@@ -88,7 +88,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### StatefulSet / DaemonSet / Job Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | StatefulSet scale | `Scale` subresource; ordered pod recreation | 1 | |
 | StatefulSet rolling restart | Same restart annotation patch | 1 | |
@@ -99,7 +99,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Node Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Node list with role, status, CPU/mem capacity, version | TanStack Table; `node-role.kubernetes.io/*` labels determine role | 1 | |
 | Node detail panel (conditions, taints, labels, annotations, capacity, allocatable) | Multi-tab detail panel | 1 | |
@@ -114,7 +114,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Helm v3
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Releases list (name, namespace, chart, version, status, last deployed) | Helm SDK `action.List`; TanStack Table | 2 | |
 | Release detail (values, notes, hooks, manifests) | Multi-tab panel; values shown in Monaco editor | 2 | |
@@ -130,7 +130,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Real-Time Features
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Live resource updates (pod status, deployment ready count) | `client-go` informer watches per resource type; Go handler emits Wails events | 1 | |
 | Live event feed | `CoreV1().Events()` watch stream; frontend event feed component; ring buffer of 500 events | 1 | |
@@ -141,7 +141,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### YAML Editor
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | View resource YAML | `resourceStore` marshals cached object to YAML; displayed in Monaco read-only | 1 | |
 | Edit and apply resource YAML | Monaco edit mode; save calls `resource.Apply()` which uses `kubectl apply` semantics (server-side apply) | 2 | |
@@ -152,7 +152,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Integrated Terminal
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Pod exec shell session | xterm.js + SPDY exec; multiple tabs in BottomTray | 1 | |
 | Shell type selection (bash/sh/zsh) | Dropdown in session header; defaults to `/bin/sh` | 1 | |
@@ -164,7 +164,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### ConfigMap & Secret Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | ConfigMap list and detail (key-value table) | Standard resource view; keys shown in detail panel | 1 | |
 | Edit ConfigMap values | Monaco editor (YAML); calls update on save | 2 | |
@@ -175,7 +175,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Namespace Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Namespace list with status, age, labels | Standard resource view | 1 | |
 | Namespace filter dropdown (all or specific) | Filter bar in topbar; persisted per cluster in `uiStore` | 1 | |
@@ -185,7 +185,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### RBAC Resources
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Browse Roles, ClusterRoles | RBAC section; read-only; policy rules displayed in detail | 2 | |
 | Browse RoleBindings, ClusterRoleBindings | Subjects and roleRef shown | 2 | |
@@ -194,7 +194,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Storage Management
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | PersistentVolume list (capacity, access modes, reclaim policy, status) | Storage section; TanStack Table | 1 | |
 | PersistentVolumeClaim list (bound PV, status, access modes) | Claims show binding status and consuming pods | 1 | |
@@ -203,7 +203,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Networking
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Ingress list with hosts, rules, TLS | Networking section; rules table in detail panel | 1 | |
 | Service list (type, cluster IP, external IP, ports) | Standard resource view; port-forward action from service | 1 | |
@@ -212,7 +212,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Resource Quotas & Limits
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | ResourceQuota list with used/hard gauges | Gauges per resource type; color thresholds at 80% / 95% | 2 | |
 | LimitRange list | Shows default, default request, max, min per container | 2 | |
@@ -220,7 +220,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Resource Relationships
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Deployment → ReplicaSet → Pod | `ownerReferences` traversal; rendered as relationship panel | 2 | |
 | Service → Endpoints → Pods | Label selector matching; rendered as relationship panel | 2 | |
@@ -231,7 +231,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Cluster Health Dashboard
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Node status overview (ready/not-ready/unknown count) | Dashboard view; status aggregation from informer cache | 2 | |
 | Component status (etcd, scheduler, controller-manager) | `CoreV1().ComponentStatuses()` | 2 | |
@@ -241,7 +241,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### UX Features
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Command palette (Cmd+K / Ctrl+K) | `cmdk` component; searches clusters, resources, recent views, actions | 1 | |
 | Keyboard shortcuts for every action | `useShortcuts` hook with global and context-scoped bindings; help overlay (`?`) | 1 | |
@@ -256,7 +256,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ### Prometheus Integration
 
-| Lens Feature | KubeViewer Implementation | Phase | Notes |
+| Lens Feature | Clusterfudge Implementation | Phase | Notes |
 |---|---|---|---|
 | Auto-detect in-cluster Prometheus | Scan for `prometheus` Services in common namespaces | 3 | |
 | Custom Prometheus URL configuration | Settings page | 3 | |
@@ -280,7 +280,7 @@ This table maps every major Lens capability to KubeViewer's planned implementati
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│                          KubeViewer Desktop                           │
+│                          Clusterfudge Desktop                           │
 │                                                                       │
 │  ┌────────────────────────────────────┐                               │
 │  │         React Frontend             │                               │
@@ -397,7 +397,7 @@ client-go SharedInformer
   │    OnDelete(obj)
   ▼
 internal/resource/watcher.go  InformerEventHandler
-  │  Converts K8s event to KubeViewer WatchEvent struct:
+  │  Converts K8s event to Clusterfudge WatchEvent struct:
   │    {ClusterID, GVR, EventType, ResourceSummary}
   │  Calls eventEmitter.Emit(topic, event)
   ▼
@@ -436,7 +436,7 @@ User sees real-time update (≤100ms from K8s API event)
 
 ### Caching Strategy
 
-KubeViewer has a three-layer cache: an authoritative Go-side informer cache, a read-through frontend Zustand cache, and a SQLite persistence layer for warm-start, offline viewing, and historical data.
+Clusterfudge has a three-layer cache: an authoritative Go-side informer cache, a read-through frontend Zustand cache, and a SQLite persistence layer for warm-start, offline viewing, and historical data.
 
 **Layer 1: Go informer cache (source of truth)**
 
@@ -468,7 +468,7 @@ interface ResourceState {
 **Layer 3: SQLite persistence (warm-start & history)**
 
 ```
-~/.kubeviewer/kubeviewer.db
+~/.clusterfudge/clusterfudge.db
 
 Tables:
   resource_snapshots  — last-known state of each resource (warm-start on launch)
@@ -558,7 +558,7 @@ Disconnect:
 
 ### Concurrency Model
 
-KubeViewer uses structured concurrency with explicit context propagation and lifecycle boundaries.
+Clusterfudge uses structured concurrency with explicit context propagation and lifecycle boundaries.
 
 **Goroutine hierarchy:**
 
@@ -892,7 +892,7 @@ func (e *Emitter) Emit(topic string, payload any)
 ```go
 type Store struct { /* private; JSON on disk */ }
 
-// Path: ${XDG_CONFIG_HOME}/kubeviewer/config.json (or ~/Library/... on macOS)
+// Path: ${XDG_CONFIG_HOME}/clusterfudge/config.json (or ~/Library/... on macOS)
 func NewStore() (*Store, error)
 
 func (s *Store) GetClusters() []ClusterEntry
@@ -1115,7 +1115,7 @@ Each view follows the same pattern:
 
 ### RBAC Enforcement
 
-KubeViewer respects Kubernetes RBAC. It does not implement its own authorization — it relies entirely on the K8s API server to enforce permissions. However, it improves UX by proactively checking permissions and disabling actions the user cannot perform.
+Clusterfudge respects Kubernetes RBAC. It does not implement its own authorization — it relies entirely on the K8s API server to enforce permissions. However, it improves UX by proactively checking permissions and disabling actions the user cannot perform.
 
 **SelfSubjectAccessReview (SSAR) checks:**
 
@@ -1147,12 +1147,12 @@ SSAR checks are cached for 60 seconds per resource to avoid flooding the API ser
 - Tokens are never written to app config. Only the kubeconfig path and context name are persisted.
 - On `Disconnect`, the `ClusterConnection` struct is removed from the manager's map; the GC will collect the `rest.Config` and its embedded token.
 - The exec-credential provider in `client-go` is called on demand when tokens expire. The resulting token is stored only in the `rest.Config` in memory.
-- KubeViewer never logs credential values. All log output from `internal/` packages uses structured logging with explicit field allowlisting.
+- Clusterfudge never logs credential values. All log output from `internal/` packages uses structured logging with explicit field allowlisting.
 
 ### kubeconfig Security
 
 - The app reads kubeconfig files at the path the user specifies (or the default `~/.kube/config`). It does not copy or cache the file content.
-- File permissions: if the kubeconfig file is group- or world-readable (permissions > `0600`), a warning is shown in the cluster connection UI. The connection proceeds — KubeViewer does not enforce file permissions on behalf of the OS.
+- File permissions: if the kubeconfig file is group- or world-readable (permissions > `0600`), a warning is shown in the cluster connection UI. The connection proceeds — Clusterfudge does not enforce file permissions on behalf of the OS.
 - Certificate data embedded in kubeconfig (`certificate-authority-data`, `client-certificate-data`, `client-key-data`) is held only in the parsed `rest.Config`; not extracted to separate files and not logged.
 - The `token` field in kubeconfig (static tokens) is similarly held in memory only.
 
@@ -1264,16 +1264,16 @@ These features are explicitly out of scope. Each entry explains **why** to preve
 **Why not:** Building a stable, versioned plugin API requires the core API to be stable first. Designing a plugin system on an evolving API would require constant breaking changes. The extension architecture will be defined in Phase 4 after Phase 1–3 have validated the core design. Building hooks for a plugin system too early leads to over-engineering.
 
 ### Cloud-Specific Integrations (EKS, AKS, GKE auto-discovery)
-**Why not:** Cloud provider SDKs are large dependencies and their auth flows change frequently. Users can configure their clusters in kubeconfig using standard tools (`aws eks update-kubeconfig`, `az aks get-credentials`). KubeViewer benefits from these existing tools rather than duplicating them. Cloud-native integrations would also require separate builds for each cloud provider or a plugin approach.
+**Why not:** Cloud provider SDKs are large dependencies and their auth flows change frequently. Users can configure their clusters in kubeconfig using standard tools (`aws eks update-kubeconfig`, `az aks get-credentials`). Clusterfudge benefits from these existing tools rather than duplicating them. Cloud-native integrations would also require separate builds for each cloud provider or a plugin approach.
 
 ### AI / LLM Features (explain errors, suggest YAML)
-**Why not:** LLM API calls require internet connectivity and API key management. They introduce latency, cost, and privacy considerations (K8s resource data sent to third parties). KubeViewer is designed as an offline-capable desktop tool. AI features belong in a separate plugin after the core is stable and after explicit user consent flows are designed.
+**Why not:** LLM API calls require internet connectivity and API key management. They introduce latency, cost, and privacy considerations (K8s resource data sent to third parties). Clusterfudge is designed as an offline-capable desktop tool. AI features belong in a separate plugin after the core is stable and after explicit user consent flows are designed.
 
 ### Cluster Provisioning and Lifecycle Management
-**Why not:** Creating, upgrading, and deleting clusters is a complex domain that varies significantly by provider (kubeadm, Cluster API, EKS, GKE, k3s). This is out of scope by design — KubeViewer manages resources inside running clusters, not the cluster infrastructure itself. This scope boundary keeps the product focused and prevents feature overlap with tools like Rancher, Cluster API UI, and cloud consoles.
+**Why not:** Creating, upgrading, and deleting clusters is a complex domain that varies significantly by provider (kubeadm, Cluster API, EKS, GKE, k3s). This is out of scope by design — Clusterfudge manages resources inside running clusters, not the cluster infrastructure itself. This scope boundary keeps the product focused and prevents feature overlap with tools like Rancher, Cluster API UI, and cloud consoles.
 
 ### Cost Analysis and FinOps
-**Why not:** Accurate cost analysis requires cloud billing APIs which are provider-specific, require credentials beyond kubeconfig, and depend on pricing data that changes frequently. Cost analysis tools (Kubecost, OpenCost) are purpose-built for this and expose K8s-native APIs. KubeViewer can show resource requests/limits (which are inputs to cost estimation) but not costs themselves.
+**Why not:** Accurate cost analysis requires cloud billing APIs which are provider-specific, require credentials beyond kubeconfig, and depend on pricing data that changes frequently. Cost analysis tools (Kubecost, OpenCost) are purpose-built for this and expose K8s-native APIs. Clusterfudge can show resource requests/limits (which are inputs to cost estimation) but not costs themselves.
 
 ### RBAC Visualization (graph view)
 **Why not:** RBAC visualization (who can do what, permission graphs) is a standalone capability that requires substantial graph rendering work and careful UX design. Phase 1 focuses on RBAC resource browsing (list roles and bindings). A full visualization will be a dedicated feature in Phase 3 or later.
@@ -1282,10 +1282,10 @@ These features are explicitly out of scope. Each entry explains **why** to preve
 **Why not:** Same reasoning as RBAC visualization. Policy graphs are valuable but require significant custom rendering and are rarely the day-to-day task. Phase 2 handles listing NetworkPolicy resources; a graph view is Phase 3+.
 
 ### Audit Log Streaming
-**Why not:** Kubernetes audit logs require API server configuration (`--audit-log-path`, `--audit-webhook-config`) that is cluster-specific and often not exposed via the API. This is an operational concern for cluster administrators, not the daily driver use case KubeViewer targets.
+**Why not:** Kubernetes audit logs require API server configuration (`--audit-log-path`, `--audit-webhook-config`) that is cluster-specific and often not exposed via the API. This is an operational concern for cluster administrators, not the daily driver use case Clusterfudge targets.
 
 ### Multi-Tenancy (shared instance serving multiple users)
-**Why not:** KubeViewer is a single-user desktop application. Each user runs their own instance with their own kubeconfig credentials. There is no server component and no concept of multi-tenancy. This keeps the security model simple — each process has exactly the permissions of the user who launched it.
+**Why not:** Clusterfudge is a single-user desktop application. Each user runs their own instance with their own kubeconfig credentials. There is no server component and no concept of multi-tenancy. This keeps the security model simple — each process has exactly the permissions of the user who launched it.
 
 ### Windows ARM64 Support (Phase 1)
 **Why not:** Wails v2 Windows builds target x64. Windows ARM64 (Surface Pro X, Snapdragon PCs) is a small market segment and cross-compilation is more complex. macOS (Apple Silicon via universal binary) and Linux ARM64 are supported. Windows ARM64 is a Phase 2 consideration after validating the x64 build.
@@ -1316,4 +1316,4 @@ client-go handles: exec-based authentication providers, OIDC token refresh, cert
 This maps cleanly to K8s semantics. K8s supports both request/response (GET resources) and watch streams (watch resources). Method calls are request/response: the frontend asks for data, Go returns it. Events are push: Go detects a change and notifies the frontend. This bidirectional model means the frontend never needs to poll — it is always up-to-date through the watch mechanism, and can also refresh on demand via method calls.
 
 ### Dynamic Client for CRDs
-`client-go` typed clients require code generation for each resource type. CRDs are defined at runtime by the cluster operator. Using `dynamic.Interface` with `unstructured.Unstructured` allows KubeViewer to work with any CRD without code generation. The cost is losing compile-time type safety for CRD fields, but `ResourceSummary.Fields map[string]any` makes this explicit at the IPC boundary.
+`client-go` typed clients require code generation for each resource type. CRDs are defined at runtime by the cluster operator. Using `dynamic.Interface` with `unstructured.Unstructured` allows Clusterfudge to work with any CRD without code generation. The cost is losing compile-time type safety for CRD fields, but `ResourceSummary.Fields map[string]any` makes this explicit at the IPC boundary.

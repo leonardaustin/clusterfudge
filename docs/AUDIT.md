@@ -1,4 +1,4 @@
-# KubeViewer Comprehensive Code Audit
+# Clusterfudge Comprehensive Code Audit
 
 **Date:** 2026-03-06
 **Scope:** Full codebase — Go backend, TypeScript/React frontend, tests, configuration, dependencies
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-KubeViewer is a Wails-based (Go + React/TypeScript) Kubernetes cluster viewer. The codebase is well-structured overall, but this audit identified **44 issues** across security, reliability, performance, and code quality domains.
+Clusterfudge is a Wails-based (Go + React/TypeScript) Kubernetes cluster viewer. The codebase is well-structured overall, but this audit identified **44 issues** across security, reliability, performance, and code quality domains.
 
 ### Remediation Progress
 
@@ -365,7 +365,7 @@ useEffect depends on `onClose` callback prop — creates/destroys event listener
 ### L2. Audit Entries Only In-Memory — RESOLVED
 **File:** `internal/audit/logger.go` — All audit history lost on restart.
 
-**Resolution:** Added `NewLoggerWithFile(path)` constructor that persists entries as JSONL. On startup, existing entries are loaded from the file. Added `Close()` method for cleanup. Main app now uses file-backed audit logger at `~/.config/kubeviewer/audit.jsonl` with graceful fallback to in-memory if file access fails.
+**Resolution:** Added `NewLoggerWithFile(path)` constructor that persists entries as JSONL. On startup, existing entries are loaded from the file. Added `Close()` method for cleanup. Main app now uses file-backed audit logger at `~/.config/clusterfudge/audit.jsonl` with graceful fallback to in-memory if file access fails.
 
 ### L3. String-Based Patch Construction (multiple locations) — RESOLVED
 **File:** `handlers/resource_handler.go:315-360` — Anti-pattern, should use json.Marshal.

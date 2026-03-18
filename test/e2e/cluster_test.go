@@ -13,8 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
 )
 
 // TC-CONN-001: Connect to k3s cluster via kubeconfig

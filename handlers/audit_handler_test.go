@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/audit"
+	"clusterfudge/internal/audit"
 )
 
 func TestNewAuditHandler(t *testing.T) {

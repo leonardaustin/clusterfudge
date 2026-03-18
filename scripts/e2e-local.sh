@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/e2e-local.sh
 #
-# Run KubeViewer e2e tests locally using podman + k3s.
+# Run Clusterfudge e2e tests locally using podman + k3s.
 #
 # Usage:
 #   ./scripts/e2e-local.sh [--keep] [--skip-helm] [--skip-perf] [TEST_FILTER]
@@ -23,12 +23,12 @@ set -euo pipefail
 # Configuration
 # ---------------------------------------------------------------------------
 
-CONTAINER_NAME="kubeviewer-e2e-k3s"
+CONTAINER_NAME="clusterfudge-e2e-k3s"
 K3S_IMAGE="rancher/k3s:v1.28.5-k3s1"
 K3S_HOST_PORT="16443"
-KUBECONFIG_PATH="$(mktemp -t kubeviewer-e2e-XXXXXX.yaml)"
-E2E_NAMESPACE="kubeviewer-e2e"
-E2E_NAMESPACE_B="kubeviewer-e2e-b"
+KUBECONFIG_PATH="$(mktemp -t clusterfudge-e2e-XXXXXX.yaml)"
+E2E_NAMESPACE="clusterfudge-e2e"
+E2E_NAMESPACE_B="clusterfudge-e2e-b"
 KEEP_CONTAINER=false
 SKIP_HELM=false
 SKIP_PERF=true

@@ -11,7 +11,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	kvresource "kubeviewer/internal/resource"
+	kvresource "clusterfudge/internal/resource"
 )
 
 // marshalJSON marshals v to JSON bytes, failing the test on error.

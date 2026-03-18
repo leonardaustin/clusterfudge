@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/k8s"
+	"clusterfudge/internal/k8s"
 )
 
 // TC-METRICS-001: GetPodMetrics returns nil gracefully when metrics-server is absent

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/troubleshoot"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/troubleshoot"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"

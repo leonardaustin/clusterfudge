@@ -1,4 +1,4 @@
-# KubeViewer Features & API Reference
+# Clusterfudge Features & API Reference
 
 Complete feature inventory with the corresponding backend API surface. Every method listed below is callable from the frontend via Wails-generated TypeScript bindings.
 
@@ -291,7 +291,7 @@ Reusable YAML templates with variable interpolation.
 
 ## Keyboard Shortcuts
 
-KubeViewer is keyboard-first. The shortcuts below are the active hardcoded bindings in the frontend (`AppShellShortcuts.tsx`, `ShortcutHelpOverlay.tsx`). The backend also exposes a `keyBindings` map in the config store (`internal/config/store.go`) intended for user customization, but this is not yet wired into the frontend.
+Clusterfudge is keyboard-first. The shortcuts below are the active hardcoded bindings in the frontend (`AppShellShortcuts.tsx`, `ShortcutHelpOverlay.tsx`). The backend also exposes a `keyBindings` map in the config store (`internal/config/store.go`) intended for user customization, but this is not yet wired into the frontend.
 
 **Navigation (vim-style chords):**
 
@@ -399,7 +399,7 @@ Automatic discovery of Amazon EKS clusters from configured AWS accounts. Planned
 - **Multi-account support** — Discover clusters across multiple AWS accounts via assumed roles
 - **IAM authentication** — Native support for `aws-iam-authenticator` and `aws eks get-token` credential providers
 
-**Current state:** KubeViewer can *detect* that a cluster is EKS (via server URL patterns and exec plugin detection in `internal/cluster/platform.go` and `internal/cluster/kubeconfig.go`) and provides manual setup guides in the Welcome screen, but does not yet integrate with the AWS SDK for programmatic cluster discovery.
+**Current state:** Clusterfudge can *detect* that a cluster is EKS (via server URL patterns and exec plugin detection in `internal/cluster/platform.go` and `internal/cluster/kubeconfig.go`) and provides manual setup guides in the Welcome screen, but does not yet integrate with the AWS SDK for programmatic cluster discovery.
 
 ### Azure AKS: One-Click Azure Integration for AKS Cluster Discovery
 
@@ -410,7 +410,7 @@ Automatic discovery of Azure AKS clusters from configured Azure subscriptions. P
 - **Multi-subscription support** — Discover clusters across multiple Azure subscriptions
 - **Azure AD authentication** — Native support for `kubelogin` and Azure AD-based authentication flows
 
-**Current state:** KubeViewer can *detect* that a cluster is AKS (via `.azmk8s.io` URL patterns and `kubelogin` exec plugin detection) and provides manual setup guides in the Welcome screen, but does not yet integrate with the Azure SDK for programmatic cluster discovery.
+**Current state:** Clusterfudge can *detect* that a cluster is AKS (via `.azmk8s.io` URL patterns and `kubelogin` exec plugin detection) and provides manual setup guides in the Welcome screen, but does not yet integrate with the Azure SDK for programmatic cluster discovery.
 
 ### Security Center: CVE Reporting for Images, Resources, and Roles
 
@@ -422,4 +422,4 @@ A comprehensive security center with vulnerability scanning and CVE reporting. P
 - **Config audit results** — Surface Trivy config audit findings for resource spec misconfigurations
 - **Role-based security analysis** — Identify overly permissive RBAC roles and service accounts
 
-**Current state:** KubeViewer implements pod-level security scanning against Kubernetes Pod Security Standards (`internal/security/scanner.go`), RBAC graph visualization (`internal/rbacgraph/`), and audit logging (`internal/audit/logger.go`). The CVE/Trivy integration described in the Phase 9 design document has not yet been implemented.
+**Current state:** Clusterfudge implements pod-level security scanning against Kubernetes Pod Security Standards (`internal/security/scanner.go`), RBAC graph visualization (`internal/rbacgraph/`), and audit logging (`internal/audit/logger.go`). The CVE/Trivy integration described in the Phase 9 design document has not yet been implemented.

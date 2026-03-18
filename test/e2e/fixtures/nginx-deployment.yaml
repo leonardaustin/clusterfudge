@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: e2e-nginx
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
     app: e2e-nginx
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   replicas: 1
   selector:

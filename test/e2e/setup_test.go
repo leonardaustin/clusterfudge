@@ -18,9 +18,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/resource"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/resource"
 )
 
 // testEnv holds shared state for the e2e suite.
@@ -67,11 +67,11 @@ func setup() error {
 	// Resolve namespace
 	testEnv.namespace = os.Getenv("E2E_NAMESPACE")
 	if testEnv.namespace == "" {
-		testEnv.namespace = "kubeviewer-e2e"
+		testEnv.namespace = "clusterfudge-e2e"
 	}
 	testEnv.namespaceB = os.Getenv("E2E_NAMESPACE_B")
 	if testEnv.namespaceB == "" {
-		testEnv.namespaceB = "kubeviewer-e2e-b"
+		testEnv.namespaceB = "clusterfudge-e2e-b"
 	}
 
 	// Build rest.Config
@@ -158,7 +158,7 @@ func waitForDefaultServiceAccount(ctx context.Context, namespace string) error {
 func startK3sContainer(t *testing.T) (kubeconfigPath string, cleanup func()) {
 	t.Helper()
 
-	containerName := "kubeviewer-e2e-k3s"
+	containerName := "clusterfudge-e2e-k3s"
 
 	// Check if already running
 	out, err := exec.Command("podman", "inspect", containerName, "--format", "{{.State.Status}}").Output()

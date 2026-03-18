@@ -14,8 +14,8 @@ export function YAMLDiffView({ original, modified, onClose }: YAMLDiffViewProps)
   const editorMinimap = useSettingsStore((s) => s.editorMinimap)
 
   const handleMount: DiffOnMount = useCallback((_editor, monaco) => {
-    monaco.editor.defineTheme('kubeviewer-dark', monacoTheme)
-    monaco.editor.setTheme('kubeviewer-dark')
+    monaco.editor.defineTheme('clusterfudge-dark', monacoTheme)
+    monaco.editor.setTheme('clusterfudge-dark')
   }, [])
 
   return (

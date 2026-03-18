@@ -2,9 +2,9 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: e2e-cronjob
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   schedule: "*/60 * * * *"
   jobTemplate:

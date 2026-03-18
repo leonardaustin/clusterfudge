@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"kubeviewer/internal/audit"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/security"
+	"clusterfudge/internal/audit"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/security"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/resource"
-	"kubeviewer/internal/troubleshoot"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/resource"
+	"clusterfudge/internal/troubleshoot"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

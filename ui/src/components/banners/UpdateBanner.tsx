@@ -44,7 +44,7 @@ export function UpdateBanner() {
     >
       <Download className="w-3.5 h-3.5 shrink-0" />
       <span className="font-medium">
-        KubeViewer {update.version} is available
+        Clusterfudge {update.version} is available
       </span>
 
       <a

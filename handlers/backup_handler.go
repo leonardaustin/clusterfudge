@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"kubeviewer/internal/backup"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/resource"
+	"clusterfudge/internal/backup"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/resource"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -178,7 +178,7 @@ func (h *BackupHandler) Import(opts backup.ImportOptions) (*backup.ImportResult,
 			resClient = cs.Dynamic.Resource(gvr)
 		}
 
-		applyOpts := metav1.ApplyOptions{FieldManager: "kubeviewer", Force: true}
+		applyOpts := metav1.ApplyOptions{FieldManager: "clusterfudge", Force: true}
 		if opts.DryRun {
 			applyOpts.DryRun = []string{metav1.DryRunAll}
 		}

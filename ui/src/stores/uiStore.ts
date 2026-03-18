@@ -156,7 +156,7 @@ export const useUIStore = create<UIState>()(
       isSectionOpen: (id): boolean => !get().collapsedSections[id],
     }),
     {
-      name: "kubeviewer-ui",
+      name: "clusterfudge-ui",
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { eventsResourceFilter, aiSessions, activeAISessionId, ...persisted } = state;

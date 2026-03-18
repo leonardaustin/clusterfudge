@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kubeviewer/internal/config"
+	"clusterfudge/internal/config"
 )
 
 // ConfigHandler wraps config.Store to provide Wails-callable methods for the Settings page.

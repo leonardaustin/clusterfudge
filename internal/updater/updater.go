@@ -140,7 +140,7 @@ func (u *Updater) DownloadUpdate(ctx context.Context, info *UpdateInfo, progress
 		return "", fmt.Errorf("download update: server returned HTTP %d", resp.StatusCode)
 	}
 
-	tmpFile, err := os.CreateTemp("", "kubeviewer-update-*")
+	tmpFile, err := os.CreateTemp("", "clusterfudge-update-*")
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %w", err)
 	}
@@ -270,11 +270,11 @@ func parseChecksumFile(r io.Reader, filename string) (string, error) {
 func PlatformAssetName() string {
 	switch runtime.GOOS {
 	case "darwin":
-		return "KubeViewer-macos-universal.dmg"
+		return "Clusterfudge-macos-universal.dmg"
 	case "windows":
-		return "KubeViewer-amd64-installer.exe"
+		return "Clusterfudge-amd64-installer.exe"
 	case "linux":
-		return "KubeViewer-linux-amd64.AppImage"
+		return "Clusterfudge-linux-amd64.AppImage"
 	default:
 		return ""
 	}

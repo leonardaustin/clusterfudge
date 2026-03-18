@@ -2,9 +2,9 @@ apiVersion: v1
 kind: LimitRange
 metadata:
   name: e2e-limit-range
-  namespace: kubeviewer-e2e
+  namespace: clusterfudge-e2e
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   limits:
     - type: Container

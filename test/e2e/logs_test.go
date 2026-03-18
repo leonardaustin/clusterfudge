@@ -12,7 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kubeviewer/internal/stream"
+	"clusterfudge/internal/stream"
 )
 
 // TC-LOG-001: Start log stream and receive known content

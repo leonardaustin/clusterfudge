@@ -1333,7 +1333,7 @@ export function ColumnCustomizer<T>({ columns, onReorder }: Props<T>) {
 
 ```ts
 // ui/src/lib/columnPrefs.ts
-const KEY_PREFIX = "kubeviewer:columns:";
+const KEY_PREFIX = "clusterfudge:columns:";
 
 export function loadColumnPrefs(resource: string): { visible: string[]; order: string[] } | null {
   try {
@@ -1748,7 +1748,7 @@ export function ResourceDiff({ original, modified, leftLabel = "Before", rightLa
         original={original}
         modified={modified}
         language="yaml"
-        theme="kubeviewer-dark"
+        theme="clusterfudge-dark"
         options={{
           readOnly: true,
           renderSideBySide: true,
@@ -1971,7 +1971,7 @@ export function CreateResourceWizard({ namespace, onClose, onCreate }) {
               <MonacoEditor
                 value={yaml}
                 language="yaml"
-                theme="kubeviewer-dark"
+                theme="clusterfudge-dark"
                 onChange={(v) => setYaml(v ?? "")}
                 options={{ minimap: { enabled: false }, fontSize: 12, lineNumbers: "on" }}
               />

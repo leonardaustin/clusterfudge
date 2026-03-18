@@ -287,11 +287,11 @@ func configFilePath() (string, error) {
 		if appdata == "" {
 			return "", fmt.Errorf("APPDATA not set")
 		}
-		return filepath.Join(appdata, "kubeviewer", "config.json"), nil
+		return filepath.Join(appdata, "clusterfudge", "config.json"), nil
 	}
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "kubeviewer", "config.json"), nil
+	return filepath.Join(dir, "clusterfudge", "config.json"), nil
 }

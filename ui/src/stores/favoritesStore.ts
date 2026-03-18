@@ -88,6 +88,6 @@ export const useFavoritesStore = create<FavoritesState>()(
       setClusterColor: (name, color) =>
         set((s) => ({ clusterColors: { ...s.clusterColors, [name]: color } })),
     }),
-    { name: "kubeviewer-favorites" }
+    { name: "clusterfudge-favorites" }
   )
 );

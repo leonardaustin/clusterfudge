@@ -48,7 +48,7 @@ type Engine struct {
 // User templates are loaded from the OS config directory if available.
 func NewEngine() *Engine {
 	configDir, _ := os.UserConfigDir()
-	storeDir := filepath.Join(configDir, "kubeviewer", "templates")
+	storeDir := filepath.Join(configDir, "clusterfudge", "templates")
 
 	e := &Engine{
 		templates: make(map[string]Template),

@@ -411,9 +411,9 @@ export function Welcome() {
       {/* Header */}
       <div className="resource-header">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="KubeViewer" className="w-8 h-8" />
+          <img src="/logo.svg" alt="Clusterfudge" className="w-8 h-8" />
           <div>
-            <h1>KubeViewer</h1>
+            <h1>Clusterfudge</h1>
             <div className="subtitle">
               {sortedClusters.length > 0
                 ? `${sortedClusters.length} cluster${sortedClusters.length === 1 ? '' : 's'} discovered from kubeconfig`

@@ -95,7 +95,7 @@ func (s *Service) Apply(ctx context.Context, client dynamic.Interface, q Resourc
 	}
 
 	rc := resourceClient(client, q)
-	_, err := rc.Apply(ctx, name, &obj, metav1.ApplyOptions{FieldManager: "kubeviewer", Force: true})
+	_, err := rc.Apply(ctx, name, &obj, metav1.ApplyOptions{FieldManager: "clusterfudge", Force: true})
 	return err
 }
 

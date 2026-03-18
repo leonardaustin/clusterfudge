@@ -285,7 +285,7 @@ export function AppShell() {
 ```
 ┌──────────────────────────┐
 │  ┌────────────────────┐  │
-│  │ ⬡ KubeViewer        │  │  Brand
+│  │ ⬡ Clusterfudge        │  │  Brand
 │  │ minikube (local) ▾  │  │  Cluster selector
 │  └────────────────────┘  │
 │                           │
@@ -703,7 +703,7 @@ interface SectionProps {
 
 function SidebarSection({ section, collapsed, counts }: SectionProps) {
   const location = useLocation();
-  const storageKey = `kubeviewer-section-${section.id}`;
+  const storageKey = `clusterfudge-section-${section.id}`;
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem(storageKey) !== "false"; }
     catch { return true; }
@@ -1118,7 +1118,7 @@ function NamespaceFilter() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [recentNs, setRecentNs] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("kubeviewer-recent-ns") ?? "[]"); }
+    try { return JSON.parse(localStorage.getItem("clusterfudge-recent-ns") ?? "[]"); }
     catch { return []; }
   });
 
@@ -1131,7 +1131,7 @@ function NamespaceFilter() {
     setOpen(false);
     setRecentNs((prev) => {
       const next = [ns, ...prev.filter((n) => n !== ns)].slice(0, 5);
-      try { localStorage.setItem("kubeviewer-recent-ns", JSON.stringify(next)); } catch {}
+      try { localStorage.setItem("clusterfudge-recent-ns", JSON.stringify(next)); } catch {}
       return next;
     });
   };
@@ -2546,7 +2546,7 @@ export const useClusterStore = create<ClusterState>()(
       setConnectionError: (err)  => set({ connectionError: err }),
     }),
     {
-      name: "kubeviewer-cluster",
+      name: "clusterfudge-cluster",
       // Only persist cluster list and selection, not live status
       partialize: (s) => ({
         clusters: s.clusters.map((c) => ({ ...c, status: "disconnected" as ClusterStatus })),
@@ -2628,7 +2628,7 @@ export const useUIStore = create<UIState>()(
       toggleTheme: () => set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
       setShortcutsEnabled: (v) => set({ shortcutsEnabled: v }),
     }),
-    { name: "kubeviewer-ui" }
+    { name: "clusterfudge-ui" }
   )
 );
 ```
@@ -2739,7 +2739,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       setClusterColor: (name, color) =>
         set((s) => ({ clusterColors: { ...s.clusterColors, [name]: color } })),
     }),
-    { name: "kubeviewer-favorites" }
+    { name: "clusterfudge-favorites" }
   )
 );
 ```
@@ -2908,7 +2908,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Sync system preference on first load if no saved preference
   useEffect(() => {
-    const saved = localStorage.getItem("kubeviewer-ui");
+    const saved = localStorage.getItem("clusterfudge-ui");
     if (!saved) {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setTheme(prefersDark ? "dark" : "light");
@@ -3131,7 +3131,7 @@ function UpdateBanner({ version, onInstall }: UpdateBannerProps) {
     <Banner
       variant="info"
       icon={<ArrowUp className="w-3.5 h-3.5" />}
-      message={`KubeViewer ${version} is available.`}
+      message={`Clusterfudge ${version} is available.`}
       action={
         <button
           onClick={onInstall}

@@ -146,7 +146,7 @@ export const useClusterStore = create<ClusterState>()(
       setConnectionError: (err)  => set({ connectionError: err }),
     }),
     {
-      name: "kubeviewer-cluster",
+      name: "clusterfudge-cluster",
       // Persist cluster list, selection, and last active cluster name (not live status)
       partialize: (s) => ({
         activeCluster: s.activeCluster,

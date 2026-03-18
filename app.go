@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/config"
-	"kubeviewer/internal/events"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/config"
+	"clusterfudge/internal/events"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -47,7 +47,7 @@ func (a *App) RegisterEmitterReceivers(receivers ...emitterReceiver) {
 // startup is called when the Wails app is ready.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	log.Println("KubeViewer starting up")
+	log.Println("Clusterfudge starting up")
 
 	// Create the event emitter now that the Wails context is available.
 	emitter := events.NewEmitter(func(topic string, payload any) {
@@ -96,7 +96,7 @@ func (a *App) domReady(_ context.Context) {
 
 // shutdown is called when the application is closing.
 func (a *App) shutdown(_ context.Context) {
-	log.Println("KubeViewer shutting down")
+	log.Println("Clusterfudge shutting down")
 
 	// Persist window position and size to config.
 	// Deep merge preserves frontend-managed layout fields (sidebarWidth, etc.).

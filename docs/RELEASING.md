@@ -1,4 +1,4 @@
-# Releasing KubeViewer
+# Releasing Clusterfudge
 
 Step-by-step procedure for cutting a new release.
 

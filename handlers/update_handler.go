@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"kubeviewer/internal/updater"
+	"clusterfudge/internal/updater"
 )
 
 // UpdateHandler exposes update operations to the frontend.

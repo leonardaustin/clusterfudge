@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
 
 	authv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"

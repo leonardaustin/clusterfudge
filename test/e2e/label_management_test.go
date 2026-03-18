@@ -9,7 +9,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kubeviewer/handlers"
+	"clusterfudge/handlers"
 )
 
 // TC-LABEL-001: PatchLabels add, modify, and remove labels

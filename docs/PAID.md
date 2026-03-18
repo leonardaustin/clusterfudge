@@ -1,4 +1,4 @@
-# KubeViewer Paid Edition
+# Clusterfudge Paid Edition
 
 ## Pricing Model
 

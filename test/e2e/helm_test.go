@@ -13,7 +13,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kubeviewer/internal/helm"
+	"clusterfudge/internal/helm"
 )
 
 // testChartPath returns the path to the test Helm chart.

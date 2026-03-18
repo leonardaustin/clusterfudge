@@ -1,6 +1,6 @@
 import type { ColumnConfig } from '@/components/table/ColumnCustomizer'
 
-const STORAGE_KEY_PREFIX = 'kubeviewer:columns:'
+const STORAGE_KEY_PREFIX = 'clusterfudge:columns:'
 
 /**
  * Save column preferences (order + visibility) to localStorage.

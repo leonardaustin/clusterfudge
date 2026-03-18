@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"kubeviewer/internal/wizards"
+	"clusterfudge/internal/wizards"
 )
 
 // WizardHandler exposes resource creation wizard operations to the frontend.

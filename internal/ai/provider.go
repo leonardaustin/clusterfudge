@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"kubeviewer/internal/config"
+	"clusterfudge/internal/config"
 )
 
 // Provider represents an AI CLI tool that can be launched for interactive debugging.

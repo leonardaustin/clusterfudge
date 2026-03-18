@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/k8s"
-	"kubeviewer/internal/resource"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/k8s"
+	"clusterfudge/internal/resource"
 
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"

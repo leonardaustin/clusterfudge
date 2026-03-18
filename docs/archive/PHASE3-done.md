@@ -1430,7 +1430,7 @@ func RetryWithBackoff(ctx context.Context, cfg RetryConfig, fn func() error) err
 
 ### Overview
 
-The SharedInformer cache layer is the backbone of KubeViewer's real-time data.
+The SharedInformer cache layer is the backbone of Clusterfudge's real-time data.
 Instead of polling the API server, we use `client-go`'s SharedInformerFactory
 to maintain an in-memory cache that is kept current via watch streams.
 

@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: widgets.example.com
   labels:
-    managed-by: kubeviewer-e2e
+    managed-by: clusterfudge-e2e
 spec:
   group: example.com
   scope: Namespaced

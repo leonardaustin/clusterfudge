@@ -1,4 +1,4 @@
-# KubeViewer vs Lens (lenshq.io) — Competitor Analysis
+# Clusterfudge vs Lens (lenshq.io) — Competitor Analysis
 
 **Last Updated:** 2026-03-08
 **Competitor:** Lens Kubernetes IDE (https://lenshq.io)
@@ -7,12 +7,12 @@
 
 ---
 
-## Features Lens Has That KubeViewer is Missing
+## Features Lens Has That Clusterfudge is Missing
 
 | Feature | Details | Priority |
 |---|---|---|
 | **AI Assistant (Prism AI)** | Context-aware AI troubleshooter built into the IDE — auto-diagnoses issues, suggests fixes, no copy-pasting to ChatGPT | High |
-| **Prometheus Integration** | Pulls metrics directly from Prometheus/kube-state-metrics/node-exporter. KubeViewer only supports metrics-server | High |
+| **Prometheus Integration** | Pulls metrics directly from Prometheus/kube-state-metrics/node-exporter. Clusterfudge only supports metrics-server | High |
 | **Extension/Plugin System** | Full extension API with 100+ extensions (vulnerability scanning, cloud integrations, resource maps, chaos engineering, etc.) | High |
 | **CVE/Vulnerability Scanning** | Pro-tier feature that scans container images for known CVEs | High |
 | **Team Collaboration (Lens Spaces)** | End-to-end encrypted team communication, shared cluster catalogs, synced configurations | Medium |
@@ -29,7 +29,7 @@
 
 ---
 
-## Features KubeViewer Has That Lens is Missing
+## Features Clusterfudge Has That Lens is Missing
 
 | Feature | Details | Differentiator Strength |
 |---|---|---|
@@ -96,7 +96,7 @@
 
 6. **Debug pods / ephemeral containers** — Launching `kubectl debug` containers from the UI is a high-value developer workflow.
 
-### KubeViewer's Key Differentiators to Lean Into
+### Clusterfudge's Key Differentiators to Lean Into
 
 1. **Performance** — 15MB binary vs 150MB+ Electron is a massive, provable advantage. Lean into "fast" messaging.
 
@@ -115,7 +115,7 @@
 ```
                     Mouse-Driven ←————————————→ Keyboard-First
                          |                            |
-              Lens       |                            |  KubeViewer
+              Lens       |                            |  Clusterfudge
               (heavy,    |                            |  (lightweight,
                extensible|                            |   built-in)
                          |                            |

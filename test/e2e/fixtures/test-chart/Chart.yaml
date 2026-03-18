@@ -1,6 +1,6 @@
 apiVersion: v2
 name: e2e-test-chart
-description: A minimal Helm chart for KubeViewer e2e testing
+description: A minimal Helm chart for Clusterfudge e2e testing
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

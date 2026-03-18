@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"kubeviewer/internal/config"
+	"clusterfudge/internal/config"
 )
 
 func TestResolveProvider_NoProviderEnabled(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"kubeviewer/internal/config"
+	"clusterfudge/internal/config"
 )
 
 func newTestConfigHandler(t *testing.T) *ConfigHandler {

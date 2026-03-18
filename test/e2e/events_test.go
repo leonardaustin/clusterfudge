@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/events"
+	"clusterfudge/internal/events"
 )
 
 func TestEvents_EmitAndSubscribe(t *testing.T) {

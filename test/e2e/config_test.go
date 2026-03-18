@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"kubeviewer/internal/config"
+	"clusterfudge/internal/config"
 )
 
 func TestConfig_PersistenceRoundTrip(t *testing.T) {

@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"kubeviewer/internal/alerts"
-	"kubeviewer/internal/audit"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/resource"
-	"kubeviewer/internal/troubleshoot"
+	"clusterfudge/internal/alerts"
+	"clusterfudge/internal/audit"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/resource"
+	"clusterfudge/internal/troubleshoot"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"

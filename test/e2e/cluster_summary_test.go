@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/handlers"
+	"clusterfudge/handlers"
 )
 
 // TC-SUMMARY-001: GetClusterSummary returns valid counts

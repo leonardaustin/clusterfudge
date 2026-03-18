@@ -14,7 +14,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Sync system preference on first load if no saved preference
   useEffect(() => {
-    const saved = safeGetItem("kubeviewer-ui");
+    const saved = safeGetItem("clusterfudge-ui");
     if (!saved) {
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)"
@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent) => {
-      const saved = safeGetItem("kubeviewer-ui");
+      const saved = safeGetItem("clusterfudge-ui");
       if (!saved) {
         setTheme(e.matches ? "dark" : "light");
       }

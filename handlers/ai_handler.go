@@ -8,13 +8,13 @@ import (
 	"runtime"
 	"sync"
 
-	"kubeviewer/internal/ai"
-	"kubeviewer/internal/cluster"
-	"kubeviewer/internal/config"
-	"kubeviewer/internal/events"
-	"kubeviewer/internal/resource"
-	"kubeviewer/internal/stream"
-	"kubeviewer/internal/troubleshoot"
+	"clusterfudge/internal/ai"
+	"clusterfudge/internal/cluster"
+	"clusterfudge/internal/config"
+	"clusterfudge/internal/events"
+	"clusterfudge/internal/resource"
+	"clusterfudge/internal/stream"
+	"clusterfudge/internal/troubleshoot"
 )
 
 // AIHandler exposes AI debugging session management to the frontend.

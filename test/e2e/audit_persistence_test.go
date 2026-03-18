@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"kubeviewer/internal/audit"
+	"clusterfudge/internal/audit"
 )
 
 // ---------------------------------------------------------------------------

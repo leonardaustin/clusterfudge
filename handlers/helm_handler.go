@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"kubeviewer/internal/helm"
+	"clusterfudge/internal/helm"
 )
 
 // HelmHandler wraps helm.Client to expose Helm operations to the frontend.

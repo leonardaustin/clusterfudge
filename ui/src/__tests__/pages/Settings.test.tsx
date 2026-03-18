@@ -79,7 +79,7 @@ describe('Settings', () => {
     expect(screen.getByText('Command Palette')).toBeDefined()
 
     await user.click(screen.getByText('About'))
-    expect(screen.getByText('KubeViewer')).toBeDefined()
+    expect(screen.getByText('Clusterfudge')).toBeDefined()
     expect(screen.getByText('v1.2.3')).toBeDefined()
   })
 

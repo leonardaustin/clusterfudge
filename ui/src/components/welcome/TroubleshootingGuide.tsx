@@ -68,7 +68,7 @@ const issues: TroubleshootingIssue[] = [
       'context deadline exceeded',
     ],
     steps: [
-      { label: 'Test basic connectivity with kubectl', command: 'kubectl cluster-info', note: 'If this also times out the issue is not specific to KubeViewer' },
+      { label: 'Test basic connectivity with kubectl', command: 'kubectl cluster-info', note: 'If this also times out the issue is not specific to Clusterfudge' },
       { label: 'Check if a VPN connection is required', note: 'Private clusters typically require a VPN or bastion host' },
       { label: 'Verify the server address in your kubeconfig', command: 'kubectl config view --minify -o jsonpath=\'{.clusters[0].cluster.server}\'' },
       { label: 'Try curling the API server directly', command: 'curl -sk --connect-timeout 5 $(kubectl config view --minify -o jsonpath=\'{.clusters[0].cluster.server}\')/version' },

@@ -1,4 +1,4 @@
-# KubeViewer Architecture
+# Clusterfudge Architecture
 
 A fast, keyboard-first Kubernetes desktop app built with Go + React.
 
@@ -27,7 +27,7 @@ A fast, keyboard-first Kubernetes desktop app built with Go + React.
 ## Project Layout
 
 ```
-kubeviewer/
+clusterfudge/
   main.go                  # Wails app bootstrap, service wiring
   app.go                   # Lifecycle (startup/shutdown), event emitter setup
   wails.json               # Wails project config
