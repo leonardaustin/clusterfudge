@@ -54,7 +54,7 @@ describe('toastStore', () => {
     vi.useRealTimers()
   })
 
-  it('uses default duration of 4000ms', () => {
+  it('uses default duration of 20000ms', () => {
     vi.useFakeTimers()
 
     useToastStore.getState().addToast({
@@ -64,7 +64,7 @@ describe('toastStore', () => {
 
     expect(useToastStore.getState().toasts).toHaveLength(1)
 
-    vi.advanceTimersByTime(3999)
+    vi.advanceTimersByTime(19999)
     expect(useToastStore.getState().toasts).toHaveLength(1)
 
     vi.advanceTimersByTime(1)
