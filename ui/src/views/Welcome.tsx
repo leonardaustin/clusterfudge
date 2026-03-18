@@ -136,13 +136,10 @@ function ClustersSection({
         )}
       </AnimatePresence>
 
-      <div className="welcome-section-header">
+      <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
         <div>
-          <h2 className="welcome-section-title">
-            <Server className="w-4 h-4" />
-            Available Clusters
-          </h2>
-          <p className="settings-description" style={{ marginTop: 2 }}>
+          <h2 className="settings-section-title" style={{ marginBottom: 0 }}>Available Clusters</h2>
+          <p className="settings-description" style={{ marginBottom: 'var(--space-4)' }}>
             Discovered from your kubeconfig. Click a cluster to connect.
           </p>
         </div>
@@ -150,6 +147,7 @@ function ClustersSection({
           className="settings-btn"
           onClick={onRefresh}
           disabled={preflightRunning}
+          style={{ marginTop: 2, flexShrink: 0 }}
         >
           <RefreshCw className={cn('w-3 h-3 mr-1.5 inline', preflightRunning && 'animate-spin')} />
           {preflightRunning ? 'Checking...' : 'Recheck'}
