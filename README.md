@@ -1,6 +1,6 @@
 # Clusterfudge
 
-A native desktop Kubernetes management tool built with [Wails](https://wails.io/) (Go backend + React/TypeScript frontend).
+A native desktop Kubernetes management tool.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
@@ -25,99 +25,25 @@ A native desktop Kubernetes management tool built with [Wails](https://wails.io/
 - **RBAC visualization** &mdash; graph-based RBAC relationship viewer
 - **Backup/restore** &mdash; export resources with metadata stripping
 
-## Prerequisites
+## Install
 
-- [Go](https://go.dev/) 1.23+
-- [Node.js](https://nodejs.org/) 20+
-- [pnpm](https://pnpm.io/) 9+
-- [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2
-
-### Platform-specific dependencies
-
-**Linux:**
-```bash
-sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
-```
-
-**macOS:** Xcode command line tools (`xcode-select --install`)
-
-**Windows:** WebView2 runtime (included in Windows 11, [download](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) for Windows 10)
-
-## Getting Started
+### Homebrew (macOS / Linux)
 
 ```bash
-# Clone the repository
-git clone https://github.com/leonardaustin/clusterfudge.git
-cd clusterfudge
-
-# Install frontend dependencies
-cd ui && pnpm install && cd ..
-
-# Start development server with hot reload
-make dev
+brew install leonardaustin/tap/clusterfudge
 ```
 
-## Development
+### Download
 
-```bash
-# Start development server with hot reload
-make dev
+Grab the latest release for your platform from the [Releases](https://github.com/leonardaustin/clusterfudge/releases) page:
 
-# Run all tests
-make test
-
-# Run linters
-make lint
-
-# Build production binary
-make build
-
-# Format code
-make format
-
-# See all available commands
-make help
-```
-
-## Project Structure
-
-```
-.
-├── main.go                  # Application entry point
-├── app.go                   # Wails lifecycle hooks
-├── handlers/                # Wails-bound handler layer
-├── internal/
-│   ├── ai/                  # AI integration
-│   ├── alerts/              # Alert rules and store
-│   ├── audit/               # Audit logging
-│   ├── backup/              # Resource export/import
-│   ├── cache/               # In-memory caching
-│   ├── cluster/             # Cluster connection management
-│   ├── config/              # App configuration store
-│   ├── events/              # Event emitter
-│   ├── helm/                # Helm SDK wrapper
-│   ├── k8s/                 # Kubernetes client utilities
-│   ├── resource/            # Resource service layer
-│   ├── security/            # Security scanning
-│   ├── stream/              # Log streaming, exec, port-forward
-│   ├── templates/           # YAML template engine
-│   ├── troubleshoot/        # Diagnostic engine and timeline
-│   └── updater/             # Auto-update checker
-├── ui/                      # React/TypeScript frontend
-│   └── src/
-│       ├── components/      # Reusable UI components
-│       ├── hooks/           # Custom React hooks
-│       ├── lib/             # Utilities, column definitions
-│       ├── pages/           # Route page components
-│       ├── stores/          # Zustand state stores
-│       └── views/           # Top-level view compositions
-├── docs/                    # Documentation and audit reports
-└── Makefile                 # Build commands
-```
+- **macOS** &mdash; `.dmg` (Apple Silicon & Intel)
+- **Linux** &mdash; `.AppImage`
+- **Windows** &mdash; `.exe` installer
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
