@@ -188,7 +188,7 @@ function ProviderRow({
             Detect
           </button>
         </div>
-        {isInvalid && (
+        {isInvalid && enabled && (
           <div style={{ marginTop: '4px', fontSize: 'var(--text-xs)', color: 'var(--red, #ef4444)' }}>
             {validationError}
           </div>

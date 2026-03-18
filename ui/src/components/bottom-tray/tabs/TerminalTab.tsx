@@ -11,6 +11,10 @@ import {
   WriteExec,
   CloseExec,
   ResizeExec,
+  StartLocalTerminal,
+  WriteLocalTerminal,
+  CloseLocalTerminal,
+  ResizeLocalTerminal,
 } from "@/wailsjs/go/handlers/StreamHandler";
 import { EventsOn } from "@/wailsjs/runtime/runtime";
 import { PodPicker, type PodPickerValue } from "../PodPicker";
@@ -24,6 +28,7 @@ interface TerminalSession {
   namespace: string;
   container: string;
   sessionId: string;
+  isLocal: boolean;
   xterm: import("@xterm/xterm").Terminal | null;
   searchAddon: SearchAddonType | null;
   cleanup: Array<() => void>;
@@ -229,7 +234,11 @@ export default function TerminalTab() {
       fn();
     }
     if (session.sessionId) {
-      CloseExec(session.sessionId);
+      if (session.isLocal) {
+        CloseLocalTerminal(session.sessionId);
+      } else {
+        CloseExec(session.sessionId);
+      }
     }
     if (session.xterm) {
       session.xterm.dispose();
@@ -258,6 +267,7 @@ export default function TerminalTab() {
       namespace,
       container,
       sessionId: "",
+      isLocal: false,
       xterm: null,
       searchAddon: null,
       cleanup: [],
@@ -394,6 +404,136 @@ export default function TerminalTab() {
     }
   }, [isPod, namespace, podName, selectedContainer, containers, termFontSize, termCursorStyle, termCursorBlink, termShell, termCopyOnSelect, termTheme]);
 
+  const createLocalSession = useCallback(async () => {
+    if (!termContainerRef.current) return;
+
+    const sessionLocalId = `session-${nextSessionSeq++}`;
+    const sessionName = "Local";
+
+    const termDiv = document.createElement("div");
+    termDiv.className = "absolute inset-0";
+    termContainerRef.current.appendChild(termDiv);
+
+    const newSession: TerminalSession = {
+      id: sessionLocalId,
+      name: sessionName,
+      podName: "",
+      namespace: "",
+      container: "",
+      sessionId: "",
+      isLocal: true,
+      xterm: null,
+      searchAddon: null,
+      cleanup: [],
+      termDiv,
+    };
+
+    setSessions((prev) => [...prev, newSession]);
+    setActiveSessionId(sessionLocalId);
+
+    try {
+      const { Terminal } = await import("@xterm/xterm");
+      const { FitAddon } = await import("@xterm/addon-fit");
+      const { SearchAddon } = await import("@xterm/addon-search");
+      await import("@xterm/xterm/css/xterm.css");
+
+      const resolvedTheme = TERMINAL_THEMES[termTheme] ?? TERMINAL_THEMES.dark;
+
+      const term = new Terminal({
+        theme: resolvedTheme,
+        fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
+        fontSize: termFontSize,
+        lineHeight: 1.4,
+        cursorBlink: termCursorBlink,
+        cursorStyle: termCursorStyle as "block" | "bar" | "underline",
+      });
+
+      const fitAddon = new FitAddon();
+      term.loadAddon(fitAddon);
+
+      const searchAddon = new SearchAddon();
+      term.loadAddon(searchAddon);
+
+      term.open(termDiv);
+      fitAddon.fit();
+
+      const cleanup: Array<() => void> = [];
+
+      if (termCopyOnSelect) {
+        const selDisposable = term.onSelectionChange(() => {
+          const sel = term.getSelection();
+          if (sel) {
+            navigator.clipboard.writeText(sel).catch((err) => console.warn('[TerminalTab] Failed to copy to clipboard:', err));
+          }
+        });
+        cleanup.push(() => selDisposable.dispose());
+      }
+
+      let backendSessionId = "";
+      try {
+        backendSessionId = await StartLocalTerminal();
+
+        const dataDisposable = term.onData((data) => {
+          WriteLocalTerminal(backendSessionId, data).catch((err: unknown) => {
+            console.error("[TerminalTab] WriteLocalTerminal failed:", err);
+          });
+        });
+        cleanup.push(() => dataDisposable.dispose());
+
+        const stdoutCleanup = EventsOn(
+          `localterm:stdout:${backendSessionId}`,
+          (data: unknown) => {
+            term.write(data as string);
+          }
+        );
+        cleanup.push(stdoutCleanup);
+
+        const exitCleanup = EventsOn(
+          `localterm:exit:${backendSessionId}`,
+          (msg: unknown) => {
+            const message = msg as string;
+            term.write(
+              `\r\n\x1b[90m[Session ended${message ? `: ${message}` : ""}]\x1b[0m\r\n`
+            );
+          }
+        );
+        cleanup.push(exitCleanup);
+
+        fitAddon.fit();
+        if (term.cols != null && term.rows != null) {
+          ResizeLocalTerminal(backendSessionId, term.rows, term.cols).catch(() => {});
+        }
+
+        const resizeDisposable = term.onResize(({ cols, rows }) => {
+          if (backendSessionId) {
+            ResizeLocalTerminal(backendSessionId, rows, cols).catch(() => {});
+          }
+        });
+        cleanup.push(() => resizeDisposable.dispose());
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        term.write(`\x1b[31mFailed to start local terminal: ${msg}\x1b[0m\r\n`);
+      }
+
+      const resizeObserver = new ResizeObserver(() => {
+        fitAddon.fit();
+      });
+      resizeObserver.observe(termDiv);
+      cleanup.push(() => resizeObserver.disconnect());
+
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === sessionLocalId
+            ? { ...s, xterm: term, searchAddon, sessionId: backendSessionId, cleanup }
+            : s
+        )
+      );
+    } catch (err) {
+      console.error('[TerminalTab] Failed to initialize local terminal:', err);
+      useToastStore.getState().addToast({ type: 'error', title: 'Failed to initialize local terminal', description: err instanceof Error ? err.message : String(err) });
+    }
+  }, [termFontSize, termCursorStyle, termCursorBlink, termCopyOnSelect, termTheme]);
+
   const closeSession = useCallback((sessionId: string) => {
     setSessions((prev) => {
       const session = prev.find((s) => s.id === sessionId);
@@ -453,16 +593,144 @@ export default function TerminalTab() {
     return podKeys.size > 1;
   }, [sessions]);
 
-  if (!isPod) {
+  if (!isPod && sessions.length === 0) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
           <PodPicker value={picked} onSelect={setPicked} />
+          <div className="flex-1" />
+          <button
+            onClick={() => { createLocalSession(); }}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors"
+            style={{
+              borderColor: 'var(--border)',
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-tertiary, transparent)',
+            }}
+            title="Open a local terminal"
+          >
+            <TerminalIcon className="w-3.5 h-3.5" />
+            Local Terminal
+          </button>
         </div>
         <div className="flex items-center justify-center flex-1 gap-2 text-text-tertiary text-sm">
           <TerminalIcon className="w-4 h-4" />
-          <span>Select a pod to open a terminal</span>
+          <span>Select a pod or open a local terminal</span>
         </div>
+      </div>
+    );
+  }
+
+  if (!isPod && sessions.length > 0) {
+    // Show local terminal sessions without pod picker requirement
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
+          <PodPicker value={picked} onSelect={setPicked} />
+
+          {/* Session tabs */}
+          <div className="flex items-center gap-0.5 overflow-x-auto max-w-[30%]" data-testid="session-tabs">
+            {sessions.map((session) => (
+              <div
+                key={session.id}
+                role="tab"
+                tabIndex={0}
+                aria-selected={session.id === activeSessionId}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors group min-w-0",
+                  session.id === activeSessionId
+                    ? "bg-accent text-white"
+                    : "bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                )}
+                onClick={() => setActiveSessionId(session.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveSessionId(session.id);
+                  }
+                }}
+                data-testid={`session-tab-${session.id}`}
+              >
+                <span className="truncate max-w-[120px]" title={session.name}>
+                  {session.name}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    closeSession(session.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
+                  title="Close session"
+                  aria-label={`Close session ${session.name}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => { createLocalSession(); }}
+              title="New local terminal"
+              aria-label="New local terminal"
+              className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Theme selector */}
+          <select
+            value={termTheme}
+            onChange={(e) => updateSetting("terminalTheme", e.target.value)}
+            className="text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary"
+            title="Terminal theme"
+            aria-label="Terminal theme"
+          >
+            {Object.keys(TERMINAL_THEMES).map((name) => (
+              <option key={name} value={name}>
+                {name.charAt(0).toUpperCase() + name.slice(1)}
+              </option>
+            ))}
+          </select>
+
+          {/* Search toggle */}
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            title="Search (Ctrl+F)"
+            aria-label="Search terminal"
+            className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"
+          >
+            <Search className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Search bar */}
+        {searchOpen && (
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0"
+            style={{ background: 'var(--bg-secondary, #1a1a1e)' }}
+            data-testid="terminal-search-bar"
+          >
+            <Search className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search..."
+              aria-label="Search terminal"
+              className="flex-1 text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary outline-none focus:border-accent"
+            />
+            <button onClick={handleSearchPrev} disabled={!searchTerm} title="Previous match (Shift+Enter)" aria-label="Previous match" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors disabled:opacity-40"><ChevronUp className="w-3.5 h-3.5" /></button>
+            <button onClick={handleSearchNext} disabled={!searchTerm} title="Next match (Enter)" aria-label="Next match" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors disabled:opacity-40"><ChevronDown className="w-3.5 h-3.5" /></button>
+            <button onClick={handleCloseSearch} title="Close search (Escape)" aria-label="Close search" className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"><X className="w-3.5 h-3.5" /></button>
+          </div>
+        )}
+
+        {/* Terminal container */}
+        <div ref={termContainerRef} className="flex-1 min-h-0 relative" />
       </div>
     );
   }
@@ -537,6 +805,16 @@ export default function TerminalTab() {
             <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        <button
+          onClick={() => { createLocalSession(); }}
+          className="flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors bg-bg-tertiary text-text-secondary hover:text-text-primary"
+          title="Open a local terminal"
+          aria-label="New local terminal"
+        >
+          <TerminalIcon className="w-3 h-3" />
+          Local
+        </button>
 
         <div className="flex-1" />
 

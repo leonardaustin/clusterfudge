@@ -74,28 +74,28 @@ describe("AITab", () => {
   });
 
   it("shows session tabs when sessions exist", async () => {
-    useUIStore.getState().addAISession("default", "nginx-pod");
+    useUIStore.getState().addAISession("default", "nginx-pod", "claude", "Claude Code");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     expect(screen.getByTestId("ai-session-tabs")).toBeInTheDocument();
-    expect(screen.getByText("default/nginx-pod")).toBeInTheDocument();
+    expect(screen.getByText("Claude Code: default/nginx-pod")).toBeInTheDocument();
     unmount();
   });
 
   it("shows multiple session tabs", async () => {
-    useUIStore.getState().addAISession("default", "pod-a");
-    useUIStore.getState().addAISession("kube-system", "pod-b");
+    useUIStore.getState().addAISession("default", "pod-a", "claude", "Claude Code");
+    useUIStore.getState().addAISession("kube-system", "pod-b", "gemini", "Gemini CLI");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
-    expect(screen.getByText("default/pod-a")).toBeInTheDocument();
-    expect(screen.getByText("kube-system/pod-b")).toBeInTheDocument();
+    expect(screen.getByText("Claude Code: default/pod-a")).toBeInTheDocument();
+    expect(screen.getByText("Gemini CLI: kube-system/pod-b")).toBeInTheDocument();
     unmount();
   });
 
   it("shows close button on each session tab", async () => {
-    useUIStore.getState().addAISession("default", "nginx-pod");
+    useUIStore.getState().addAISession("default", "nginx-pod", "claude", "Claude Code");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
@@ -107,8 +107,8 @@ describe("AITab", () => {
 
   it("removes session when close button is clicked", async () => {
     const user = userEvent.setup();
-    useUIStore.getState().addAISession("default", "pod-a");
-    useUIStore.getState().addAISession("default", "pod-b");
+    useUIStore.getState().addAISession("default", "pod-a", "claude", "Claude Code");
+    useUIStore.getState().addAISession("default", "pod-b", "claude", "Claude Code");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
@@ -117,14 +117,14 @@ describe("AITab", () => {
       screen.getByLabelText("Close AI session default/pod-a")
     );
 
-    expect(screen.queryByText("default/pod-a")).not.toBeInTheDocument();
-    expect(screen.getByText("default/pod-b")).toBeInTheDocument();
+    expect(screen.queryByText("Claude Code: default/pod-a")).not.toBeInTheDocument();
+    expect(screen.getByText("Claude Code: default/pod-b")).toBeInTheDocument();
     unmount();
   });
 
   it("shows empty state after closing all sessions", async () => {
     const user = userEvent.setup();
-    useUIStore.getState().addAISession("default", "only-pod");
+    useUIStore.getState().addAISession("default", "only-pod", "claude", "Claude Code");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
@@ -134,12 +134,12 @@ describe("AITab", () => {
 
     // After closing, store should be empty
     expect(useUIStore.getState().aiSessions).toHaveLength(0);
-    expect(screen.queryByText("default/only-pod")).not.toBeInTheDocument();
+    expect(screen.queryByText("Claude Code: default/only-pod")).not.toBeInTheDocument();
     unmount();
   });
 
   it("shows disabled + button with tooltip", async () => {
-    useUIStore.getState().addAISession("default", "pod-a");
+    useUIStore.getState().addAISession("default", "pod-a", "claude", "Claude Code");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
@@ -150,8 +150,8 @@ describe("AITab", () => {
   });
 
   it("highlights the active session tab", async () => {
-    const id1 = useUIStore.getState().addAISession("default", "pod-a");
-    const id2 = useUIStore.getState().addAISession("default", "pod-b");
+    const id1 = useUIStore.getState().addAISession("default", "pod-a", "claude", "Claude Code");
+    const id2 = useUIStore.getState().addAISession("default", "pod-b", "gemini", "Gemini CLI");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
@@ -165,8 +165,8 @@ describe("AITab", () => {
 
   it("switches active session when tab is clicked", async () => {
     const user = userEvent.setup();
-    const id1 = useUIStore.getState().addAISession("default", "pod-a");
-    useUIStore.getState().addAISession("default", "pod-b");
+    const id1 = useUIStore.getState().addAISession("default", "pod-a", "claude", "Claude Code");
+    useUIStore.getState().addAISession("default", "pod-b", "gemini", "Gemini CLI");
     const { unmount } = render(<AITab />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 

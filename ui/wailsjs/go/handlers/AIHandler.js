@@ -18,6 +18,10 @@ export function GetAIProviderName() {
   return window['go']['handlers']['AIHandler']['GetAIProviderName']();
 }
 
+export function GetEnabledAIProviders() {
+  return window['go']['handlers']['AIHandler']['GetEnabledAIProviders']();
+}
+
 export function ResizeAISession(arg1, arg2, arg3) {
   return window['go']['handlers']['AIHandler']['ResizeAISession'](arg1, arg2, arg3);
 }
@@ -26,8 +30,8 @@ export function SetEmitter(arg1) {
   return window['go']['handlers']['AIHandler']['SetEmitter'](arg1);
 }
 
-export function StartAISession(arg1, arg2) {
-  return window['go']['handlers']['AIHandler']['StartAISession'](arg1, arg2);
+export function StartAISession(arg1, arg2, arg3) {
+  return window['go']['handlers']['AIHandler']['StartAISession'](arg1, arg2, arg3);
 }
 
 export function ValidateAIPath(arg1) {

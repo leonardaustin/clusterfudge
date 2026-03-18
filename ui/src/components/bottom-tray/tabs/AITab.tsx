@@ -90,7 +90,7 @@ export default function AITab() {
 
         const cleanup: Array<() => void> = [];
 
-        term.write("\x1b[90mStarting AI session...\x1b[0m\r\n");
+        term.write(`\x1b[90mStarting ${session.providerName || 'AI'} session...\x1b[0m\r\n`);
 
         // Start backend AI session
         let backendSessionId = "";
@@ -98,6 +98,7 @@ export default function AITab() {
           backendSessionId = await StartAISession(
             session.namespace,
             session.name,
+            session.providerID,
           );
 
           // Send initial resize
@@ -248,10 +249,10 @@ export default function AITab() {
               data-testid={`ai-session-tab-${session.id}`}
             >
               <span
-                className="truncate max-w-[120px]"
-                title={`${session.namespace}/${session.name}`}
+                className="truncate max-w-[160px]"
+                title={`${session.providerName}: ${session.namespace}/${session.name}`}
               >
-                {session.namespace}/{session.name}
+                {session.providerName ? `${session.providerName}: ` : ''}{session.namespace}/{session.name}
               </span>
               <button
                 onClick={(e) => {

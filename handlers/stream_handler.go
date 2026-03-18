@@ -4,10 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 
+	"clusterfudge/internal/ai"
 	"clusterfudge/internal/cluster"
 	"clusterfudge/internal/events"
 	"clusterfudge/internal/stream"
@@ -17,16 +22,17 @@ import (
 )
 
 // StreamHandler wraps stream functions and cluster.Manager to expose
-// log streaming, exec, and port-forward operations to the frontend.
+// log streaming, exec, port-forward, and local terminal operations to the frontend.
 type StreamHandler struct {
 	manager  *cluster.Manager
 	emitter  *events.Emitter
 	mu       sync.RWMutex
-	logCancels   map[string]context.CancelFunc   // podName → cancel
-	execSessions map[string]*stream.ExecSession  // sessionID → session
-	pfCancels    map[int]context.CancelFunc      // localPort → cancel
-	pfManager    *stream.PortForwardManager
-	multiStreamers map[string]*multiStreamerEntry // "ns/pod" → entry
+	logCancels     map[string]context.CancelFunc    // podName → cancel
+	execSessions   map[string]*stream.ExecSession   // sessionID → session
+	localTerminals map[string]*ai.LocalSession      // sessionID → local terminal session
+	pfCancels      map[int]context.CancelFunc       // localPort → cancel
+	pfManager      *stream.PortForwardManager
+	multiStreamers map[string]*multiStreamerEntry    // "ns/pod" → entry
 }
 
 // multiStreamerEntry bundles a multi-log streamer with its context cancel func.
@@ -41,6 +47,7 @@ func NewStreamHandler(mgr *cluster.Manager) *StreamHandler {
 		manager:        mgr,
 		logCancels:     make(map[string]context.CancelFunc),
 		execSessions:   make(map[string]*stream.ExecSession),
+		localTerminals: make(map[string]*ai.LocalSession),
 		pfCancels:      make(map[int]context.CancelFunc),
 		pfManager:      stream.NewPortForwardManager(),
 		multiStreamers: make(map[string]*multiStreamerEntry),
@@ -396,6 +403,97 @@ func (h *StreamHandler) StopAllContainerLogs(namespace, podName string) {
 		delete(h.multiStreamers, key)
 	}
 	h.mu.Unlock()
+}
+
+// StartLocalTerminal spawns a local shell in a PTY.
+// Output streams on "localterm:stdout:{sessionID}", exit on "localterm:exit:{sessionID}".
+func (h *StreamHandler) StartLocalTerminal() (string, error) {
+	shell := defaultShell()
+
+	sessionID, err := stream.GenerateID()
+	if err != nil {
+		return "", fmt.Errorf("generate session ID: %w", err)
+	}
+
+	session, err := ai.StartLocalSession([]string{shell}, nil, "", func(data []byte) {
+		if h.emitter != nil {
+			h.emitter.Emit("localterm:stdout:"+sessionID, string(data))
+		}
+	}, func(exitErr error) {
+		msg := ""
+		if exitErr != nil {
+			msg = exitErr.Error()
+		}
+		if h.emitter != nil {
+			h.emitter.Emit("localterm:exit:"+sessionID, msg)
+		}
+		h.mu.Lock()
+		delete(h.localTerminals, sessionID)
+		h.mu.Unlock()
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to start local terminal: %w", err)
+	}
+
+	h.mu.Lock()
+	h.localTerminals[sessionID] = session
+	h.mu.Unlock()
+
+	slog.Info("Local terminal started", "session", sessionID, "shell", shell)
+	return sessionID, nil
+}
+
+// WriteLocalTerminal sends keyboard input to a local terminal session's PTY.
+func (h *StreamHandler) WriteLocalTerminal(sessionID, data string) error {
+	h.mu.RLock()
+	session, ok := h.localTerminals[sessionID]
+	h.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("local terminal session not found: %s", sessionID)
+	}
+	return session.Write([]byte(data))
+}
+
+// ResizeLocalTerminal resizes the PTY for a local terminal session.
+func (h *StreamHandler) ResizeLocalTerminal(sessionID string, rows, cols int) error {
+	if rows <= 0 || cols <= 0 || rows > 500 || cols > 500 {
+		return fmt.Errorf("invalid terminal size: %dx%d", rows, cols)
+	}
+	h.mu.RLock()
+	session, ok := h.localTerminals[sessionID]
+	h.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("local terminal session not found: %s", sessionID)
+	}
+	return session.Resize(uint16(rows), uint16(cols))
+}
+
+// CloseLocalTerminal terminates a local terminal session.
+func (h *StreamHandler) CloseLocalTerminal(sessionID string) {
+	h.mu.Lock()
+	session, ok := h.localTerminals[sessionID]
+	if ok {
+		delete(h.localTerminals, sessionID)
+	}
+	h.mu.Unlock()
+	if session != nil {
+		session.Close()
+		slog.Info("Local terminal closed", "session", sessionID)
+	}
+}
+
+// defaultShell returns the user's preferred shell.
+func defaultShell() string {
+	if s := os.Getenv("SHELL"); s != "" {
+		return s
+	}
+	if runtime.GOOS == "windows" {
+		if ps, err := exec.LookPath("powershell.exe"); err == nil {
+			return ps
+		}
+		return "cmd.exe"
+	}
+	return "/bin/sh"
 }
 
 // DownloadLogs fetches the full (non-streaming) log for a container and returns it as a string.

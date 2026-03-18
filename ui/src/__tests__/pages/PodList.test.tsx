@@ -28,7 +28,7 @@ vi.mock('@/stores/uiStore', () => ({
 }))
 
 vi.mock('@/wailsjs/go/handlers/AIHandler', () => ({
-  GetAIProviderName: vi.fn(() => Promise.resolve('')),
+  GetEnabledAIProviders: vi.fn(() => Promise.resolve([{ id: 'claude', name: 'Claude Code' }])),
 }))
 
 vi.mock('@/wailsjs/go/handlers/ResourceHandler', () => ({
@@ -188,6 +188,5 @@ describe('PodList', () => {
     expect(screen.getAllByText('ctx-pod').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('View Logs')).toBeDefined()
     expect(screen.getByText('Exec Shell')).toBeDefined()
-    expect(screen.getByText('Debug with AI')).toBeDefined()
   })
 })

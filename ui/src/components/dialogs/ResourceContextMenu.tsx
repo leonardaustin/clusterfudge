@@ -15,11 +15,16 @@ import type { ReactNode } from 'react'
 
 export type ResourceKind = 'Pod' | 'Deployment' | 'Node' | 'Service' | 'ConfigMap' | 'Secret' | string
 
+export interface AIProviderOption {
+  id: string
+  name: string
+}
+
 export interface ResourceContextAction {
   onViewDetails?: () => void
   onViewLogs?: () => void
   onExecShell?: () => void
-  onAIDiagnose?: () => void
+  onAIDiagnose?: (providerID: string) => void
   onEditYAML?: () => void
   onScale?: () => void
   onRestart?: () => void
@@ -37,6 +42,7 @@ interface ResourceContextMenuProps {
   isRunning?: boolean
   isCordoned?: boolean
   actions: ResourceContextAction
+  aiProviders?: AIProviderOption[]
 }
 
 function MenuItem({
@@ -82,10 +88,12 @@ export function ResourceContextMenu({
   isRunning = true,
   isCordoned = false,
   actions,
+  aiProviders = [],
 }: ResourceContextMenuProps) {
   const isPod = kind === 'Pod'
   const isDeployment = kind === 'Deployment'
   const isNode = kind === 'Node'
+  const hasAI = aiProviders.length > 0
 
   return (
     <ContextMenu.Root>
@@ -134,12 +142,16 @@ export function ResourceContextMenu({
                 disabled={!isRunning}
                 onClick={actions.onExecShell}
               />
-              <MenuItem
-                icon={Bot}
-                label="Debug with AI"
-                disabled={!isRunning}
-                onClick={actions.onAIDiagnose}
-              />
+              {/* AI provider items — one per enabled provider */}
+              {hasAI && aiProviders.map((provider) => (
+                <MenuItem
+                  key={provider.id}
+                  icon={Bot}
+                  label={`Debug with ${provider.name}`}
+                  disabled={!isRunning}
+                  onClick={() => actions.onAIDiagnose?.(provider.id)}
+                />
+              ))}
               {actions.onPortForward && (
                 <MenuItem
                   icon={Workflow}

@@ -9,6 +9,8 @@ export interface AISessionInfo {
   id: string;
   namespace: string;
   name: string;
+  providerID: string;
+  providerName: string;
 }
 
 interface UIState {
@@ -53,10 +55,10 @@ interface UIState {
   setBottomTrayTab: (tab: TrayTab) => void;
   openOrToggleTrayTab: (tab: TrayTab) => void;
 
-  addAISession: (namespace: string, name: string) => string;
+  addAISession: (namespace: string, name: string, providerID: string, providerName: string) => string;
   removeAISession: (id: string) => void;
   setActiveAISession: (id: string) => void;
-  setAITarget: (target: { namespace: string; name: string } | null) => void;
+  setAITarget: (target: { namespace: string; name: string; providerID: string; providerName: string } | null) => void;
 
   setEventsResourceFilter: (filter: { kind: string; name: string; namespace: string } | null) => void;
 
@@ -112,10 +114,10 @@ export const useUIStore = create<UIState>()(
           return { bottomTrayTab: tab, bottomTrayOpen: true };
         }),
 
-      addAISession: (namespace, name) => {
+      addAISession: (namespace, name, providerID, providerName) => {
         const id = `ai-${Date.now()}-${++aiSessionSeq}`;
         set((s) => ({
-          aiSessions: [...s.aiSessions, { id, namespace, name }],
+          aiSessions: [...s.aiSessions, { id, namespace, name, providerID, providerName }],
           activeAISessionId: id,
           bottomTrayOpen: true,
           bottomTrayTab: "ai" as TrayTab,
@@ -134,7 +136,7 @@ export const useUIStore = create<UIState>()(
       setActiveAISession: (id) => set({ activeAISessionId: id }),
       setAITarget: (target) => {
         if (target) {
-          get().addAISession(target.namespace, target.name);
+          get().addAISession(target.namespace, target.name, target.providerID, target.providerName);
         }
       },
 

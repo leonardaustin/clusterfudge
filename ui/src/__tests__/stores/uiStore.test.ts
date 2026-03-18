@@ -98,19 +98,19 @@ describe('uiStore', () => {
   })
 
   it('addAISession creates a session, sets it active, and opens tray to ai tab', () => {
-    const id = useUIStore.getState().addAISession('default', 'nginx-pod')
+    const id = useUIStore.getState().addAISession('default', 'nginx-pod', 'claude', 'Claude Code')
     const s = useUIStore.getState()
     expect(id).toMatch(/^ai-/)
     expect(s.aiSessions).toHaveLength(1)
-    expect(s.aiSessions[0]).toEqual({ id, namespace: 'default', name: 'nginx-pod' })
+    expect(s.aiSessions[0]).toEqual({ id, namespace: 'default', name: 'nginx-pod', providerID: 'claude', providerName: 'Claude Code' })
     expect(s.activeAISessionId).toBe(id)
     expect(s.bottomTrayOpen).toBe(true)
     expect(s.bottomTrayTab).toBe('ai')
   })
 
   it('addAISession can add multiple sessions', () => {
-    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
-    const id2 = useUIStore.getState().addAISession('kube-system', 'pod-b')
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a', 'claude', 'Claude Code')
+    const id2 = useUIStore.getState().addAISession('kube-system', 'pod-b', 'gemini', 'Gemini CLI')
     const s = useUIStore.getState()
     expect(s.aiSessions).toHaveLength(2)
     expect(s.activeAISessionId).toBe(id2)
@@ -119,8 +119,8 @@ describe('uiStore', () => {
   })
 
   it('removeAISession removes a session and selects next active', () => {
-    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
-    const id2 = useUIStore.getState().addAISession('default', 'pod-b')
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a', 'claude', 'Claude Code')
+    const id2 = useUIStore.getState().addAISession('default', 'pod-b', 'claude', 'Claude Code')
 
     useUIStore.getState().removeAISession(id2)
     const s = useUIStore.getState()
@@ -130,7 +130,7 @@ describe('uiStore', () => {
   })
 
   it('removeAISession sets null when last session removed', () => {
-    const id = useUIStore.getState().addAISession('default', 'pod-a')
+    const id = useUIStore.getState().addAISession('default', 'pod-a', 'claude', 'Claude Code')
     useUIStore.getState().removeAISession(id)
     const s = useUIStore.getState()
     expect(s.aiSessions).toHaveLength(0)
@@ -138,23 +138,25 @@ describe('uiStore', () => {
   })
 
   it('setActiveAISession switches active session', () => {
-    const id1 = useUIStore.getState().addAISession('default', 'pod-a')
-    useUIStore.getState().addAISession('default', 'pod-b')
+    const id1 = useUIStore.getState().addAISession('default', 'pod-a', 'claude', 'Claude Code')
+    useUIStore.getState().addAISession('default', 'pod-b', 'gemini', 'Gemini CLI')
     useUIStore.getState().setActiveAISession(id1)
     expect(useUIStore.getState().activeAISessionId).toBe(id1)
   })
 
-  it('setAITarget creates a new session (backward compat)', () => {
-    useUIStore.getState().setAITarget({ namespace: 'prod', name: 'web-pod' })
+  it('setAITarget creates a new session', () => {
+    useUIStore.getState().setAITarget({ namespace: 'prod', name: 'web-pod', providerID: 'claude', providerName: 'Claude Code' })
     const s = useUIStore.getState()
     expect(s.aiSessions).toHaveLength(1)
     expect(s.aiSessions[0].namespace).toBe('prod')
     expect(s.aiSessions[0].name).toBe('web-pod')
+    expect(s.aiSessions[0].providerID).toBe('claude')
+    expect(s.aiSessions[0].providerName).toBe('Claude Code')
     expect(s.activeAISessionId).toBe(s.aiSessions[0].id)
   })
 
   it('setAITarget with null does nothing', () => {
-    useUIStore.getState().addAISession('default', 'pod-a')
+    useUIStore.getState().addAISession('default', 'pod-a', 'claude', 'Claude Code')
     useUIStore.getState().setAITarget(null)
     expect(useUIStore.getState().aiSessions).toHaveLength(1)
   })

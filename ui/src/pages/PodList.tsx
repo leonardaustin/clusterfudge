@@ -23,7 +23,8 @@ import { RESOURCE_CONFIG } from '../lib/resourceConfig'
 import { useClusterStore } from '../stores/clusterStore'
 import { useSelectionStore } from '../stores/selectionStore'
 import { useUIStore } from '../stores/uiStore'
-import { GetAIProviderName } from '../wailsjs/go/handlers/AIHandler'
+import { GetEnabledAIProviders } from '../wailsjs/go/handlers/AIHandler'
+import type { AIProviderInfo } from '../wailsjs/go/handlers/AIHandler'
 import { GetResource } from '../wailsjs/go/handlers/ResourceHandler'
 import type { ResourceItem } from '../wailsjs/go/handlers/ResourceHandler'
 
@@ -186,7 +187,7 @@ export function PodList() {
 
   const [filter, setFilter] = useState('')
   const [activeTab, setActiveTab] = useState('Overview')
-  const [aiProviderName, setAiProviderName] = useState('')
+  const [aiProviders, setAiProviders] = useState<AIProviderInfo[]>([])
   const [detail, setDetail] = useState<PodDetailData | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
@@ -219,7 +220,7 @@ export function PodList() {
 
   // AI provider check
   useEffect(() => {
-    GetAIProviderName().then((n) => setAiProviderName(n || '')).catch(() => setAiProviderName(''))
+    GetEnabledAIProviders().then((p) => setAiProviders(p || [])).catch(() => setAiProviders([]))
   }, [])
 
   // Detail fetch
@@ -364,6 +365,7 @@ export function PodList() {
                 kind="Pod"
                 name={pod.name}
                 isRunning={pod.status === 'Running'}
+                aiProviders={aiProviders}
                 actions={{
                   onViewDetails: () => navigate(`/workloads/pods/${pod.namespace}/${pod.name}`),
                   onViewLogs: () => {
@@ -386,8 +388,14 @@ export function PodList() {
                     });
                     setBottomTrayTab('terminal');
                   },
-                  onAIDiagnose: () => {
-                    setAITarget({ namespace: pod.namespace, name: pod.name });
+                  onAIDiagnose: (providerID: string) => {
+                    const provider = aiProviders.find((p) => p.id === providerID);
+                    setAITarget({
+                      namespace: pod.namespace,
+                      name: pod.name,
+                      providerID,
+                      providerName: provider?.name || providerID,
+                    });
                     setBottomTrayTab('ai');
                   },
                 }}
@@ -492,10 +500,16 @@ export function PodList() {
                   >
                     Open Shell
                   </button>
-                  {aiProviderName && selectedName && (
+                  {aiProviders.length > 0 && selectedName && aiProviders.map((provider) => (
                     <button
+                      key={provider.id}
                       onClick={() => {
-                        setAITarget({ namespace: detailNamespace, name: selectedName })
+                        setAITarget({
+                          namespace: detailNamespace,
+                          name: selectedName,
+                          providerID: provider.id,
+                          providerName: provider.name,
+                        })
                         setBottomTrayTab('ai')
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
@@ -504,12 +518,12 @@ export function PodList() {
                         color: 'var(--accent)',
                         background: 'var(--accent-subtle, transparent)',
                       }}
-                      title={`Open ${aiProviderName} to diagnose this pod`}
+                      title={`Open ${provider.name} to diagnose this pod`}
                     >
                       <Bot className="w-3.5 h-3.5" />
-                      AI Diagnose
+                      {provider.name}
                     </button>
-                  )}
+                  ))}
                 </div>
 
                 <DetailTabs tabs={DETAIL_TABS} activeTab={activeTab} onTabChange={setActiveTab} />

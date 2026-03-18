@@ -6,6 +6,10 @@ export function CloseExec(arg1) {
   return window['go']['handlers']['StreamHandler']['CloseExec'](arg1);
 }
 
+export function CloseLocalTerminal(arg1) {
+  return window['go']['handlers']['StreamHandler']['CloseLocalTerminal'](arg1);
+}
+
 export function DownloadLogs(arg1) {
   return window['go']['handlers']['StreamHandler']['DownloadLogs'](arg1);
 }
@@ -18,12 +22,20 @@ export function ResizeExec(arg1, arg2, arg3) {
   return window['go']['handlers']['StreamHandler']['ResizeExec'](arg1, arg2, arg3);
 }
 
+export function ResizeLocalTerminal(arg1, arg2, arg3) {
+  return window['go']['handlers']['StreamHandler']['ResizeLocalTerminal'](arg1, arg2, arg3);
+}
+
 export function SetEmitter(arg1) {
   return window['go']['handlers']['StreamHandler']['SetEmitter'](arg1);
 }
 
 export function StartExec(arg1) {
   return window['go']['handlers']['StreamHandler']['StartExec'](arg1);
+}
+
+export function StartLocalTerminal() {
+  return window['go']['handlers']['StreamHandler']['StartLocalTerminal']();
 }
 
 export function StartPortForward(arg1) {
@@ -56,4 +68,8 @@ export function StreamLogs(arg1) {
 
 export function WriteExec(arg1, arg2) {
   return window['go']['handlers']['StreamHandler']['WriteExec'](arg1, arg2);
+}
+
+export function WriteLocalTerminal(arg1, arg2) {
+  return window['go']['handlers']['StreamHandler']['WriteLocalTerminal'](arg1, arg2);
 }

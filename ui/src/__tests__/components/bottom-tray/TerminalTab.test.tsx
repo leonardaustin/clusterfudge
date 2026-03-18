@@ -82,7 +82,7 @@ describe("TerminalTab", () => {
     render(<TerminalTab />);
     expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(
-      screen.getByText("Select a pod to open a terminal")
+      screen.getByText("Select a pod or open a local terminal")
     ).toBeInTheDocument();
   });
 
@@ -96,7 +96,7 @@ describe("TerminalTab", () => {
     render(<TerminalTab />);
     expect(screen.getByTestId("pod-picker")).toBeInTheDocument();
     expect(
-      screen.getByText("Select a pod to open a terminal")
+      screen.getByText("Select a pod or open a local terminal")
     ).toBeInTheDocument();
   });
 

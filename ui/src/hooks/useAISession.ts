@@ -12,7 +12,7 @@ interface AISession {
   error: string | null
 }
 
-export function useAISession(namespace: string, name: string, active: boolean) {
+export function useAISession(namespace: string, name: string, active: boolean, providerID = '') {
   const [session, setSession] = useState<AISession>({
     sessionId: '',
     status: 'starting',
@@ -29,7 +29,7 @@ export function useAISession(namespace: string, name: string, active: boolean) {
     ;(async () => {
       try {
         setSession({ sessionId: '', status: 'starting', error: null })
-        const id = await StartAISession(namespace, name)
+        const id = await StartAISession(namespace, name, providerID)
         if (cancelled) {
           CloseAISession(id)
           return
@@ -53,7 +53,7 @@ export function useAISession(namespace: string, name: string, active: boolean) {
         sessionRef.current = ''
       }
     }
-  }, [active, namespace, name])
+  }, [active, namespace, name, providerID])
 
   const write = useCallback(
     (data: string) => {

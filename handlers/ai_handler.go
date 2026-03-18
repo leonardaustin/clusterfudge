@@ -46,11 +46,18 @@ func (h *AIHandler) SetEmitter(emitter *events.Emitter) {
 
 // StartAISession gathers K8s context for a pod, writes it to a temp file,
 // and launches the AI CLI in a local PTY. Returns the session ID.
+// providerID selects which AI provider to use (e.g. "claude", "gemini", "codex").
 // Output streams on "ai:stdout:{sessionID}", exit on "ai:exit:{sessionID}".
-func (h *AIHandler) StartAISession(namespace, name string) (string, error) {
+func (h *AIHandler) StartAISession(namespace, name, providerID string) (string, error) {
 	// Resolve provider from config
 	cfg := h.cfgStore.Get()
-	provider, err := ai.ResolveProvider(cfg)
+	var provider ai.Provider
+	var err error
+	if providerID != "" {
+		provider, err = ai.ResolveProviderByID(cfg, providerID)
+	} else {
+		provider, err = ai.ResolveProvider(cfg)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -109,6 +116,12 @@ func (h *AIHandler) GetAIProviderName() string {
 		return ""
 	}
 	return provider.Name()
+}
+
+// GetEnabledAIProviders returns info about all enabled and valid AI providers.
+func (h *AIHandler) GetEnabledAIProviders() []ai.ProviderInfo {
+	cfg := h.cfgStore.Get()
+	return ai.ListEnabledProviders(cfg)
 }
 
 // WriteAISession sends keyboard input to an AI session's PTY.

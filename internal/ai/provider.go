@@ -52,6 +52,12 @@ func (c *ChatGPTCodex) BuildCommand(contextFilePath string) []string {
 	return []string{c.path, prompt}
 }
 
+// ProviderInfo is a lightweight descriptor returned to the frontend.
+type ProviderInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // ResolveProvider returns the first enabled AI provider from config.
 // Priority: Claude Code > Gemini CLI > ChatGPT Codex.
 func ResolveProvider(cfg config.AppConfig) (Provider, error) {
@@ -77,6 +83,56 @@ func ResolveProvider(cfg config.AppConfig) (Provider, error) {
 		return p, nil
 	}
 	return nil, fmt.Errorf("no AI provider enabled — configure one in Settings > AI")
+}
+
+// ResolveProviderByID returns the provider for a specific ID.
+func ResolveProviderByID(cfg config.AppConfig, providerID string) (Provider, error) {
+	switch providerID {
+	case "claude":
+		if !cfg.AIClaudeCodeEnabled {
+			return nil, fmt.Errorf("Claude Code is not enabled — check Settings > AI")
+		}
+		p := &ClaudeCode{path: cfg.AIClaudeCodePath}
+		if err := validatePath(p.path, p.Name()); err != nil {
+			return nil, err
+		}
+		return p, nil
+	case "gemini":
+		if !cfg.AIGeminiCLIEnabled {
+			return nil, fmt.Errorf("Gemini CLI is not enabled — check Settings > AI")
+		}
+		p := &GeminiCLI{path: cfg.AIGeminiCLIPath}
+		if err := validatePath(p.path, p.Name()); err != nil {
+			return nil, err
+		}
+		return p, nil
+	case "codex":
+		if !cfg.AIChatGPTCodexEnabled {
+			return nil, fmt.Errorf("ChatGPT Codex is not enabled — check Settings > AI")
+		}
+		p := &ChatGPTCodex{path: cfg.AIChatGPTCodexPath}
+		if err := validatePath(p.path, p.Name()); err != nil {
+			return nil, err
+		}
+		return p, nil
+	default:
+		return nil, fmt.Errorf("unknown AI provider: %s", providerID)
+	}
+}
+
+// ListEnabledProviders returns info for all enabled and valid AI providers.
+func ListEnabledProviders(cfg config.AppConfig) []ProviderInfo {
+	var providers []ProviderInfo
+	if cfg.AIClaudeCodeEnabled && validatePath(cfg.AIClaudeCodePath, "Claude Code") == nil {
+		providers = append(providers, ProviderInfo{ID: "claude", Name: "Claude Code"})
+	}
+	if cfg.AIGeminiCLIEnabled && validatePath(cfg.AIGeminiCLIPath, "Gemini CLI") == nil {
+		providers = append(providers, ProviderInfo{ID: "gemini", Name: "Gemini CLI"})
+	}
+	if cfg.AIChatGPTCodexEnabled && validatePath(cfg.AIChatGPTCodexPath, "ChatGPT Codex") == nil {
+		providers = append(providers, ProviderInfo{ID: "codex", Name: "ChatGPT Codex"})
+	}
+	return providers
 }
 
 // validatePath checks that the executable exists at the given path.

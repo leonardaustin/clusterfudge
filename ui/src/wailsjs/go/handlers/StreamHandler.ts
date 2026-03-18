@@ -89,6 +89,22 @@ export function ListPortForwards(): Promise<PortForwardInfo[]> {
   return wailsCall(H, 'ListPortForwards')
 }
 
+export function StartLocalTerminal(): Promise<string> {
+  return wailsCall(H, 'StartLocalTerminal')
+}
+
+export function WriteLocalTerminal(sessionID: string, data: string): Promise<void> {
+  return wailsCall(H, 'WriteLocalTerminal', sessionID, data)
+}
+
+export function ResizeLocalTerminal(sessionID: string, rows: number, cols: number): Promise<void> {
+  return wailsCall(H, 'ResizeLocalTerminal', sessionID, rows, cols)
+}
+
+export function CloseLocalTerminal(sessionID: string): Promise<void> {
+  return wailsCall(H, 'CloseLocalTerminal', sessionID)
+}
+
 export function DownloadLogs(opts: LogOptions): Promise<string> {
   return wailsCall(H, 'DownloadLogs', opts)
 }

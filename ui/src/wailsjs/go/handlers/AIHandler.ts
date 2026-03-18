@@ -2,12 +2,21 @@ import { wailsCall } from '../../call'
 
 const H = 'AIHandler'
 
-export function StartAISession(namespace: string, name: string): Promise<string> {
-  return wailsCall(H, 'StartAISession', namespace, name)
+export interface AIProviderInfo {
+  id: string
+  name: string
+}
+
+export function StartAISession(namespace: string, name: string, providerID: string): Promise<string> {
+  return wailsCall(H, 'StartAISession', namespace, name, providerID)
 }
 
 export function GetAIProviderName(): Promise<string> {
   return wailsCall(H, 'GetAIProviderName')
+}
+
+export function GetEnabledAIProviders(): Promise<AIProviderInfo[]> {
+  return wailsCall(H, 'GetEnabledAIProviders')
 }
 
 export function WriteAISession(sessionID: string, data: string): Promise<void> {
