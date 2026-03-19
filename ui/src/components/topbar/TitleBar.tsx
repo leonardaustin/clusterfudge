@@ -1,6 +1,9 @@
+import { Heart } from "lucide-react";
 import { useOS } from "@/hooks/useOS";
 import { TrafficLights } from "./TrafficLights";
-import { SponsorButton } from "@/components/welcome/SponsorButton";
+import { BrowserOpenURL } from "@/wailsjs/runtime/runtime";
+
+const SPONSOR_URL = "https://github.com/sponsors/leonardaustin";
 
 export function TitleBar() {
   const isMac = useOS() === "mac";
@@ -13,8 +16,18 @@ export function TitleBar() {
     >
       <TrafficLights />
       <div className="flex-1" />
-      <div className="pr-2" style={{ ["--wails-draggable" as string]: "no-drag" }}>
-        <SponsorButton compact />
+      <div className="px-3 flex items-center" style={{ ["--wails-draggable" as string]: "no-drag" }}>
+        <button
+          onClick={() => BrowserOpenURL(SPONSOR_URL)}
+          className="flex items-center justify-center w-7 h-7 rounded
+                     hover:bg-bg-hover transition-colors"
+          title="Sponsor this project"
+        >
+          <Heart
+            className="w-3.5 h-3.5 fill-current"
+            style={{ color: "#e05688" }}
+          />
+        </button>
       </div>
     </div>
   );
