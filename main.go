@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -212,7 +213,7 @@ func main() {
 	}
 }
 
-// ensurePath adds common tool directories to PATH so that exec-based
+// ensurePath inherits the user's login shell PATH so that exec-based
 // credential plugins (e.g. gke-gcloud-auth-plugin, aws-iam-authenticator)
 // can be found when the app is launched from Finder/Dock, which provides
 // only a minimal default PATH.
@@ -221,34 +222,20 @@ func ensurePath() {
 		return
 	}
 
-	extra := []string{
-		"/opt/homebrew/bin",
-		"/opt/homebrew/sbin",
-		"/usr/local/bin",
-		"/usr/local/sbin",
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/zsh"
 	}
 
-	if home, err := os.UserHomeDir(); err == nil {
-		extra = append(extra,
-			filepath.Join(home, ".local", "bin"),
-			filepath.Join(home, "bin"),
-		)
+	out, err := exec.Command(shell, "-l", "-c", "echo __PATH__=$PATH").Output()
+	if err != nil {
+		return
 	}
 
-	current := os.Getenv("PATH")
-	existing := make(map[string]bool)
-	for _, p := range strings.Split(current, ":") {
-		existing[p] = true
-	}
-
-	var toAdd []string
-	for _, dir := range extra {
-		if !existing[dir] {
-			toAdd = append(toAdd, dir)
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.HasPrefix(line, "__PATH__=") {
+			os.Setenv("PATH", strings.TrimPrefix(line, "__PATH__="))
+			return
 		}
-	}
-
-	if len(toAdd) > 0 {
-		os.Setenv("PATH", current+":"+strings.Join(toAdd, ":"))
 	}
 }
