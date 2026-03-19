@@ -903,6 +903,33 @@ a {
   border-bottom-color: var(--accent);
 }
 
+.detail-tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.detail-tabs-actions button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary, transparent);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.detail-tabs-actions button:hover {
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
 .detail-panel-body {
   flex: 1;
   overflow-y: auto;

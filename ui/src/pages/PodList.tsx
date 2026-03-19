@@ -476,14 +476,12 @@ export function PodList() {
                 <DetailTabs tabs={DETAIL_TABS} activeTab={activeTab} onTabChange={setActiveTab} actions={
                   <>
                     <button
-                      className="detail-tab"
                       onClick={() => setBottomTrayTab('logs')}
                       title="View logs in bottom tray"
                     >
                       Logs
                     </button>
                     <button
-                      className="detail-tab"
                       onClick={() => setBottomTrayTab('terminal')}
                       title="Open shell in bottom tray"
                     >
@@ -494,7 +492,6 @@ export function PodList() {
                       return (
                         <button
                           key={provider.id}
-                          className="detail-tab"
                           onClick={() => {
                             setAITarget({
                               namespace: detailNamespace,

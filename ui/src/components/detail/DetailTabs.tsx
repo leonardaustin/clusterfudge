@@ -22,7 +22,9 @@ export function DetailTabs({ tabs, activeTab, onTabChange, actions }: DetailTabs
       {actions && (
         <>
           <div style={{ flex: 1 }} />
-          {actions}
+          <div className="detail-tabs-actions">
+            {actions}
+          </div>
         </>
       )}
     </div>
