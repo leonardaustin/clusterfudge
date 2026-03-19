@@ -1,5 +1,6 @@
 import { useOS } from "@/hooks/useOS";
 import { TrafficLights } from "./TrafficLights";
+import { SponsorButton } from "@/components/welcome/SponsorButton";
 
 export function TitleBar() {
   const isMac = useOS() === "mac";
@@ -11,6 +12,10 @@ export function TitleBar() {
       style={{ ["--wails-draggable" as string]: "drag" }}
     >
       <TrafficLights />
+      <div className="flex-1" />
+      <div className="pr-2" style={{ ["--wails-draggable" as string]: "no-drag" }}>
+        <SponsorButton compact />
+      </div>
     </div>
   );
 }
