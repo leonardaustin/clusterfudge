@@ -223,15 +223,13 @@ func ensurePath() {
 
 	extra := []string{
 		"/opt/homebrew/bin",
+		"/opt/homebrew/sbin",
 		"/usr/local/bin",
 		"/usr/local/sbin",
-		"/opt/homebrew/sbin",
 	}
 
-	// Also add ~/google-cloud-sdk/bin if it exists (common gcloud install location).
 	if home, err := os.UserHomeDir(); err == nil {
 		extra = append(extra,
-			filepath.Join(home, "google-cloud-sdk", "bin"),
 			filepath.Join(home, ".local", "bin"),
 			filepath.Join(home, "bin"),
 		)
