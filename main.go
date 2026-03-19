@@ -227,14 +227,14 @@ func ensurePath() {
 		shell = "/bin/zsh"
 	}
 
-	out, err := exec.Command(shell, "-l", "-c", "echo __PATH__=$PATH").Output()
+	out, err := exec.Command(shell, "-l", "-c", "echo __PATH__=$PATH").Output() //nolint:gosec // shell comes from the user's own SHELL env var
 	if err != nil {
 		return
 	}
 
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.HasPrefix(line, "__PATH__=") {
-			os.Setenv("PATH", strings.TrimPrefix(line, "__PATH__="))
+			_ = os.Setenv("PATH", strings.TrimPrefix(line, "__PATH__="))
 			return
 		}
 	}
