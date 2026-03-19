@@ -35,13 +35,20 @@ A native desktop Kubernetes management tool.
 brew install --cask leonardaustin/tap/clusterfudge
 ```
 
+### APT (Debian/Ubuntu)
+
+```bash
+curl -fsSL https://apt.austincorp.com/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/austincorp.gpg
+echo "deb [signed-by=/usr/share/keyrings/austincorp.gpg] https://apt.austincorp.com stable main" | sudo tee /etc/apt/sources.list.d/austincorp.list
+sudo apt update && sudo apt install clusterfudge
+```
+
 ### Download
 
 Grab the latest release for your platform from the [Releases](https://github.com/leonardaustin/clusterfudge/releases) page:
 
 - **macOS** &mdash; `.dmg` (Apple Silicon & Intel)
-- **Linux** &mdash; `.AppImage`
-- **Windows** &mdash; `.exe` installer
+- **Linux** &mdash; `.tar.gz` (x64 & ARM64)
 
 ## Contributing
 
