@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 import { formatRelative } from "@/components/cells/RelativeTime";
 
 const SEVERITY_PATTERNS: Array<{ pattern: RegExp; className: string }> = [
-  { pattern: /\b(FATAL|CRITICAL|PANIC)\b/i, className: "text-red-400 font-bold" },
-  { pattern: /\b(ERROR|ERR|EXCEPTION)\b/i, className: "text-red-400" },
-  { pattern: /\b(WARN|WARNING)\b/i, className: "text-yellow-400" },
-  { pattern: /\b(INFO|INFORMATION)\b/i, className: "text-sky-400" },
+  { pattern: /\b(FATAL|CRITICAL|PANIC)\b/i, className: "text-status-error font-bold" },
+  { pattern: /\b(ERROR|ERR|EXCEPTION)\b/i, className: "text-status-error" },
+  { pattern: /\b(WARN|WARNING)\b/i, className: "text-status-pending" },
+  { pattern: /\b(INFO|INFORMATION)\b/i, className: "text-status-info" },
   { pattern: /\b(DEBUG|TRACE|VERBOSE)\b/i, className: "text-text-tertiary" },
 ];
 
@@ -42,7 +42,7 @@ function highlightSearch(content: string, searchTerm: string, isRegex?: boolean)
   const capped = parts.length > MAX_HIGHLIGHT_PARTS ? parts.slice(0, MAX_HIGHLIGHT_PARTS) : parts;
   return capped.map((part, i) =>
     i % 2 === 1 ? (
-      <mark key={i} className="bg-yellow-400/30 text-yellow-200 rounded-sm">
+      <mark key={i} className="bg-status-bg-pending text-status-pending rounded-sm">
         {part}
       </mark>
     ) : (

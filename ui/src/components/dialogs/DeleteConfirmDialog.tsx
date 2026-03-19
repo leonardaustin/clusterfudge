@@ -65,7 +65,7 @@ export function DeleteConfirmDialog({
       <Dialog.Portal>
         <Dialog.Overlay
           className="fixed inset-0 z-50"
-          style={{ background: 'rgba(0,0,0,0.6)' }}
+          style={{ background: 'var(--color-bg-overlay)' }}
         />
         <Dialog.Content
           className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg p-6 w-[400px]"

@@ -60,7 +60,7 @@ export function PriorityClassList() {
             <td className="name-cell">{pc.name}</td>
             <td className="mono">{pc.value.toLocaleString()}</td>
             <td>
-              <span style={{ color: pc.globalDefault ? 'var(--green)' : 'var(--text-muted)' }}>
+              <span style={{ color: pc.globalDefault ? 'var(--green)' : 'var(--text-tertiary)' }}>
                 {pc.globalDefault ? 'True' : 'False'}
               </span>
             </td>

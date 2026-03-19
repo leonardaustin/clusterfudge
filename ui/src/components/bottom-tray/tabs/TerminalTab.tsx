@@ -590,7 +590,7 @@ export default function TerminalTab() {
                       e.stopPropagation();
                       closeSession(session.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-bg-hover rounded"
                     title="Close session"
                     aria-label={`Close session ${session.name}`}
                   >
@@ -686,7 +686,7 @@ export default function TerminalTab() {
       {!showEmptyState && searchOpen && (
         <div
           className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0"
-          style={{ background: 'var(--bg-secondary, #1a1a1e)' }}
+          style={{ background: 'var(--bg-secondary)' }}
           data-testid="terminal-search-bar"
         >
           <Search className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />

@@ -68,7 +68,7 @@ describe("LogLineRow", () => {
       />
     );
     const errorSpan = screen.getByText("ERROR: something failed");
-    expect(errorSpan.className).toContain("text-red-400");
+    expect(errorSpan.className).toContain("text-status-error");
   });
 
   it("applies warning severity class", () => {
@@ -82,7 +82,7 @@ describe("LogLineRow", () => {
       />
     );
     const warnSpan = screen.getByText("WARNING: something suspicious");
-    expect(warnSpan.className).toContain("text-yellow-400");
+    expect(warnSpan.className).toContain("text-status-pending");
   });
 
   it("applies info severity class", () => {
@@ -96,7 +96,7 @@ describe("LogLineRow", () => {
       />
     );
     const infoSpan = screen.getByText("INFO: application started");
-    expect(infoSpan.className).toContain("text-sky-400");
+    expect(infoSpan.className).toContain("text-status-info");
   });
 
   it("applies debug severity class", () => {

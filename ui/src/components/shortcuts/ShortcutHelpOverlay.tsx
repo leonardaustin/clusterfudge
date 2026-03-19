@@ -60,7 +60,7 @@ export function ShortcutHelpOverlay({ open, onClose }: ShortcutHelpOverlayProps)
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-8"
+      className="fixed inset-0 z-[60] bg-bg-overlay backdrop-blur-sm flex items-center justify-center p-8"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="bg-bg-secondary border border-border rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">

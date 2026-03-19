@@ -319,7 +319,7 @@ export default function EventsTab() {
           filteredEvents.map((event, i) => (
             <div
               key={`${event.objectKind}-${event.objectName}-${event.reason}-${i}`}
-              className="flex items-start gap-3 px-3 py-2 hover:bg-bg-hover border-b border-white/[0.03] text-xs"
+              className="flex items-start gap-3 px-3 py-2 hover:bg-bg-hover border-b border-border text-xs"
             >
               {/* Type indicator */}
               <span

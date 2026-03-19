@@ -1,7 +1,8 @@
 import Editor, { type OnMount } from '@monaco-editor/react'
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { monacoTheme } from './monacoTheme'
+import { useUIStore } from '@/stores/uiStore'
+import { monacoThemeDark, monacoThemeLight } from './monacoTheme'
 import {
   validateTopLevelFields,
   extractKind,
@@ -101,6 +102,7 @@ export function YAMLEditor({ value, readOnly = false, onChange, onApply, onPrevi
   const editorTabSize = useSettingsStore((s) => s.editorTabSize)
   const editorWordWrap = useSettingsStore((s) => s.editorWordWrap)
   const editorMinimap = useSettingsStore((s) => s.editorMinimap)
+  const theme = useUIStore((s) => s.theme)
 
   // Multi-doc tabs
   const docSegments = useMemo(() => parseDocSegments(current), [current])
@@ -134,13 +136,21 @@ export function YAMLEditor({ value, readOnly = false, onChange, onApply, onPrevi
     monaco.editor.setModelMarkers(model, 'k8s-validation', markers)
   }, [current])
 
+  // Switch Monaco theme when app theme changes
+  useEffect(() => {
+    const monaco = monacoRef.current
+    if (!monaco) return
+    monaco.editor.setTheme(theme === 'light' ? 'clusterfudge-light' : 'clusterfudge-dark')
+  }, [theme])
+
   const handleMount: OnMount = useCallback(
     (editor, monaco) => {
       editorRef.current = editor
       monacoRef.current = monaco
 
-      monaco.editor.defineTheme('clusterfudge-dark', monacoTheme)
-      monaco.editor.setTheme('clusterfudge-dark')
+      monaco.editor.defineTheme('clusterfudge-dark', monacoThemeDark)
+      monaco.editor.defineTheme('clusterfudge-light', monacoThemeLight)
+      monaco.editor.setTheme(theme === 'light' ? 'clusterfudge-light' : 'clusterfudge-dark')
 
       // Cmd/Ctrl+S to apply
       if (!readOnly && onApply) {

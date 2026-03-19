@@ -112,7 +112,7 @@ export function NamespaceList() {
         <Dialog.Portal>
           <Dialog.Overlay
             className="fixed inset-0 z-50"
-            style={{ background: 'rgba(0,0,0,0.6)' }}
+            style={{ background: 'var(--color-bg-overlay)' }}
           />
           <Dialog.Content
             aria-describedby={undefined}

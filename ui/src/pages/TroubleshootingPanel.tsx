@@ -256,7 +256,7 @@ export function TroubleshootingPanel() {
               position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
               maxHeight: '200px', overflowY: 'auto', marginTop: '2px',
               background: 'var(--bg-tertiary)', border: '1px solid var(--border)',
-              borderRadius: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              borderRadius: '6px', boxShadow: 'var(--shadow-md)',
             }}>
               {filteredNames.slice(0, 50).map((n) => (
                 <button
@@ -317,7 +317,7 @@ export function TroubleshootingPanel() {
             <div className="card" style={{ padding: 'var(--space-4)' }}>
               <h3 style={{ color: 'var(--text-primary)', fontSize: 'var(--text-base)', marginBottom: 'var(--space-2)' }}>Result</h3>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
-                <strong style={{ color: investigation.rootCause ? 'var(--red)' : 'var(--green, #22c55e)' }}>
+                <strong style={{ color: investigation.rootCause ? 'var(--red)' : 'var(--green)' }}>
                   {investigation.rootCause ? 'Problem:' : 'Status:'}
                 </strong> {investigation.problem}
               </div>
@@ -380,7 +380,7 @@ export function TroubleshootingPanel() {
           style={{
             position: 'fixed', inset: 0, zIndex: 100,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            background: 'var(--color-bg-overlay)', backdropFilter: 'blur(4px)',
           }}
           onClick={() => setShowRawData(false)}
         >
@@ -388,7 +388,7 @@ export function TroubleshootingPanel() {
             style={{
               background: 'var(--bg-primary)', border: '1px solid var(--border)',
               borderRadius: '8px', width: '700px', maxWidth: '90vw', maxHeight: '80vh',
-              display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+              display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-xl)',
             }}
             onClick={(e) => e.stopPropagation()}
           >

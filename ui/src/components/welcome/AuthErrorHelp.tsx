@@ -90,7 +90,7 @@ export function InlineAuthHelp({ authProvider }: { authProvider?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 ml-1">
       <span className="text-text-secondary">Try:</span>
-      <code className="px-1.5 py-0.5 rounded bg-black/20 font-mono text-2xs">
+      <code className="px-1.5 py-0.5 rounded bg-bg-hover font-mono text-2xs">
         {primaryStep.command}
       </code>
     </span>

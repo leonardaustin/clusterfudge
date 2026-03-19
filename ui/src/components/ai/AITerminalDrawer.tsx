@@ -144,7 +144,7 @@ export function AITerminalDrawer({ namespace, name, providerName, onClose }: AIT
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 transition-opacity"
+        className="absolute inset-0 bg-bg-overlay transition-opacity"
         role="button"
         tabIndex={0}
         aria-label="Close AI session"

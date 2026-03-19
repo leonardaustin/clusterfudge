@@ -72,7 +72,7 @@ export function UpdateBanner() {
       <button
         onClick={() => setDismissed(true)}
         aria-label="Dismiss update banner"
-        className="ml-auto shrink-0 p-0.5 rounded hover:bg-black/10 transition-colors"
+        className="ml-auto shrink-0 p-0.5 rounded hover:bg-bg-hover transition-colors"
       >
         <X className="w-3.5 h-3.5" />
       </button>

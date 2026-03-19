@@ -1,7 +1,8 @@
 import { DiffEditor, type DiffOnMount } from '@monaco-editor/react'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { monacoTheme } from './monacoTheme'
+import { useUIStore } from '@/stores/uiStore'
+import { monacoThemeDark, monacoThemeLight } from './monacoTheme'
 
 interface YAMLDiffViewProps {
   original: string
@@ -12,11 +13,21 @@ interface YAMLDiffViewProps {
 export function YAMLDiffView({ original, modified, onClose }: YAMLDiffViewProps) {
   const editorFontSize = useSettingsStore((s) => s.editorFontSize)
   const editorMinimap = useSettingsStore((s) => s.editorMinimap)
+  const theme = useUIStore((s) => s.theme)
+  const monacoRef = useRef<Parameters<DiffOnMount>[1] | null>(null)
 
   const handleMount: DiffOnMount = useCallback((_editor, monaco) => {
-    monaco.editor.defineTheme('clusterfudge-dark', monacoTheme)
-    monaco.editor.setTheme('clusterfudge-dark')
-  }, [])
+    monacoRef.current = monaco
+    monaco.editor.defineTheme('clusterfudge-dark', monacoThemeDark)
+    monaco.editor.defineTheme('clusterfudge-light', monacoThemeLight)
+    monaco.editor.setTheme(theme === 'light' ? 'clusterfudge-light' : 'clusterfudge-dark')
+  }, [theme])
+
+  useEffect(() => {
+    const monaco = monacoRef.current
+    if (!monaco) return
+    monaco.editor.setTheme(theme === 'light' ? 'clusterfudge-light' : 'clusterfudge-dark')
+  }, [theme])
 
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg-primary)' }}>

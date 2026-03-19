@@ -313,11 +313,11 @@ function NodeCard({ node, expanded, onToggle }: { node: ClusterNode; expanded: b
 // ─── Hex Map helpers ─────────────────────────────────────────────────────────
 
 function cpuPercentToFill(pct: number): string {
-  if (pct >= 80) return '#ef4444'
-  if (pct >= 60) return '#f97316'
-  if (pct >= 40) return '#eab308'
-  if (pct >= 20) return '#84cc16'
-  return '#22c55e'
+  if (pct >= 80) return 'var(--red)'
+  if (pct >= 60) return 'var(--yellow)'
+  if (pct >= 40) return 'var(--yellow)'
+  if (pct >= 20) return 'var(--green)'
+  return 'var(--green)'
 }
 
 function buildHexGroups(
@@ -368,9 +368,9 @@ function buildHexGroups(
       }
 
       let fill = cpuPercentToFill(cpuPercent)
-      if (displayStatus === 'Completed' || displayStatus === 'Succeeded') fill = '#60a5fa'
-      if (displayStatus === 'Pending') fill = '#6b7280'
-      if (displayStatus === 'CrashLoopBackOff' || displayStatus === 'Failed') fill = '#ef4444'
+      if (displayStatus === 'Completed' || displayStatus === 'Succeeded') fill = 'var(--blue)'
+      if (displayStatus === 'Pending') fill = 'var(--gray)'
+      if (displayStatus === 'CrashLoopBackOff' || displayStatus === 'Failed') fill = 'var(--red)'
 
       return {
         name: p.name,
@@ -710,11 +710,11 @@ export function NodeList() {
                 <span>100%</span>
               </div>
               <span style={{ marginLeft: 'var(--space-4)' }}>
-                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#60a5fa', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: 'var(--blue)', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
                 Completed
               </span>
               <span>
-                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#6b7280', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', background: 'var(--gray)', borderRadius: '2px', verticalAlign: 'middle', marginRight: '4px' }} />
                 Pending
               </span>
             </div>

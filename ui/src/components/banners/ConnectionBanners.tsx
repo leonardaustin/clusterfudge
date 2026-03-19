@@ -29,7 +29,7 @@ function Banner({ variant, icon, message, action, dismissable, onDismiss }: Bann
       {dismissable && onDismiss && (
         <button
           onClick={onDismiss}
-          className="shrink-0 p-0.5 rounded hover:bg-black/10 transition-colors"
+          className="shrink-0 p-0.5 rounded hover:bg-bg-hover transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>

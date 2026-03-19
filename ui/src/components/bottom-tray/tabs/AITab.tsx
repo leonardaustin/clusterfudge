@@ -259,7 +259,7 @@ export default function AITab() {
                   e.stopPropagation();
                   handleClose(session.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-bg-hover rounded"
                 title="Close session"
                 aria-label={`Close AI session ${session.namespace}/${session.name}`}
               >

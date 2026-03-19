@@ -65,10 +65,31 @@
   --color-scrollbar-thumb: #3A3A42;
   --color-scrollbar-track: transparent;
 
+  /* Overlay */
+  --color-bg-overlay:      rgba(0, 0, 0, 0.5);
+  --color-text-inverse:    #0A0A0B;
+
+  /* Accent extended */
+  --color-accent-active:   #6A4EE8;
+  --color-accent-subtle:   rgba(124, 92, 252, 0.05);
+
+  /* Status extended */
+  --color-status-terminated: #6B7280;
+  --color-status-paused:     #A78BFA;
+  --color-status-bg-running:    rgba(74, 222, 128, 0.1);
+  --color-status-bg-pending:    rgba(251, 191, 36, 0.1);
+  --color-status-bg-error:      rgba(248, 113, 113, 0.1);
+  --color-status-bg-terminated: rgba(107, 114, 128, 0.1);
+  --color-status-bg-info:       rgba(96, 165, 250, 0.1);
+  --color-status-bg-paused:     rgba(167, 139, 250, 0.1);
+
   /* Shadows */
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-focus:   0 0 0 2px rgba(124, 92, 252, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* ── Light theme ───────────────────────────────────────────────────────── */
@@ -102,9 +123,30 @@
   --color-scrollbar-thumb: #C4C4CC;
   --color-scrollbar-track: transparent;
 
+  /* Overlay */
+  --color-bg-overlay:      rgba(0, 0, 0, 0.3);
+  --color-text-inverse:    #FFFFFF;
+
+  /* Accent extended */
+  --color-accent-active:   #5A38D4;
+  --color-accent-subtle:   rgba(107, 71, 229, 0.05);
+
+  /* Status extended */
+  --color-status-terminated: #6B7280;
+  --color-status-paused:     #7C3AED;
+  --color-status-bg-running:    rgba(21, 128, 61, 0.1);
+  --color-status-bg-pending:    rgba(180, 83, 9, 0.1);
+  --color-status-bg-error:      rgba(185, 28, 28, 0.1);
+  --color-status-bg-terminated: rgba(107, 114, 128, 0.1);
+  --color-status-bg-info:       rgba(37, 99, 235, 0.1);
+  --color-status-bg-paused:     rgba(124, 58, 237, 0.1);
+
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.12);
   --shadow-xl:  0 8px 32px rgba(0,0,0,0.16);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.08);
+  --shadow-focus:   0 0 0 2px rgba(107, 71, 229, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.08);
 }
 
 /* ── High contrast mode ────────────────────────────────────────────────── */
@@ -118,7 +160,8 @@
   .theme-light {
     --color-text-primary:   #000000;
     --color-text-secondary: #333333;
-    --color-border:         #888888;
+    --color-border:         #555555;
+    --color-border-strong:  #333333;
   }
 }
 

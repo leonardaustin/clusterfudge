@@ -105,7 +105,7 @@ export function ResourceEvents({
           <span
             className={cn(
               'shrink-0 mt-0.5',
-              event.type === 'Warning' ? 'text-yellow-400' : 'text-sky-400'
+              event.type === 'Warning' ? 'text-status-pending' : 'text-status-info'
             )}
           >
             {event.type === 'Warning' ? (
