@@ -4,7 +4,7 @@ A native desktop Kubernetes management tool.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
-<iframe src="https://github.com/sponsors/leonardaustin/button" title="Sponsor leonardaustin" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/leonardaustin)
 
 ## Features
 
