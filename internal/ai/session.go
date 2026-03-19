@@ -11,17 +11,16 @@ import (
 
 // LocalSession wraps an AI CLI process running in a local PTY.
 type LocalSession struct {
-	cmd     *exec.Cmd
-	ptmx    *os.File // PTY master
-	mu      sync.Mutex
-	closed  bool
-	tmpFile string // temp context file path, cleaned up on close
+	cmd    *exec.Cmd
+	ptmx   *os.File // PTY master
+	mu     sync.Mutex
+	closed bool
 }
 
 // StartLocalSession launches a command in a local PTY.
 // The onOutput callback receives PTY output chunks.
 // The onExit callback is called when the process exits.
-func StartLocalSession(args []string, env []string, tmpFile string, onOutput func([]byte), onExit func(error)) (*LocalSession, error) {
+func StartLocalSession(args []string, env []string, onOutput func([]byte), onExit func(error)) (*LocalSession, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("empty command")
 	}
@@ -38,9 +37,8 @@ func StartLocalSession(args []string, env []string, tmpFile string, onOutput fun
 	_ = pty.Setsize(ptmx, &pty.Winsize{Rows: 24, Cols: 80})
 
 	s := &LocalSession{
-		cmd:     cmd,
-		ptmx:    ptmx,
-		tmpFile: tmpFile,
+		cmd:  cmd,
+		ptmx: ptmx,
 	}
 
 	// Read goroutine: read from PTY master and deliver to callback
@@ -87,7 +85,7 @@ func (s *LocalSession) Resize(rows, cols uint16) error {
 	return pty.Setsize(s.ptmx, &pty.Winsize{Rows: rows, Cols: cols})
 }
 
-// Close terminates the session, kills the process, and removes the temp file.
+// Close terminates the session and kills the process.
 func (s *LocalSession) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -102,10 +100,5 @@ func (s *LocalSession) Close() {
 	// Kill the process if still running
 	if s.cmd.Process != nil {
 		_ = s.cmd.Process.Kill()
-	}
-
-	// Clean up temp file
-	if s.tmpFile != "" {
-		_ = os.Remove(s.tmpFile)
 	}
 }

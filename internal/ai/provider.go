@@ -12,8 +12,8 @@ type Provider interface {
 	Name() string
 	ExecPath() string
 	// BuildCommand returns the executable and args for an interactive session
-	// with an initial prompt referencing the context file.
-	BuildCommand(contextFilePath string) []string
+	// with the given prompt as the initial message.
+	BuildCommand(prompt string) []string
 }
 
 // ProviderInfo is a lightweight descriptor returned to the frontend.
@@ -43,7 +43,7 @@ var registry = []providerDef{
 		id: "gemini", name: "Gemini CLI",
 		enabled: func(c config.AppConfig) bool { return c.AIGeminiCLIEnabled },
 		path:    func(c config.AppConfig) string { return c.AIGeminiCLIPath },
-		make:    func(p string) Provider { return &cliProvider{name: "Gemini CLI", path: p} },
+		make:    func(p string) Provider { return &cliProvider{name: "Gemini CLI", path: p, promptFlag: "-i"} },
 	},
 	{
 		id: "codex", name: "ChatGPT Codex",
@@ -55,14 +55,17 @@ var registry = []providerDef{
 
 // cliProvider implements Provider for any AI CLI that accepts a prompt argument.
 type cliProvider struct {
-	name string
-	path string
+	name      string
+	path      string
+	promptFlag string // flag to pass before prompt for interactive mode (e.g. "-i" for Gemini), empty for positional
 }
 
 func (c *cliProvider) Name() string     { return c.name }
 func (c *cliProvider) ExecPath() string { return c.path }
-func (c *cliProvider) BuildCommand(contextFilePath string) []string {
-	prompt := fmt.Sprintf("Read the file %s for Kubernetes pod debugging context, then help me diagnose and fix the issues described. Start by summarizing what you see.", contextFilePath)
+func (c *cliProvider) BuildCommand(prompt string) []string {
+	if c.promptFlag != "" {
+		return []string{c.path, c.promptFlag, prompt}
+	}
 	return []string{c.path, prompt}
 }
 

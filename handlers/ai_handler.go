@@ -14,7 +14,6 @@ import (
 	"clusterfudge/internal/events"
 	"clusterfudge/internal/resource"
 	"clusterfudge/internal/stream"
-	"clusterfudge/internal/troubleshoot"
 )
 
 // AIHandler exposes AI debugging session management to the frontend.
@@ -22,19 +21,17 @@ type AIHandler struct {
 	manager  *cluster.Manager
 	cfgStore *config.Store
 	svc      *resource.Service
-	tsEngine *troubleshoot.Engine
 	emitter  *events.Emitter
 	mu       sync.RWMutex
 	sessions map[string]*ai.LocalSession
 }
 
 // NewAIHandler creates an AIHandler.
-func NewAIHandler(svc *resource.Service, mgr *cluster.Manager, cfgStore *config.Store, tsEngine *troubleshoot.Engine) *AIHandler {
+func NewAIHandler(svc *resource.Service, mgr *cluster.Manager, cfgStore *config.Store) *AIHandler {
 	return &AIHandler{
 		manager:  mgr,
 		cfgStore: cfgStore,
 		svc:      svc,
-		tsEngine: tsEngine,
 		sessions: make(map[string]*ai.LocalSession),
 	}
 }
@@ -62,15 +59,15 @@ func (h *AIHandler) StartAISession(namespace, name, providerID string) (string, 
 		return "", err
 	}
 
-	// Gather K8s context
-	gatherer := ai.NewContextGatherer(h.manager, h.svc, h.tsEngine)
-	tmpFile, err := gatherer.GatherAndWrite(namespace, name)
+	// Gather pod context as a prompt
+	gatherer := ai.NewContextGatherer(h.manager, h.svc)
+	prompt, err := gatherer.GatherPrompt(namespace, name)
 	if err != nil {
 		return "", fmt.Errorf("failed to gather pod context: %w", err)
 	}
 
 	// Build command
-	args := provider.BuildCommand(tmpFile)
+	args := provider.BuildCommand(prompt)
 
 	// Generate session ID
 	sessionID, err := stream.GenerateID()
@@ -79,7 +76,7 @@ func (h *AIHandler) StartAISession(namespace, name, providerID string) (string, 
 	}
 
 	// Start PTY session
-	session, err := ai.StartLocalSession(args, nil, tmpFile, func(data []byte) {
+	session, err := ai.StartLocalSession(args, nil, func(data []byte) {
 		if h.emitter != nil {
 			h.emitter.Emit("ai:stdout:"+sessionID, string(data))
 		}

@@ -123,7 +123,7 @@ func main() {
 	secretHandler := handlers.NewSecretHandler(mgr, auditLogger)
 
 	// AI handler
-	aiHandler := handlers.NewAIHandler(svc, mgr, cfgStore, tsEngine)
+	aiHandler := handlers.NewAIHandler(svc, mgr, cfgStore)
 
 	// Phase 9 handlers
 	troubleshootHandler := handlers.NewTroubleshootHandler(tsEngine, mgr)

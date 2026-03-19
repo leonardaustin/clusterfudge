@@ -415,7 +415,7 @@ func (h *StreamHandler) StartLocalTerminal() (string, error) {
 		return "", fmt.Errorf("generate session ID: %w", err)
 	}
 
-	session, err := ai.StartLocalSession([]string{shell}, nil, "", func(data []byte) {
+	session, err := ai.StartLocalSession([]string{shell}, nil, func(data []byte) {
 		if h.emitter != nil {
 			h.emitter.Emit("localterm:stdout:"+sessionID, string(data))
 		}

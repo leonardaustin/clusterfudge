@@ -513,122 +513,108 @@ export default function TerminalTab() {
 
   const hasSessions = sessions.length > 0;
 
-  // ── Empty state: no pod selected and no sessions ──
-  if (!isPod && !hasSessions) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
-          <PodPicker value={picked} onSelect={setPicked} />
-          <div className="flex-1" />
-          <button
-            onClick={() => { createLocalSession(); }}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors"
-            style={{
-              borderColor: 'var(--border)',
-              color: 'var(--text-secondary)',
-              background: 'var(--bg-tertiary, transparent)',
-            }}
-            title="Open a local terminal"
-          >
-            <TerminalIcon className="w-3.5 h-3.5" />
-            Local Terminal
-          </button>
-        </div>
-        <div className="flex items-center justify-center flex-1 gap-2 text-text-tertiary text-sm">
-          <TerminalIcon className="w-4 h-4" />
-          <span>Select a pod or open a local terminal</span>
-        </div>
-      </div>
-    );
-  }
+  const showEmptyState = !isPod && !hasSessions;
 
-  // ── Main view: has sessions or a pod selected ──
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0">
         <PodPicker value={picked} onSelect={setPicked} />
 
-        {/* Session tabs */}
-        <div className="flex items-center gap-0.5 overflow-x-auto max-w-[30%]" data-testid="session-tabs">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              role="tab"
-              tabIndex={0}
-              aria-selected={session.id === activeSessionId}
-              className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors group min-w-0",
-                session.id === activeSessionId
-                  ? "bg-accent text-white"
-                  : "bg-bg-tertiary text-text-secondary hover:text-text-primary"
+        {/* Session tabs (hidden in empty state) */}
+        {!showEmptyState && (
+          <>
+            <div className="flex items-center gap-0.5 overflow-x-auto max-w-[30%]" data-testid="session-tabs">
+              {sessions.map((session) => (
+                <div
+                  key={session.id}
+                  role="tab"
+                  tabIndex={0}
+                  aria-selected={session.id === activeSessionId}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors group min-w-0",
+                    session.id === activeSessionId
+                      ? "bg-accent text-white"
+                      : "bg-bg-tertiary text-text-secondary hover:text-text-primary"
+                  )}
+                  onClick={() => setActiveSessionId(session.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveSessionId(session.id);
+                    }
+                  }}
+                  onDoubleClick={() => handleTabDoubleClick(session.id, session.name)}
+                  data-testid={`session-tab-${session.id}`}
+                >
+                  {editingTabId === session.id ? (
+                    <input
+                      type="text"
+                      value={editingTabName}
+                      onChange={(e) => setEditingTabName(e.target.value)}
+                      onKeyDown={handleTabRenameKeyDown}
+                      onBlur={commitTabRename}
+                      ref={(el) => { el?.focus(); }}
+                      className="text-xs bg-transparent border-none outline-none w-20 text-inherit"
+                      data-testid="tab-rename-input"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="truncate max-w-[120px]" title={hasMultiplePods && !session.isLocal ? `${session.name} (${session.podName})` : session.name}>
+                      {session.name}{hasMultiplePods && !session.isLocal ? ` (${session.podName})` : ""}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeSession(session.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
+                    title="Close session"
+                    aria-label={`Close session ${session.name}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {isPod && (
+                <button
+                  onClick={() => { createNewSession(); }}
+                  title="New terminal session"
+                  aria-label="New terminal session"
+                  className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
               )}
-              onClick={() => setActiveSessionId(session.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setActiveSessionId(session.id);
-                }
-              }}
-              onDoubleClick={() => handleTabDoubleClick(session.id, session.name)}
-              data-testid={`session-tab-${session.id}`}
-            >
-              {editingTabId === session.id ? (
-                <input
-                  type="text"
-                  value={editingTabName}
-                  onChange={(e) => setEditingTabName(e.target.value)}
-                  onKeyDown={handleTabRenameKeyDown}
-                  onBlur={commitTabRename}
-                  ref={(el) => { el?.focus(); }}
-                  className="text-xs bg-transparent border-none outline-none w-20 text-inherit"
-                  data-testid="tab-rename-input"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <span className="truncate max-w-[120px]" title={hasMultiplePods && !session.isLocal ? `${session.name} (${session.podName})` : session.name}>
-                  {session.name}{hasMultiplePods && !session.isLocal ? ` (${session.podName})` : ""}
-                </span>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeSession(session.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-white/20 rounded"
-                title="Close session"
-                aria-label={`Close session ${session.name}`}
-              >
-                <X className="w-3 h-3" />
-              </button>
             </div>
-          ))}
-          {isPod && (
-            <button
-              onClick={() => { createNewSession(); }}
-              title="New terminal session"
-              aria-label="New terminal session"
-              className="p-0.5 text-text-secondary hover:text-text-primary rounded transition-colors flex-shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        <button
-          onClick={() => { createLocalSession(); }}
-          className="flex items-center gap-1 px-2 py-0.5 rounded text-xs cursor-pointer transition-colors bg-bg-tertiary text-text-secondary hover:text-text-primary"
-          title="Open a local terminal"
-          aria-label="New local terminal"
-        >
-          <TerminalIcon className="w-3 h-3" />
-          Local
-        </button>
+          </>
+        )}
 
         <div className="flex-1" />
 
+        <button
+          onClick={() => { createLocalSession(); }}
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition-colors",
+            showEmptyState
+              ? "font-medium border"
+              : "cursor-pointer bg-bg-tertiary text-text-secondary hover:text-text-primary"
+          )}
+          style={showEmptyState ? {
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
+            background: 'var(--bg-tertiary, transparent)',
+          } : undefined}
+          title="Open a local terminal"
+          aria-label="New local terminal"
+        >
+          <TerminalIcon className="w-3.5 h-3.5" />
+          {showEmptyState ? "Local Terminal" : "Local"}
+        </button>
+
         {/* Container selector */}
-        {isPod && containers.length > 1 && (
+        {!showEmptyState && isPod && containers.length > 1 && (
           <>
             <span className="text-xs text-text-tertiary">Container:</span>
             <select
@@ -646,33 +632,37 @@ export default function TerminalTab() {
         )}
 
         {/* Theme selector */}
-        <select
-          value={termTheme}
-          onChange={(e) => updateSetting("terminalTheme", e.target.value)}
-          className="text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary"
-          title="Terminal theme"
-          aria-label="Terminal theme"
-        >
-          {Object.keys(TERMINAL_THEMES).map((name) => (
-            <option key={name} value={name}>
-              {name.charAt(0).toUpperCase() + name.slice(1)}
-            </option>
-          ))}
-        </select>
+        {!showEmptyState && (
+          <select
+            value={termTheme}
+            onChange={(e) => updateSetting("terminalTheme", e.target.value)}
+            className="text-xs bg-bg-tertiary border border-border rounded px-2 py-1 text-text-primary"
+            title="Terminal theme"
+            aria-label="Terminal theme"
+          >
+            {Object.keys(TERMINAL_THEMES).map((name) => (
+              <option key={name} value={name}>
+                {name.charAt(0).toUpperCase() + name.slice(1)}
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Search toggle */}
-        <button
-          onClick={() => setSearchOpen(!searchOpen)}
-          title="Search (Ctrl+F)"
-          aria-label="Search terminal"
-          className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"
-        >
-          <Search className="w-3.5 h-3.5" />
-        </button>
+        {!showEmptyState && (
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            title="Search (Ctrl+F)"
+            aria-label="Search terminal"
+            className="text-text-secondary hover:text-text-primary p-1 rounded transition-colors"
+          >
+            <Search className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Search bar */}
-      {searchOpen && (
+      {!showEmptyState && searchOpen && (
         <div
           className="flex items-center gap-2 px-3 py-1.5 border-b border-border flex-shrink-0"
           style={{ background: 'var(--bg-secondary, #1a1a1e)' }}
@@ -718,8 +708,15 @@ export default function TerminalTab() {
         </div>
       )}
 
-      {/* Terminal container - sessions are appended as child divs */}
-      <div ref={termContainerRef} className="flex-1 min-h-0 relative" />
+      {/* Terminal container - always mounted so ref is available */}
+      <div ref={termContainerRef} className="flex-1 min-h-0 relative">
+        {showEmptyState && (
+          <div className="flex items-center justify-center absolute inset-0 gap-2 text-text-tertiary text-sm">
+            <TerminalIcon className="w-4 h-4" />
+            <span>Select a pod or open a local terminal</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

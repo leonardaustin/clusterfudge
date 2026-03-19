@@ -125,15 +125,13 @@ func TestResolveProvider_NotExecutable(t *testing.T) {
 	}
 }
 
-func TestBuildCommand(t *testing.T) {
-	providers := []Provider{
+func TestBuildCommand_Positional(t *testing.T) {
+	// Claude Code and Codex pass the prompt as a positional argument.
+	for _, p := range []Provider{
 		&cliProvider{name: "Claude Code", path: "/usr/local/bin/claude"},
-		&cliProvider{name: "Gemini CLI", path: "/usr/local/bin/gemini"},
 		&cliProvider{name: "ChatGPT Codex", path: "/usr/local/bin/codex"},
-	}
-
-	for _, p := range providers {
-		cmd := p.BuildCommand("/tmp/kv-ai-test.md")
+	} {
+		cmd := p.BuildCommand("test prompt")
 		if len(cmd) != 2 {
 			t.Errorf("%s: expected 2 args, got %d", p.Name(), len(cmd))
 			continue
@@ -141,8 +139,26 @@ func TestBuildCommand(t *testing.T) {
 		if cmd[0] != p.ExecPath() {
 			t.Errorf("%s: expected exec path %s, got %s", p.Name(), p.ExecPath(), cmd[0])
 		}
-		if cmd[1] == "" {
-			t.Errorf("%s: prompt should not be empty", p.Name())
+		if cmd[1] != "test prompt" {
+			t.Errorf("%s: expected prompt 'test prompt', got %s", p.Name(), cmd[1])
 		}
+	}
+}
+
+func TestBuildCommand_GeminiFlag(t *testing.T) {
+	// Gemini CLI needs -i for interactive mode with an initial prompt.
+	p := &cliProvider{name: "Gemini CLI", path: "/usr/local/bin/gemini", promptFlag: "-i"}
+	cmd := p.BuildCommand("test prompt")
+	if len(cmd) != 3 {
+		t.Fatalf("Gemini: expected 3 args, got %d", len(cmd))
+	}
+	if cmd[0] != "/usr/local/bin/gemini" {
+		t.Errorf("expected exec path, got %s", cmd[0])
+	}
+	if cmd[1] != "-i" {
+		t.Errorf("expected -i flag, got %s", cmd[1])
+	}
+	if cmd[2] != "test prompt" {
+		t.Errorf("expected prompt, got %s", cmd[2])
 	}
 }

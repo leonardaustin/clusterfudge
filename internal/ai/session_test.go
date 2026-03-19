@@ -1,8 +1,6 @@
 package ai
 
 import (
-	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -19,7 +17,6 @@ func TestStartLocalSession_Echo(t *testing.T) {
 	session, err := StartLocalSession(
 		[]string{"/bin/echo", "hello world"},
 		nil,
-		"",
 		func(data []byte) {
 			mu.Lock()
 			output = append(output, data...)
@@ -63,7 +60,7 @@ func TestStartLocalSession_Echo(t *testing.T) {
 }
 
 func TestStartLocalSession_EmptyCommand(t *testing.T) {
-	_, err := StartLocalSession(nil, nil, "", func([]byte) {}, func(error) {})
+	_, err := StartLocalSession(nil, nil, func([]byte) {}, func(error) {})
 	if err == nil {
 		t.Error("expected error for empty command")
 	}
@@ -77,7 +74,6 @@ func TestLocalSession_Write(t *testing.T) {
 	session, err := StartLocalSession(
 		[]string{"/bin/cat"},
 		nil,
-		"",
 		func(data []byte) {
 			mu.Lock()
 			output = append(output, data...)
@@ -111,7 +107,6 @@ func TestLocalSession_Resize(t *testing.T) {
 	session, err := StartLocalSession(
 		[]string{"/bin/cat"},
 		nil,
-		"",
 		func([]byte) {},
 		func(error) {},
 	)
@@ -125,37 +120,10 @@ func TestLocalSession_Resize(t *testing.T) {
 	}
 }
 
-func TestLocalSession_CleansTempFile(t *testing.T) {
-	tmpFile := filepath.Join(t.TempDir(), "test-context.md")
-	if err := os.WriteFile(tmpFile, []byte("test"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	session, err := StartLocalSession(
-		[]string{"/bin/echo", "done"},
-		nil,
-		tmpFile,
-		func([]byte) {},
-		func(error) {},
-	)
-	if err != nil {
-		t.Fatalf("StartLocalSession: %v", err)
-	}
-
-	// Wait for process to finish
-	time.Sleep(200 * time.Millisecond)
-	session.Close()
-
-	if _, err := os.Stat(tmpFile); !os.IsNotExist(err) {
-		t.Error("expected temp file to be removed after Close")
-	}
-}
-
 func TestLocalSession_DoubleClose(t *testing.T) {
 	session, err := StartLocalSession(
 		[]string{"/bin/echo", "x"},
 		nil,
-		"",
 		func([]byte) {},
 		func(error) {},
 	)
