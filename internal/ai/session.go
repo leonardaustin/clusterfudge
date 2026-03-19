@@ -43,7 +43,7 @@ func StartLocalSession(args []string, env []string, onOutput func([]byte), onExi
 
 	// Read goroutine: read from PTY master and deliver to callback
 	go func() {
-		buf := make([]byte, 4096)
+		buf := make([]byte, 32768)
 		for {
 			n, err := ptmx.Read(buf)
 			if n > 0 {

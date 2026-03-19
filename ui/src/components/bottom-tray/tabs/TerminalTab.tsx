@@ -117,20 +117,41 @@ async function initTerminal(
     });
     cleanup.push(() => dataDisposable.dispose());
 
+    // Batch PTY output writes using requestAnimationFrame to avoid flashing
+    // and rendering intermediate states from rapid escape sequence updates.
+    let writeBuf = "";
+    let rafId: number | null = null;
+    const flushWrites = () => {
+      if (writeBuf) {
+        term.write(writeBuf);
+        writeBuf = "";
+      }
+      rafId = null;
+    };
+    const scheduleWrite = (data: string) => {
+      writeBuf += data;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(flushWrites);
+      }
+    };
+    cleanup.push(() => { if (rafId !== null) cancelAnimationFrame(rafId); });
+
     const stdoutCleanup = EventsOn(backend.stdoutEvent(backendSessionId), (data: unknown) => {
-      term.write(data as string);
+      scheduleWrite(data as string);
     });
     cleanup.push(stdoutCleanup);
 
     if (backend.stderrEvent) {
       const stderrCleanup = EventsOn(backend.stderrEvent(backendSessionId), (data: unknown) => {
-        term.write(data as string);
+        scheduleWrite(data as string);
       });
       cleanup.push(stderrCleanup);
     }
 
     const exitCleanup = EventsOn(backend.exitEvent(backendSessionId), (msg: unknown) => {
       const message = msg as string;
+      // Flush any pending output before showing exit message
+      flushWrites();
       term.write(`\r\n\x1b[90m[Session ended${message ? `: ${message}` : ""}]\x1b[0m\r\n`);
     });
     cleanup.push(exitCleanup);
