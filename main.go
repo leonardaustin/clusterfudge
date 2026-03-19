@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 
 	"clusterfudge/handlers"
@@ -35,6 +37,8 @@ var (
 var assets embed.FS
 
 func main() {
+	ensurePath()
+
 	// Initialise internal services
 	cfgStore, err := config.NewStore()
 	if err != nil {
@@ -205,5 +209,48 @@ func main() {
 	})
 	if err != nil {
 		log.Fatalf("wails.Run: %v", err)
+	}
+}
+
+// ensurePath adds common tool directories to PATH so that exec-based
+// credential plugins (e.g. gke-gcloud-auth-plugin, aws-iam-authenticator)
+// can be found when the app is launched from Finder/Dock, which provides
+// only a minimal default PATH.
+func ensurePath() {
+	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
+		return
+	}
+
+	extra := []string{
+		"/opt/homebrew/bin",
+		"/usr/local/bin",
+		"/usr/local/sbin",
+		"/opt/homebrew/sbin",
+	}
+
+	// Also add ~/google-cloud-sdk/bin if it exists (common gcloud install location).
+	if home, err := os.UserHomeDir(); err == nil {
+		extra = append(extra,
+			filepath.Join(home, "google-cloud-sdk", "bin"),
+			filepath.Join(home, ".local", "bin"),
+			filepath.Join(home, "bin"),
+		)
+	}
+
+	current := os.Getenv("PATH")
+	existing := make(map[string]bool)
+	for _, p := range strings.Split(current, ":") {
+		existing[p] = true
+	}
+
+	var toAdd []string
+	for _, dir := range extra {
+		if !existing[dir] {
+			toAdd = append(toAdd, dir)
+		}
+	}
+
+	if len(toAdd) > 0 {
+		os.Setenv("PATH", current+":"+strings.Join(toAdd, ":"))
 	}
 }
