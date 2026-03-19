@@ -162,7 +162,7 @@ function ClustersSection({
             className="absolute flex items-center gap-1.5 pointer-events-none"
             style={{
               right: 'calc(100% + 8px)',
-              top: 12,
+              top: 16,
               whiteSpace: 'nowrap',
             }}
             initial={{ opacity: 0, x: 8 }}
