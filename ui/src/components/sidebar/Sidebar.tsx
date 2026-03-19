@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  Home,
   LayoutDashboard,
   Box,
   Layers,
@@ -623,8 +624,13 @@ export function Sidebar() {
 
       {/* Scrollable nav area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border">
-        {/* Overview */}
+        {/* Home & Overview */}
         <div className={cn("px-2 mt-1", sidebarCollapsed && "px-1")}>
+          <NavItemRow
+            item={{ label: "Home", icon: Home, path: "/welcome" }}
+            isActive={location.pathname === "/welcome"}
+            collapsed={sidebarCollapsed}
+          />
           <NavItemRow
             item={{ label: "Overview", icon: LayoutDashboard, path: "/overview", shortcut: "G O" }}
             isActive={location.pathname === "/overview"}
