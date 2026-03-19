@@ -1,4 +1,3 @@
-import { Bot } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { ResourceContextMenu } from '../components/dialogs/ResourceContextMenu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -474,59 +473,45 @@ export function PodList() {
                 subtitle={`Pod in "${detail.namespace}" namespace`}
                 onClose={() => navigate('/workloads/pods')}
               >
-                {/* Action bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '0 var(--space-4)', paddingTop: 'var(--space-2)', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => setBottomTrayTab('logs')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-                    style={{
-                      borderColor: 'var(--border)',
-                      color: 'var(--text-secondary)',
-                      background: 'var(--bg-tertiary, transparent)',
-                    }}
-                    title="View logs in bottom tray"
-                  >
-                    View Logs
-                  </button>
-                  <button
-                    onClick={() => setBottomTrayTab('terminal')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-                    style={{
-                      borderColor: 'var(--border)',
-                      color: 'var(--text-secondary)',
-                      background: 'var(--bg-tertiary, transparent)',
-                    }}
-                    title="Open shell in bottom tray"
-                  >
-                    Open Shell
-                  </button>
-                  {aiProviders.length > 0 && selectedName && aiProviders.map((provider) => (
+                <DetailTabs tabs={DETAIL_TABS} activeTab={activeTab} onTabChange={setActiveTab} actions={
+                  <>
                     <button
-                      key={provider.id}
-                      onClick={() => {
-                        setAITarget({
-                          namespace: detailNamespace,
-                          name: selectedName,
-                          providerID: provider.id,
-                          providerName: provider.name,
-                        })
-                        setBottomTrayTab('ai')
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-                      style={{
-                        borderColor: 'var(--accent)',
-                        color: 'var(--accent)',
-                        background: 'var(--accent-subtle, transparent)',
-                      }}
-                      title={`Open ${provider.name} to diagnose this pod`}
+                      className="detail-tab"
+                      onClick={() => setBottomTrayTab('logs')}
+                      title="View logs in bottom tray"
                     >
-                      <Bot className="w-3.5 h-3.5" />
-                      {provider.name}
+                      Logs
                     </button>
-                  ))}
-                </div>
-
-                <DetailTabs tabs={DETAIL_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+                    <button
+                      className="detail-tab"
+                      onClick={() => setBottomTrayTab('terminal')}
+                      title="Open shell in bottom tray"
+                    >
+                      Shell
+                    </button>
+                    {aiProviders.length > 0 && selectedName && aiProviders.map((provider) => {
+                      const shortName: Record<string, string> = { claude: 'Claude', gemini: 'Gemini', codex: 'Codex' };
+                      return (
+                        <button
+                          key={provider.id}
+                          className="detail-tab"
+                          onClick={() => {
+                            setAITarget({
+                              namespace: detailNamespace,
+                              name: selectedName,
+                              providerID: provider.id,
+                              providerName: provider.name,
+                            })
+                            setBottomTrayTab('ai')
+                          }}
+                          title={`Open ${provider.name} to diagnose this pod`}
+                        >
+                          {shortName[provider.id] ?? provider.name}
+                        </button>
+                      );
+                    })}
+                  </>
+                } />
 
                 <div className="detail-panel-body">
                   {activeTab === 'Overview' && (

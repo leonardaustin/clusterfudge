@@ -1,10 +1,13 @@
+import type { ReactNode } from "react"
+
 interface DetailTabsProps {
   tabs: string[]
   activeTab: string
   onTabChange: (tab: string) => void
+  actions?: ReactNode
 }
 
-export function DetailTabs({ tabs, activeTab, onTabChange }: DetailTabsProps) {
+export function DetailTabs({ tabs, activeTab, onTabChange, actions }: DetailTabsProps) {
   return (
     <div className="detail-tabs">
       {tabs.map((tab) => (
@@ -16,6 +19,12 @@ export function DetailTabs({ tabs, activeTab, onTabChange }: DetailTabsProps) {
           {tab}
         </button>
       ))}
+      {actions && (
+        <>
+          <div style={{ flex: 1 }} />
+          {actions}
+        </>
+      )}
     </div>
   )
 }

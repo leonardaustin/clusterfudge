@@ -878,6 +878,9 @@ a {
 }
 
 .detail-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px var(--space-2);
   font-size: var(--text-2xs);
   font-weight: 500;
