@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Server, ArrowRight, AlertTriangle, X, CheckCircle2, XCircle,
-  Loader2, Star, RefreshCw, Bot, BookOpen, Newspaper,
+  Loader2, Star, RefreshCw, Bot, BookOpen, Newspaper, ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClusterStore, colorForName } from '@/stores/clusterStore'
@@ -155,7 +155,32 @@ function ClustersSection({
         </p>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 relative">
+        {/* Bouncing arrow callout */}
+        {connecting === null && (
+          <motion.div
+            className="absolute flex items-center gap-1.5 pointer-events-none"
+            style={{
+              right: 'calc(100% + 8px)',
+              top: 12,
+              whiteSpace: 'nowrap',
+            }}
+            initial={{ opacity: 0, x: 8 }}
+            animate={{
+              opacity: [0, 1, 1],
+              x: [8, 0, 0],
+            }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <span className="text-2xs font-medium text-accent">Pick a cluster</span>
+            <motion.div
+              animate={{ x: [0, 4, 0] }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <ChevronRight className="w-3.5 h-3.5 text-accent" />
+            </motion.div>
+          </motion.div>
+        )}
         {clusters.map((cluster, index) => {
           const pf = preflightResults[cluster.name]
           const isFav = favSet.has(cluster.name)
