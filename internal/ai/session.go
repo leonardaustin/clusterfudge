@@ -1,12 +1,23 @@
 package ai
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/creack/pty"
+)
+
+const (
+	// flushInterval is the maximum time to buffer PTY output before emitting.
+	// Matches ~60fps to align with frontend animation frames.
+	flushInterval = 16 * time.Millisecond
+
+	// maxBatchSize triggers an immediate flush when the buffer exceeds this size.
+	maxBatchSize = 32 * 1024
 )
 
 // LocalSession wraps an AI CLI process running in a local PTY.
@@ -41,24 +52,70 @@ func StartLocalSession(args []string, env []string, onOutput func([]byte), onExi
 		ptmx: ptmx,
 	}
 
-	// Read goroutine: read from PTY master and deliver to callback
+	// Read goroutine: read from PTY master, batch output, and deliver to callback.
+	// Batching collapses many small PTY writes (cursor moves, spinner frames) into
+	// fewer, larger events so the frontend renders complete frames instead of
+	// intermediate states.
 	go func() {
-		buf := make([]byte, 32768)
-		for {
-			n, err := ptmx.Read(buf)
-			if n > 0 {
-				// Copy data to avoid races with buffer reuse
-				data := make([]byte, n)
-				copy(data, buf[:n])
-				onOutput(data)
+		readBuf := make([]byte, 32768)
+		var accum bytes.Buffer
+		timer := time.NewTimer(flushInterval)
+		timer.Stop()
+		timerRunning := false
+
+		flush := func() {
+			if accum.Len() > 0 {
+				out := make([]byte, accum.Len())
+				copy(out, accum.Bytes())
+				accum.Reset()
+				onOutput(out)
 			}
-			if err != nil {
-				break
+			if timerRunning {
+				timer.Stop()
+				timerRunning = false
 			}
 		}
-		// Wait for process to finish
-		exitErr := cmd.Wait()
-		onExit(exitErr)
+
+		// dataCh receives PTY reads; nil signals EOF.
+		dataCh := make(chan []byte, 64)
+		go func() {
+			for {
+				n, err := ptmx.Read(readBuf)
+				if n > 0 {
+					chunk := make([]byte, n)
+					copy(chunk, readBuf[:n])
+					dataCh <- chunk
+				}
+				if err != nil {
+					close(dataCh)
+					return
+				}
+			}
+		}()
+
+		for {
+			select {
+			case chunk, ok := <-dataCh:
+				if !ok {
+					// PTY closed — flush remaining and exit
+					flush()
+					exitErr := cmd.Wait()
+					onExit(exitErr)
+					return
+				}
+				accum.Write(chunk)
+				if accum.Len() >= maxBatchSize {
+					flush()
+				} else if !timerRunning {
+					timer.Reset(flushInterval)
+					timerRunning = true
+				}
+
+			case <-timer.C:
+				timerRunning = false
+				flush()
+			}
+		}
 	}()
 
 	return s, nil
