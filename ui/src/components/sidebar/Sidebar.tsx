@@ -625,7 +625,7 @@ export function Sidebar() {
       {/* Scrollable nav area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border">
         {/* Home & Overview */}
-        <div className={cn("px-2 mt-1", sidebarCollapsed && "px-1")}>
+        <div className={cn("px-2 mt-1 space-y-0.5", sidebarCollapsed && "px-1")}>
           <NavItemRow
             item={{ label: "Home", icon: Home, path: "/welcome" }}
             isActive={location.pathname === "/welcome"}
