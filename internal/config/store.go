@@ -13,7 +13,7 @@ import (
 // DefaultConfig returns the default AppConfig with sensible defaults for all fields.
 func DefaultConfig() AppConfig {
 	return AppConfig{
-		DefaultNamespace:     "default",
+		DefaultNamespace:     "",
 		StartupBehavior:      "welcome",
 		AutoCheckUpdates:     true,
 		Theme:                "dark",
