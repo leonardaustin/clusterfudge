@@ -1,0 +1,6 @@
+E2E test chart deployed successfully.
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Replicas: {{ .Values.replicaCount }}
+Test Key: {{ .Values.testKey }}

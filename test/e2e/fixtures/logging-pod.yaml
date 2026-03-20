@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2e-logging
+  namespace: clusterfudge-e2e
+  labels:
+    app: e2e-logging
+    managed-by: clusterfudge-e2e
+spec:
+  containers:
+    - name: logger
+      image: busybox:latest
+      command: ["/bin/sh", "-c"]
+      args: ["while true; do echo \"test-line-$(date +%s)\"; sleep 1; done"]
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "16Mi"
