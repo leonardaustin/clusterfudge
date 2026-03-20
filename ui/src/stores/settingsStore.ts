@@ -127,7 +127,7 @@ function configToState(cfg: Record<string, any>): Partial<SettingsState> {
 export const useSettingsStore = create<SettingsState>()((set) => ({
   loaded: false,
 
-  defaultNamespace: 'default',
+  defaultNamespace: '',
   startupBehavior: 'welcome',
   autoCheckUpdates: true,
   theme: 'dark',
