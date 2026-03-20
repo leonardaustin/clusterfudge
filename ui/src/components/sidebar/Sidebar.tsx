@@ -55,6 +55,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/uiStore";
 import { useClusterStore } from "@/stores/clusterStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 import { useResourceCounts } from "@/hooks/useResourceCounts";
 
@@ -596,6 +597,7 @@ const COLLAPSED_WIDTH = 48;
 
 export function Sidebar() {
   const { sidebarCollapsed, sidebarWidth, setSidebarWidth } = useUIStore();
+  const betaFeatures = useSettingsStore((s) => s.betaFeatures);
   const counts = useResourceCounts();
   const location = useLocation();
   const handleResize = useCallback((dx: number) => {
@@ -654,8 +656,8 @@ export function Sidebar() {
         {/* Custom resources */}
         <CustomResourcesSection collapsed={sidebarCollapsed} />
 
-        {/* Extended sections */}
-        {BETA_NAV_SECTIONS.map((section) => (
+        {/* Extended sections (beta) */}
+        {betaFeatures && BETA_NAV_SECTIONS.map((section) => (
           <SidebarSection
             key={section.id}
             section={section}
