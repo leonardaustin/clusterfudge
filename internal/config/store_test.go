@@ -27,8 +27,8 @@ func TestNewStoreWithPath_CreatesDefaults(t *testing.T) {
 	if cfg.FontSize != 13 {
 		t.Errorf("expected default fontSize 13, got %d", cfg.FontSize)
 	}
-	if cfg.DefaultNamespace != "default" {
-		t.Errorf("expected default namespace 'default', got %q", cfg.DefaultNamespace)
+	if cfg.DefaultNamespace != "" {
+		t.Errorf("expected default namespace '', got %q", cfg.DefaultNamespace)
 	}
 	if cfg.StartupBehavior != "welcome" {
 		t.Errorf("expected startupBehavior 'welcome', got %q", cfg.StartupBehavior)
@@ -103,8 +103,8 @@ func TestStore_LoadsExistingConfig(t *testing.T) {
 	if got.EditorTabSize != 2 {
 		t.Errorf("expected default editorTabSize 2 for missing field, got %d", got.EditorTabSize)
 	}
-	if got.DefaultNamespace != "default" {
-		t.Errorf("expected default namespace 'default' for missing field, got %q", got.DefaultNamespace)
+	if got.DefaultNamespace != "" {
+		t.Errorf("expected default namespace '' for missing field, got %q", got.DefaultNamespace)
 	}
 }
 
@@ -132,8 +132,8 @@ func TestStore_Update_Partial(t *testing.T) {
 		t.Errorf("expected fontSize 16, got %d", cfg.FontSize)
 	}
 	// Other fields should remain at defaults
-	if cfg.DefaultNamespace != "default" {
-		t.Errorf("expected defaultNamespace 'default', got %q", cfg.DefaultNamespace)
+	if cfg.DefaultNamespace != "" {
+		t.Errorf("expected defaultNamespace '', got %q", cfg.DefaultNamespace)
 	}
 	if cfg.EditorTabSize != 2 {
 		t.Errorf("expected editorTabSize 2 (unchanged), got %d", cfg.EditorTabSize)
