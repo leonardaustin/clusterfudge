@@ -1,0 +1,10 @@
+apiVersion: example.com/v1alpha1
+kind: Widget
+metadata:
+  name: e2e-widget-blue
+  namespace: clusterfudge-e2e
+  labels:
+    managed-by: clusterfudge-e2e
+spec:
+  color: blue
+  size: medium
