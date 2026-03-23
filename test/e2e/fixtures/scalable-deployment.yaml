@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: e2e-scalable
+  namespace: clusterfudge-e2e
+  labels:
+    app: e2e-scalable
+    managed-by: clusterfudge-e2e
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: e2e-scalable
+  template:
+    metadata:
+      labels:
+        app: e2e-scalable
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"

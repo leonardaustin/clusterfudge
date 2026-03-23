@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Apple icon grid: 832x832 squircle centered in 1024x1024 canvas -->
+  <rect x="96" y="96" width="832" height="832" rx="186" ry="186" fill="#0F1117"/>
+  <!-- Logo with half the previous internal padding -->
+  <defs>
+    <mask id="cutout">
+      <rect width="1024" height="1024" fill="white"/>
+      <rect x="158" y="427" width="708" height="35" fill="black"/>
+      <rect x="427" y="427" width="35" height="439" fill="black"/>
+      <rect x="427" y="618" width="439" height="35" fill="black"/>
+    </mask>
+  </defs>
+  <polygon
+    points="512,186 767,309 829,585 653,805 371,805 195,585 257,309"
+    fill="#326CE5"
+    mask="url(#cutout)"
+  />
+</svg>

@@ -1,0 +1,39 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - gosec
+    - errorlint
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (net/http.ResponseBody).Close
+    staticcheck:
+      checks:
+        - "all"
+        - "-SA1019"  # deprecated API usage
+        - "-QF1002"  # tagged switch suggestion
+        - "-QF1008"  # embedded field suggestion
+        - "-ST1000"  # package comment
+        - "-ST1020"  # comment form
+    gosec:
+      excludes:
+        - G104  # unhandled errors (covered by errcheck)
+        - G301  # directory permissions (user-local dirs use 0755)
+        - G304  # file inclusion via variable (needed for kubeconfig loading)
+        - G306  # file write permissions (config/template files use 0640/0644)
+        - G404  # weak random (math/rand fine for jitter/non-crypto use)
+        - G703  # path traversal via taint (false positives on internally-constructed paths)
+        - G704  # SSRF via taint (updater uses hardcoded owner/repo URLs)
+        - G706  # log injection via taint (logging HTTP status codes is safe)
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - errorlint
+          - staticcheck
+          - gosec
