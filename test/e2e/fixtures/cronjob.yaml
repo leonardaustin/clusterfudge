@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: e2e-cronjob
+  namespace: clusterfudge-e2e
+  labels:
+    managed-by: clusterfudge-e2e
+spec:
+  schedule: "*/60 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: e2e-cronjob
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: job
+              image: busybox:latest
+              command: ["echo", "cronjob executed"]
+              resources:
+                requests:
+                  cpu: "10m"
+                  memory: "16Mi"
