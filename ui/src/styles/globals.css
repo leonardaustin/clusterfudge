@@ -1,0 +1,395 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Bundled fonts ─────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter.var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Meddon';
+  src: url('/fonts/Meddon.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Smooth theme transitions ──────────────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+[data-no-theme-transition], svg, img {
+  transition: none !important;
+}
+
+/* ── Dark theme (default) ──────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --color-bg-primary:   #0A0A0B;
+  --color-bg-secondary: #111113;
+  --color-bg-tertiary:  #1A1A1E;
+  --color-bg-hover:     #1F1F24;
+  --color-bg-active:    #26262C;
+
+  /* Text – WCAG AA: tertiary bumped from #5C5C63 to #828289 (>= 4.5:1 on all bg) */
+  --color-text-primary:   #EDEDEF;
+  --color-text-secondary: #8B8B8E;
+  --color-text-tertiary:  #828289;
+
+  /* Borders */
+  --color-border:        #26262C;
+  --color-border-strong: #3A3A42;
+
+  /* Accent */
+  --color-accent:        #7C5CFC;
+  --color-accent-hover:  #8E72FF;
+  --color-accent-muted:  rgba(124, 92, 252, 0.12);
+
+  /* Semantic status */
+  --color-success:  #4ADE80;
+  --color-warning:  #FBBF24;
+  --color-error:    #F87171;
+  --color-info:     #60A5FA;
+
+  /* Scrollbar */
+  --color-scrollbar-thumb: #3A3A42;
+  --color-scrollbar-track: transparent;
+
+  /* Overlay */
+  --color-bg-overlay:      rgba(0, 0, 0, 0.5);
+  --color-text-inverse:    #0A0A0B;
+
+  /* Accent extended */
+  --color-accent-active:   #6A4EE8;
+  --color-accent-subtle:   rgba(124, 92, 252, 0.05);
+
+  /* Status extended */
+  --color-status-terminated: #6B7280;
+  --color-status-paused:     #A78BFA;
+  --color-status-bg-running:    rgba(74, 222, 128, 0.1);
+  --color-status-bg-pending:    rgba(251, 191, 36, 0.1);
+  --color-status-bg-error:      rgba(248, 113, 113, 0.1);
+  --color-status-bg-terminated: rgba(107, 114, 128, 0.1);
+  --color-status-bg-info:       rgba(96, 165, 250, 0.1);
+  --color-status-bg-paused:     rgba(167, 139, 250, 0.1);
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
+  --shadow-xl:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-focus:   0 0 0 2px rgba(124, 92, 252, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ── Light theme ───────────────────────────────────────────────────────── */
+.theme-light {
+  color-scheme: light;
+
+  --color-bg-primary:   #F4F4F5;
+  --color-bg-secondary: #FAFAFA;
+  --color-bg-tertiary:  #FFFFFF;
+  --color-bg-hover:     #E8E8EC;
+  --color-bg-active:    #DDDDE3;
+
+  /* Text – WCAG AA: tertiary darkened from #A1A1AA to #6B6B73 (>= 4.5:1 on all bg) */
+  --color-text-primary:   #18181B;
+  --color-text-secondary: #52525B;
+  --color-text-tertiary:  #6B6B73;
+
+  --color-border:        #E4E4E7;
+  --color-border-strong: #C4C4CC;
+
+  --color-accent:        #6B47E5;
+  --color-accent-hover:  #5A38D4;
+  --color-accent-muted:  rgba(107, 71, 229, 0.10);
+
+  /* Status – WCAG AA: darkened for >= 4.5:1 contrast on light backgrounds */
+  --color-success:  #15803D;
+  --color-warning:  #B45309;
+  --color-error:    #B91C1C;
+  --color-info:     #2563EB;
+
+  --color-scrollbar-thumb: #C4C4CC;
+  --color-scrollbar-track: transparent;
+
+  /* Overlay */
+  --color-bg-overlay:      rgba(0, 0, 0, 0.3);
+  --color-text-inverse:    #FFFFFF;
+
+  /* Accent extended */
+  --color-accent-active:   #5A38D4;
+  --color-accent-subtle:   rgba(107, 71, 229, 0.05);
+
+  /* Status extended */
+  --color-status-terminated: #6B7280;
+  --color-status-paused:     #7C3AED;
+  --color-status-bg-running:    rgba(21, 128, 61, 0.1);
+  --color-status-bg-pending:    rgba(180, 83, 9, 0.1);
+  --color-status-bg-error:      rgba(185, 28, 28, 0.1);
+  --color-status-bg-terminated: rgba(107, 114, 128, 0.1);
+  --color-status-bg-info:       rgba(37, 99, 235, 0.1);
+  --color-status-bg-paused:     rgba(124, 58, 237, 0.1);
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.12);
+  --shadow-xl:  0 8px 32px rgba(0,0,0,0.16);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.08);
+  --shadow-focus:   0 0 0 2px rgba(107, 71, 229, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ── Monokai theme ────────────────────────────────────────────────────── */
+.theme-monokai {
+  color-scheme: dark;
+
+  --color-bg-primary:   #272822;
+  --color-bg-secondary: #2D2E27;
+  --color-bg-tertiary:  #383930;
+  --color-bg-hover:     #3E3F38;
+  --color-bg-active:    #49483E;
+
+  --color-text-primary:   #F8F8F2;
+  --color-text-secondary: #A6A68A;
+  --color-text-tertiary:  #75715E;
+
+  --color-border:        #3E3F38;
+  --color-border-strong: #59584F;
+
+  --color-accent:        #A6E22E;
+  --color-accent-hover:  #B8F340;
+  --color-accent-muted:  rgba(166, 226, 46, 0.12);
+
+  --color-success:  #A6E22E;
+  --color-warning:  #E6DB74;
+  --color-error:    #F92672;
+  --color-info:     #66D9EF;
+
+  --color-scrollbar-thumb: #49483E;
+  --color-scrollbar-track: transparent;
+
+  --color-bg-overlay:      rgba(0, 0, 0, 0.5);
+  --color-text-inverse:    #272822;
+
+  --color-accent-active:   #8BC220;
+  --color-accent-subtle:   rgba(166, 226, 46, 0.05);
+
+  --color-status-terminated: #75715E;
+  --color-status-paused:     #AE81FF;
+  --color-status-bg-running:    rgba(166, 226, 46, 0.1);
+  --color-status-bg-pending:    rgba(230, 219, 116, 0.1);
+  --color-status-bg-error:      rgba(249, 38, 114, 0.1);
+  --color-status-bg-terminated: rgba(117, 113, 94, 0.1);
+  --color-status-bg-info:       rgba(102, 217, 239, 0.1);
+  --color-status-bg-paused:     rgba(174, 129, 255, 0.1);
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
+  --shadow-xl:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-focus:   0 0 0 2px rgba(166, 226, 46, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ── Solarized Dark theme ─────────────────────────────────────────────── */
+.theme-solarized {
+  color-scheme: dark;
+
+  --color-bg-primary:   #002B36;
+  --color-bg-secondary: #073642;
+  --color-bg-tertiary:  #0A3D4A;
+  --color-bg-hover:     #0D4A59;
+  --color-bg-active:    #115568;
+
+  --color-text-primary:   #93A1A1;
+  --color-text-secondary: #839496;
+  --color-text-tertiary:  #657B83;
+
+  --color-border:        #0D4A59;
+  --color-border-strong: #2E6A7A;
+
+  --color-accent:        #268BD2;
+  --color-accent-hover:  #3B9CE3;
+  --color-accent-muted:  rgba(38, 139, 210, 0.12);
+
+  --color-success:  #859900;
+  --color-warning:  #B58900;
+  --color-error:    #DC322F;
+  --color-info:     #268BD2;
+
+  --color-scrollbar-thumb: #2E6A7A;
+  --color-scrollbar-track: transparent;
+
+  --color-bg-overlay:      rgba(0, 0, 0, 0.5);
+  --color-text-inverse:    #002B36;
+
+  --color-accent-active:   #1C7BBE;
+  --color-accent-subtle:   rgba(38, 139, 210, 0.05);
+
+  --color-status-terminated: #657B83;
+  --color-status-paused:     #6C71C4;
+  --color-status-bg-running:    rgba(133, 153, 0, 0.1);
+  --color-status-bg-pending:    rgba(181, 137, 0, 0.1);
+  --color-status-bg-error:      rgba(220, 50, 47, 0.1);
+  --color-status-bg-terminated: rgba(101, 123, 131, 0.1);
+  --color-status-bg-info:       rgba(38, 139, 210, 0.1);
+  --color-status-bg-paused:     rgba(108, 113, 196, 0.1);
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
+  --shadow-xl:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-popover: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-focus:   0 0 0 2px rgba(38, 139, 210, 0.25);
+  --shadow-panel:   0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ── High contrast mode ────────────────────────────────────────────────── */
+@media (prefers-contrast: more) {
+  :root {
+    --color-text-primary:   #FFFFFF;
+    --color-text-secondary: #CCCCCC;
+    --color-border:         #666666;
+    --color-border-strong:  #AAAAAA;
+  }
+  .theme-light {
+    --color-text-primary:   #000000;
+    --color-text-secondary: #333333;
+    --color-border:         #555555;
+    --color-border-strong:  #333333;
+  }
+}
+
+/* ── Base layer ────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    @apply bg-bg-primary text-text-primary;
+    overflow: hidden;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  input,
+  textarea,
+  [contenteditable] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: var(--color-scrollbar-track); }
+  ::-webkit-scrollbar-thumb  { background: var(--color-scrollbar-thumb); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
+
+  *:focus                   { outline: none; }
+  *:focus-visible           { @apply ring-1 ring-accent; }
+}
+
+/* ── Component layer ───────────────────────────────────────────────────── */
+@layer components {
+  .drag-region {
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  .status-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full flex-shrink-0;
+  }
+  .status-dot-running    { @apply bg-status-running; }
+  .status-dot-pending    { @apply bg-status-pending; }
+  .status-dot-error      { @apply bg-status-error; }
+  .status-dot-terminated { @apply bg-status-terminated; }
+
+  .nav-item {
+    @apply flex items-center gap-2 px-2 py-1 rounded text-sm text-text-secondary
+           hover:text-text-primary hover:bg-bg-hover transition-colors cursor-default
+           select-none;
+  }
+  .nav-item-active {
+    @apply text-text-primary bg-bg-active;
+  }
+
+  .badge {
+    @apply inline-flex items-center justify-center px-1.5 py-px rounded-full
+           text-2xs font-medium bg-bg-tertiary text-text-tertiary;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar       { width: 4px; height: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); border-radius: 2px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
+}
+
+/* ── Utilities layer ───────────────────────────────────────────────────── */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  .truncate-fade {
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  }
+}
+
+/* ── Wails drag region helpers ─────────────────────────────────────────── */
+[data-wails-drag] { -webkit-app-region: drag; app-region: drag; }
+[data-wails-no-drag] { -webkit-app-region: no-drag; app-region: no-drag; }
+
+/* ── Animations ────────────────────────────────────────────────────────── */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-scale-in { animation: scale-in 100ms ease-out; }
+.animate-slide-in { animation: slide-in 100ms ease-out; }
+.animate-fade-in  { animation: fade-in  150ms ease-out; }
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: e2e-batch-job
+  namespace: clusterfudge-e2e
+  labels:
+    managed-by: clusterfudge-e2e
+spec:
+  template:
+    metadata:
+      labels:
+        app: e2e-batch-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: job
+          image: busybox:latest
+          command: ["echo", "job completed successfully"]
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"

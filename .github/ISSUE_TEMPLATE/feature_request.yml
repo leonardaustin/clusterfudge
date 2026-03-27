@@ -1,0 +1,46 @@
+name: Feature Request
+description: Suggest an idea for Clusterfudge
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! We read every request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the problem or workflow gap. Focus on the problem, not the solution.
+      placeholder: I often need to ... but currently I have to ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to see?
+      description: Describe your ideal solution. Screenshots, mockups, or examples from other tools are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: How do you work around it today?
+      description: What do you currently do instead?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      options:
+        - Cluster management
+        - Resource browsing
+        - Log streaming
+        - Terminal
+        - Port forwarding
+        - Helm
+        - YAML editor
+        - Security / RBAC
+        - AI debugging
+        - Command palette / UX
+        - Keyboard navigation
+        - Themes / appearance
+        - Other
